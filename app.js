@@ -822,7 +822,7 @@ function openTenseModal(tense) {
         <span class="level-badge level-${tense.level}" style="margin-top:6px">${tense.level === 'beginner' ? '🌱 Débutant' : tense.level === 'intermediate' ? '🌿 Intermédiaire' : '🌳 Avancé'}</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav('${tense.id}', this)">⭐</button>
+        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav('${tense.id}', this)">${isFav ? '★' : '☆'}</button>
         <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
     </div>
@@ -1469,7 +1469,7 @@ function filterVerbs() {
           <span style="font-weight:600;color:var(--secondary)">${v.pp}</span>
           <span style="color:var(--text-light);margin-left:8px;font-size:0.85rem">${v.meaning}</span>
         </div>
-        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation();toggleFav('verb_${v.base}', this)">⭐</button>
+        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation();toggleFav('verb_${v.base}', this)">${isFav ? '★' : '☆'}</button>
       </div>
       <div class="verb-conjugation-table">
         <div class="conj-grid">
@@ -1720,7 +1720,7 @@ function renderFavorites() {
         return `<div class="verb-card" style="cursor:default">
           <span class="verb-base">${verb.base}</span> → <span style="color:var(--accent)">${verb.past}</span> → <span style="color:var(--secondary)">${verb.pp}</span>
           <span style="color:var(--text-light);margin-left:8px">${verb.meaning}</span>
-          <button class="fav-btn active" style="margin-left:auto" onclick="toggleFav('${f}', this)">⭐</button>
+          <button class="fav-btn active" style="margin-left:auto" onclick="toggleFav('${f}', this)">★</button>
         </div>`;
       }
     } else {
@@ -1732,7 +1732,7 @@ function renderFavorites() {
             <div class="lesson-title">${tense.nameFR}</div>
             <div class="lesson-desc">${tense.explanation.substring(0, 80)}...</div>
           </div>
-          <button class="fav-btn active" onclick="event.stopPropagation();toggleFav('${f}', this)">⭐</button>
+          <button class="fav-btn active" onclick="event.stopPropagation();toggleFav('${f}', this)">★</button>
         </div>`;
       }
     }
@@ -1743,10 +1743,16 @@ function renderFavorites() {
 function toggleFav(item, btn) {
   if (State.isFavorite(item)) {
     State.removeFavorite(item);
-    btn?.classList.remove('active');
+    if (btn) {
+      btn.classList.remove('active');
+      btn.innerText = '☆';
+    }
   } else {
     State.addFavorite(item);
-    btn?.classList.add('active');
+    if (btn) {
+      btn.classList.add('active');
+      btn.innerText = '★';
+    }
   }
 }
 
