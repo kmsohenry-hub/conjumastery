@@ -389,6 +389,16 @@
     </div>
 
     <div class="card" style="max-width:600px;margin-bottom:20px">
+      <h3 style="margin-bottom:16px">🔔 Notifications</h3>
+      <p style="font-size:0.9rem;color:var(--text-light);margin-bottom:12px">
+        Recevez des rappels lorsque des leçons de votre répétition espacée sont prêtes à être révisées (nécessite que l'application reste ouverte dans un onglet).
+      </p>
+      <button class="btn btn-outline btn-sm" id="notificationToggleBtn" onclick="NotificationManager.toggle()">
+        Activer les notifications
+      </button>
+    </div>
+
+    <div class="card" style="max-width:600px;margin-bottom:20px">
       <h3 style="margin-bottom:16px">📊 Données</h3>
       <button class="btn btn-outline btn-sm" onclick="exportData()" style="margin-right:8px">📤 Exporter mes données</button>
       <button class="btn btn-outline btn-sm" onclick="importData()" style="margin-right:8px">📥 Importer des données</button>
