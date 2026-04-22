@@ -1,3 +1,33 @@
+// ============================================================
+// UTILITAIRES DE SÉCURITÉ
+// ============================================================
+
+/**
+ * Échappe les caractères HTML spéciaux pour prévenir les attaques XSS
+ * @param {string} str - La chaîne à échapper
+ * @returns {string} - La chaîne échappée
+ */
+function escapeHtml(str) {
+  if (typeof str !== 'string') return str;
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/**
+ * Valide et nettoie une entrée utilisateur
+ * @param {string} input - L'entrée à valider
+ * @returns {string} - L'entrée nettoyée
+ */
+function sanitizeInput(input) {
+  if (typeof input !== 'string') return '';
+  return input.trim().slice(0, 500); // Limite de longueur
+}
+
+// ============================================================
+// 1. STATE MANAGEMENT
+// ============================================================
+
 const State = {
   data: {
     xp: 0,
@@ -1018,11 +1048,11 @@ function renderExerciseQuestion(q) {
 
   let html = `<div class="exercise-card">`;
   html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-    <span class="tag tag-blue">${APP_DATA.tenses.find(t => t.id === q.tenseId)?.nameFR || q.tenseId}</span>
-    <span style="font-size:0.8rem;color:var(--text-light)">Type : ${q.type === 'qcm' ? 'QCM' : q.type === 'fill' ? 'Compléter' : q.type === 'transform' ? 'Transformer' : q.type === 'correction' ? 'Corriger' : 'Traduire'}</span>
+    <span class="tag tag-blue">${escapeHtml(APP_DATA.tenses.find(t => t.id === q.tenseId)?.nameFR || q.tenseId)}</span>
+    <span style="font-size:0.8rem;color:var(--text-light)">Type : ${escapeHtml(q.type === 'qcm' ? 'QCM' : q.type === 'fill' ? 'Compléter' : q.type === 'transform' ? 'Transformer' : q.type === 'correction' ? 'Corriger' : 'Traduire')}</span>
   </div>`;
 
-  html += `<div class="exercise-question">${q.sentence.replace(/\n/g, '<br>')}</div>`;
+  html += `<div class="exercise-question">${escapeHtml(q.sentence).replace(/\n/g, '<br>')}</div>`;
 
   if (q.type === 'qcm') {
     const letters = ['A', 'B', 'C', 'D'];
@@ -1030,7 +1060,7 @@ function renderExerciseQuestion(q) {
     q.options.forEach((opt, i) => {
       html += `<button class="option-btn" onclick="selectOption(this, ${i})" data-index="${i}">
         <span class="option-letter">${letters[i]}</span>
-        <span>${opt}</span>
+        <span>${escapeHtml(opt)}</span>
       </button>`;
     });
     html += `</div>`;
@@ -1102,10 +1132,13 @@ function validateExercise() {
   // Show feedback
   const feedbackEl = document.getElementById('exerciseFeedback');
   feedbackEl.style.display = 'block';
+  const safeAnswer = escapeHtml(q.answer || q.options[q.correct]);
+  const safeUserAnswer = escapeHtml(userAnswer);
+  const safeExplanation = escapeHtml(q.explanation);
   feedbackEl.innerHTML = `<div class="feedback-box ${correct ? 'correct' : 'incorrect'}">
     <strong>${correct ? '✅ Correct !' : '❌ Incorrect'}</strong>
-    ${!correct ? `<br>Réponse attendue : <strong>${q.answer || q.options[q.correct]}</strong><br>Votre réponse : ${userAnswer}` : ''}
-    <br><br><em>${q.explanation}</em>
+    ${!correct ? `<br>Réponse attendue : <strong>${safeAnswer}</strong><br>Votre réponse : ${safeUserAnswer}` : ''}
+    <br><br><em>${safeExplanation}</em>
   </div>`;
 
   document.getElementById('exValidateBtn').style.display = 'none';
@@ -1128,10 +1161,12 @@ function skipExercise() {
 
   const feedbackEl = document.getElementById('exerciseFeedback');
   feedbackEl.style.display = 'block';
+  const safeAnswer = escapeHtml(q.answer || q.options[q.correct]);
+  const safeExplanation = escapeHtml(q.explanation);
   feedbackEl.innerHTML = `<div class="feedback-box info">
     <strong>⏭️ Question passée</strong><br>
-    Réponse : <strong>${q.answer || q.options[q.correct]}</strong><br>
-    <em>${q.explanation}</em>
+    Réponse : <strong>${safeAnswer}</strong><br>
+    <em>${safeExplanation}</em>
   </div>`;
 
   document.getElementById('exValidateBtn').style.display = 'none';
@@ -1266,9 +1301,9 @@ function renderTestQuestion() {
   const container = document.getElementById('testQuestionContainer');
   let html = `<div class="exercise-card">`;
   html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-    <span class="tag tag-blue">${APP_DATA.tenses.find(t => t.id === q.tenseId)?.nameFR || q.tenseId}</span>
+    <span class="tag tag-blue">${escapeHtml(APP_DATA.tenses.find(t => t.id === q.tenseId)?.nameFR || q.tenseId)}</span>
   </div>`;
-  html += `<div class="exercise-question">${q.sentence.replace(/\n/g, '<br>')}</div>`;
+  html += `<div class="exercise-question">${escapeHtml(q.sentence).replace(/\n/g, '<br>')}</div>`;
 
   if (q.type === 'qcm') {
     const letters = ['A', 'B', 'C', 'D'];
@@ -1276,7 +1311,7 @@ function renderTestQuestion() {
     q.options.forEach((opt, i) => {
       html += `<button class="option-btn" onclick="selectOption(this, ${i})" data-index="${i}">
         <span class="option-letter">${letters[i]}</span>
-        <span>${opt}</span>
+        <span>${escapeHtml(opt)}</span>
       </button>`;
     });
     html += `</div>`;
@@ -1327,10 +1362,12 @@ function validateTestAnswer() {
 
   const feedbackEl = document.getElementById('testFeedback');
   feedbackEl.style.display = 'block';
+  const safeAnswer = escapeHtml(q.answer || q.options[q.correct]);
+  const safeExplanation = escapeHtml(q.explanation);
   feedbackEl.innerHTML = `<div class="feedback-box ${correct ? 'correct' : 'incorrect'}">
     <strong>${correct ? '✅' : '❌'}</strong>
-    ${!correct ? `<br>Réponse : <strong>${q.answer || q.options[q.correct]}</strong>` : ''}
-    <br><em>${q.explanation}</em>
+    ${!correct ? `<br>Réponse : <strong>${safeAnswer}</strong>` : ''}
+    <br><em>${safeExplanation}</em>
   </div>`;
 
   document.getElementById('testValidateBtn').style.display = 'none';

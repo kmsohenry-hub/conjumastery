@@ -389,4 +389,3 @@ describe('APP_DATA Structure', () => {
     });
   });
 });
-});
