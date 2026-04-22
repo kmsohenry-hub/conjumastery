@@ -1,0 +1,43 @@
+```
+# Dependencies
+node_modules/
+
+# Test coverage
+coverage/
+.nyc_output/
+__tests__/
+
+# Build outputs
+dist/
+build/
+*.js
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# Editors
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Babel and Jest cache
+.cache/
+.jest/
+```

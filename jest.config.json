@@ -1,0 +1,10 @@
+{
+  "testEnvironment": "jsdom",
+  "setupFilesAfterEnv": ["./jest.setup.js"],
+  "moduleFileExtensions": ["js"],
+  "transform": {
+    "^.+\\.js$": "babel-jest"
+  },
+  "testMatch": ["**/__tests__/**/*.js", "**/*.test.js"],
+  "verbose": true
+}
