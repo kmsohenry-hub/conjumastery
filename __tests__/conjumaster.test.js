@@ -3,52 +3,96 @@
  * Testent les fonctionnalités principales de l'application
  */
 
-// Configuration pour exposer les variables globales au contexte de test
-let State;
-let ExerciseEngine;
-let APP_DATA;
+const fs = require('fs');
+const path = require('path');
 
-// Mock des fonctions globales avant d'importer les fichiers
-beforeAll(() => {
-  global.showToast = jest.fn();
-  global.launchConfetti = jest.fn();
-  global.updateUI = jest.fn();
+// Helper for Mock elements
+const createMockElement = () => ({
+  style: {},
+  classList: { add: jest.fn(), remove: jest.fn(), toggle: jest.fn() },
+  appendChild: jest.fn(),
+  querySelector: jest.fn(() => null),
+  querySelectorAll: jest.fn(() => []),
+  setAttribute: jest.fn(),
+  removeAttribute: jest.fn(),
+  click: jest.fn(),
+  innerHTML: '',
+  textContent: ''
 });
 
-// Import des fichiers source (dans l'ordre : data.js puis app.js)
-// Ces fichiers définissent des variables globales
-const dataModule = require('../data.js');
-const appModule = require('../app.js');
+// Mock DOM & globals
+global.window = global;
+global.document = {
+  addEventListener: jest.fn(),
+  createElement: jest.fn(createMockElement),
+  getElementById: jest.fn((id) => createMockElement()),
+  documentElement: { setAttribute: jest.fn() },
+  DOMContentLoaded: 'DOMContentLoaded'
+};
+global.localStorage = {
+  store: {},
+  clear() { this.store = {}; },
+  getItem(key) { return this.store[key] || null; },
+  setItem(key, value) { this.store[key] = String(value); },
+  removeItem(key) { delete this.store[key]; }
+};
+global.Notification = {
+  permission: 'granted',
+  requestPermission: jest.fn().mockResolvedValue('granted')
+};
 
-// Récupérer les objets depuis le scope global ou depuis window
-beforeEach(() => {
-  // Dans JSDOM, les variables déclarées avec 'const' au niveau global sont attachées à window
-  State = window.State || global.State;
-  ExerciseEngine = window.ExerciseEngine || global.ExerciseEngine;
-  APP_DATA = window.APP_DATA || global.APP_DATA;
+// Global mocks
+global.showToast = jest.fn();
+global.launchConfetti = jest.fn();
+global.updateUI = jest.fn();
+
+// Load scripts
+const loadScript = (filename) => {
+  let content = fs.readFileSync(path.resolve(__dirname, '..', filename), 'utf8');
+
+  // Replace const with global assignments
+  content = content.replace(/const\s+APP_DATA\s*=/, 'global.APP_DATA =');
+  content = content.replace(/const\s+State\s*=/, 'global.State =');
+  content = content.replace(/const\s+ExerciseEngine\s*=/, 'global.ExerciseEngine =');
+
+  // Neutralize functions that use the DOM
+  content = content.replace(/function\s+showToast/, 'function _original_showToast');
+  content = content.replace(/function\s+updateUI/, 'function _original_updateUI');
+  content = content.replace(/function\s+launchConfetti/, 'function _original_launchConfetti');
   
+  eval(content);
+};
+
+loadScript('data.js');
+loadScript('app.js');
+
+const { State, ExerciseEngine, APP_DATA } = global;
+
+beforeEach(() => {
   // Réinitialiser l'état avant chaque test
-  if (State && State.data) {
-    State.data = {
-      xp: 0,
-      level: 1,
-      totalExercises: 0,
-      correctAnswers: 0,
-      incorrectAnswers: 0,
-      bestStreak: 0,
-      currentStreak: 0,
-      daysStreak: 0,
-      lastActiveDate: null,
-      completedLessons: [],
-      tenseStats: {},
-      errorLog: [],
-      activityLog: [],
-      favorites: [],
-      spacedRepetition: {},
-      settings: { theme: 'light' }
-    };
-  }
+  State.data = {
+    xp: 0,
+    level: 1,
+    totalExercises: 0,
+    correctAnswers: 0,
+    incorrectAnswers: 0,
+    bestStreak: 0,
+    currentStreak: 0,
+    daysStreak: 0,
+    lastActiveDate: null,
+    completedLessons: [],
+    tenseStats: {},
+    errorLog: [],
+    activityLog: [],
+    favorites: [],
+    spacedRepetition: {},
+    settings: { theme: 'light' }
+  };
   localStorage.clear();
+  // Clear mocks
+  global.showToast.mockClear();
+  global.launchConfetti.mockClear();
+  global.updateUI.mockClear();
 });
 
 describe('State Management', () => {
