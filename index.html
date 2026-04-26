@@ -58,7 +58,7 @@
       <span class="nav-icon">⭐</span> Favoris
     </a>
 
-    <div class="nav-section-title">Paramètres</div>
+    <div class="nav-section-title">Plus</div>
     <a class="nav-item" data-page="stats" onclick="navigateTo('stats')">
       <span class="nav-icon">📈</span> Statistiques
     </a>
@@ -66,375 +66,210 @@
       <span class="nav-icon">⚙️</span> Paramètres
     </a>
   </nav>
+
   <div class="sidebar-footer">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span>Niveau <span id="sidebarLevel">1</span></span>
-      <span id="sidebarXP">0 / 100 XP</span>
-    </div>
-    <div class="xp-bar-sidebar">
-      <div class="xp-bar-fill" id="sidebarXPBar" style="width:0%"></div>
-    </div>
-    <div style="text-align:center; margin-top:16px; font-size:0.75rem; color:rgba(255,255,255,0.5);">
-      Créé avec ❤️ par <strong>Kouakam Henry</strong>
+    <div class="user-level">
+      <div class="level-badge">Niveau <span id="sidebarLevel">1</span></div>
+      <div class="xp-bar"><div class="xp-fill" id="sidebarXPBar" style="width:0%"></div></div>
+      <div class="xp-text"><span id="sidebarXP">0 / 100 XP</span></div>
     </div>
   </div>
 </aside>
 
 <!-- MAIN CONTENT -->
 <div class="main-content">
-  <header class="app-header">
-    <div class="header-left">
-      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-      <h1 class="header-title" id="pageTitle">Tableau de bord</h1>
-    </div>
-    <div class="header-right">
-      <div class="streak-display">🔥 <span id="streakCount">0</span> jour<span id="streakPlural">s</span></div>
-      <div class="header-stat">⭐ <span id="headerXP">0</span> XP</div>
-      <div class="header-stat">🏆 <span id="headerLevel">1</span></div>
-      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+  <!-- HEADER -->
+  <header class="header">
+    <button class="icon-btn menu-btn" id="menuBtn" onclick="toggleSidebar()">☰</button>
+    <h1 class="page-title" id="pageTitle">Tableau de bord</h1>
+    <div class="header-actions">
+      <div class="streak-container">
+        <span class="streak-icon">🔥</span>
+        <span class="streak-count" id="streakCount">0</span>
+        <span class="streak-text" id="streakPlural"> jour</span>
+      </div>
+      <div class="xp-display">
+        <span class="xp-label">XP:</span>
+        <span class="xp-value" id="headerXP">0</span>
+      </div>
+      <div class="level-display">
+        <span class="level-badge">Niv. <span id="headerLevel">1</span></span>
+      </div>
+      <button class="icon-btn theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
     </div>
   </header>
 
-  <!-- ==================== DASHBOARD ==================== -->
-  <div class="page active" id="page-dashboard">
-    <div class="section-title">Bienvenue sur ConjuMaster 🇬🇧</div>
-    <div class="section-subtitle">Maîtrisez la conjugaison anglaise, temps par temps.</div>
-
-    <div class="grid grid-4" style="margin-bottom:28px">
-      <div class="card stat-card">
-        <div class="stat-value" id="dashXP">0</div>
-        <div class="stat-label">XP total</div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-value" id="dashLevel">1</div>
-        <div class="stat-label">Niveau</div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-value" id="dashExercises">0</div>
-        <div class="stat-label">Exercices faits</div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-value" id="dashAccuracy">0%</div>
-        <div class="stat-label">Précision</div>
-      </div>
-    </div>
-
-    <div class="grid grid-2" style="margin-bottom:28px">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">📖 Reprendre l'apprentissage</div>
+  <!-- PAGES -->
+  <main class="content">
+    <!-- DASHBOARD -->
+    <section id="page-dashboard" class="page active">
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-value" id="dashXP">0</div>
+          <div class="stat-label">XP totales</div>
         </div>
-        <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:16px">Continuez là où vous vous êtes arrêté :</p>
-        <div id="dashNextLesson"></div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">🔄 Révisions du jour</div>
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-value" id="dashLevel">1</div>
+          <div class="stat-label">Niveau</div>
         </div>
-        <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:16px">Points à réviser basés sur la répétition espacée :</p>
-        <div id="dashRevisionQueue"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">📊 Performance par temps verbal</div>
-      </div>
-      <div class="bar-chart" id="dashChart"></div>
-    </div>
-  </div>
-
-  <!-- ==================== LESSONS ==================== -->
-  <div class="page" id="page-lessons">
-    <div class="section-title">📚 Parcours d'apprentissage</div>
-    <div class="section-subtitle">Progressez module par module, du débutant à l'avancé.</div>
-
-    <div class="tabs" id="lessonTabs"></div>
-    <div id="lessonContent"></div>
-  </div>
-
-  <!-- ==================== EXERCISES ==================== -->
-  <div class="page" id="page-exercises">
-    <div class="section-title">🎮 Exercices interactifs</div>
-    <div class="section-subtitle">Pratiquez avec des exercices générés dynamiquement.</div>
-
-    <div id="exerciseModeSelector">
-      <div class="mode-cards">
-        <div class="mode-card" onclick="startExercise('qcm')">
-          <div class="mode-icon">🅰️</div>
-          <h3>QCM intelligent</h3>
-          <p>Choisissez la bonne forme verbale parmi 4 options</p>
+        <div class="stat-card">
+          <div class="stat-icon">✏️</div>
+          <div class="stat-value" id="dashExercises">0</div>
+          <div class="stat-label">Exercices faits</div>
         </div>
-        <div class="mode-card" onclick="startExercise('fill')">
-          <div class="mode-icon">✏️</div>
-          <h3>Phrases à compléter</h3>
-          <p>Écrivez la forme correcte du verbe</p>
-        </div>
-        <div class="mode-card" onclick="startExercise('transform')">
-          <div class="mode-icon">🔄</div>
-          <h3>Transformation</h3>
-          <p>Affirmatif → Négatif → Interrogatif</p>
-        </div>
-        <div class="mode-card" onclick="startExercise('correction')">
-          <div class="mode-icon">🔍</div>
-          <h3>Correction d'erreurs</h3>
-          <p>Trouvez et corrigez l'erreur dans la phrase</p>
-        </div>
-        <div class="mode-card" onclick="startExercise('translation')">
-          <div class="mode-icon">🌍</div>
-          <h3>Traduction FR → EN</h3>
-          <p>Traduisez des phrases en conjuguant correctement</p>
-        </div>
-        <div class="mode-card" onclick="startExercise('mixed')">
-          <div class="mode-icon">🎲</div>
-          <h3>Mode mixte</h3>
-          <p>Tous les types d'exercices mélangés</p>
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-value" id="dashAccuracy">0%</div>
+          <div class="stat-label">Précision</div>
         </div>
       </div>
-    </div>
 
-    <div id="exerciseArea" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        <div>
-          <span class="level-badge level-beginner" id="exDifficulty">Débutant</span>
-          <span style="margin-left:12px;font-size:0.85rem;color:var(--text-light)">Question <span id="exCurrent">1</span> / <span id="exTotal">10</span></span>
+      <div class="card" style="margin-top:24px">
+        <h2>📈 Vos performances par temps verbal</h2>
+        <div id="dashChart" class="chart-container"></div>
+      </div>
+
+      <div class="dashboard-actions">
+        <button class="btn btn-primary" onclick="navigateTo('exercises')">🎮 Commencer un exercice</button>
+        <button class="btn btn-secondary" onclick="navigateTo('revision')">🔄 Réviser mes erreurs</button>
+      </div>
+    </section>
+
+    <!-- LESSONS -->
+    <section id="page-lessons" class="page">
+      <div class="tabs" id="lessonTabs"></div>
+      <div id="lessonContent" class="lessons-grid"></div>
+    </section>
+
+    <!-- EXERCISES -->
+    <section id="page-exercises" class="page">
+      <div id="exerciseSetup" class="card">
+        <h2>🎮 Configuration de l'exercice</h2>
+        <div class="form-group">
+          <label>Temps verbaux à pratiquer :</label>
+          <div id="tenseSelection" class="checkbox-grid"></div>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="exitExercise()">✕ Quitter</button>
+        <button class="btn btn-primary" onclick="startExerciseFromSetup()">Commencer</button>
       </div>
-      <div class="progress-bar" style="margin-bottom:24px">
-        <div class="progress-fill" id="exProgressBar" style="width:0%"></div>
+      <div id="exerciseContainer" style="display:none"></div>
+    </section>
+
+    <!-- TEST MODE -->
+    <section id="page-test" class="page">
+      <div id="testSetup" class="card">
+        <h2>🧪 Mode Test - Évaluez vos connaissances</h2>
+        <p>Sélectionnez les temps verbaux à inclure dans le test :</p>
+        <div id="testTenseSelection" class="checkbox-grid"></div>
+        <button class="btn btn-primary" onclick="startTest()">Démarrer le test</button>
       </div>
-      <div id="exerciseQuestionContainer"></div>
-      <div id="exerciseFeedback" style="display:none"></div>
-      <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end">
-        <button class="btn btn-outline" id="exSkipBtn" onclick="skipExercise()">Passer ⏭️</button>
-        <button class="btn btn-primary" id="exValidateBtn" onclick="validateExercise()">Valider ✓</button>
-        <button class="btn btn-primary" id="exNextBtn" onclick="nextExercise()" style="display:none">Suivant →</button>
+      <div id="testContainer" style="display:none"></div>
+    </section>
+
+    <!-- TENSES -->
+    <section id="page-tenses" class="page">
+      <div class="tabs" id="tenseCategoryTabs"></div>
+      <div id="tensesGrid" class="tenses-grid"></div>
+    </section>
+
+    <!-- VERBS -->
+    <section id="page-verbs" class="page">
+      <div class="search-box">
+        <input type="text" id="verbSearch" placeholder="Rechercher un verbe..." oninput="filterVerbs()">
       </div>
-    </div>
-  </div>
+      <div id="verbsGrid" class="verbs-grid"></div>
+    </section>
 
-  <!-- ==================== TEST MODE ==================== -->
-  <div class="page" id="page-test">
-    <div class="section-title">🧪 Mode Test</div>
-    <div class="section-subtitle">Évaluez votre niveau avec un test complet de 20 questions.</div>
+    <!-- COMPARISON -->
+    <section id="page-comparison" class="page">
+      <h2>📊 Comparaison des temps verbaux</h2>
+      <div id="comparisonContent"></div>
+    </section>
 
-    <div id="testSetup">
-      <div class="card" style="max-width:600px;margin:0 auto">
-        <h3 style="margin-bottom:16px">Configuration du test</h3>
-        <div class="input-group">
-          <label>Temps verbaux à inclure</label>
-          <div style="display:flex;flex-wrap:wrap;gap:8px" id="testTenseCheckboxes"></div>
-        </div>
-        <div class="input-group">
-          <label>Difficulté</label>
-          <select class="select" id="testDifficulty">
-            <option value="beginner">Débutant</option>
-            <option value="intermediate" selected>Intermédiaire</option>
-            <option value="advanced">Avancé</option>
-          </select>
-        </div>
-        <button class="btn btn-primary btn-lg btn-block" onclick="startTest()" style="margin-top:12px">🚀 Commencer le test</button>
+    <!-- REVISION -->
+    <section id="page-revision" class="page">
+      <h2>🔄 Révisions (Répétition espacée)</h2>
+      <div id="revisionQueue"></div>
+      <button class="btn btn-primary" onclick="startRevisionSession()">Commencer une session</button>
+    </section>
+
+    <!-- WEAK POINTS -->
+    <section id="page-weakpoints" class="page">
+      <h2>🎯 Vos points faibles</h2>
+      <div id="weakPointsList"></div>
+    </section>
+
+    <!-- SEARCH -->
+    <section id="page-search" class="page">
+      <div class="search-box">
+        <input type="text" id="globalSearch" placeholder="Rechercher dans tout le contenu..." oninput="performGlobalSearch()">
       </div>
-    </div>
+      <div id="searchResults"></div>
+    </section>
 
-    <div id="testArea" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        <div>
-          <span style="font-weight:700">Test en cours</span>
-          <span style="margin-left:12px;font-size:0.85rem;color:var(--text-light)">Question <span id="testCurrent">1</span> / <span id="testTotal">20</span></span>
-        </div>
-        <div style="display:flex;gap:12px;align-items:center">
-          <span style="font-size:0.85rem">⏱️ <span id="testTimer">00:00</span></span>
-          <span style="font-size:0.85rem">✅ <span id="testScore">0</span></span>
-        </div>
+    <!-- FAVORITES -->
+    <section id="page-favorites" class="page">
+      <h2>⭐ Mes favoris</h2>
+      <div id="favoritesList"></div>
+    </section>
+
+    <!-- STATS -->
+    <section id="page-stats" class="page">
+      <h2>📈 Statistiques détaillées</h2>
+      <div id="detailedStats"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="page-settings" class="page">
+      <h2>⚙️ Paramètres</h2>
+      <div class="settings-group">
+        <h3>Données</h3>
+        <button class="btn btn-secondary" id="exportBtn">📤 Exporter mes données</button>
+        <label class="btn btn-secondary">
+          📥 Importer des données
+          <input type="file" id="importInput" accept=".json" style="display:none">
+        </label>
+        <button class="btn btn-danger" id="resetBtn">🗑️ Réinitialiser toute la progression</button>
       </div>
-      <div class="progress-bar" style="margin-bottom:24px">
-        <div class="progress-fill" id="testProgressBar" style="width:0%"></div>
-      </div>
-      <div id="testQuestionContainer"></div>
-      <div id="testFeedback" style="display:none"></div>
-      <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end">
-        <button class="btn btn-primary" id="testValidateBtn" onclick="validateTestAnswer()">Valider ✓</button>
-        <button class="btn btn-primary" id="testNextBtn" onclick="nextTestQuestion()" style="display:none">Suivant →</button>
-      </div>
-    </div>
+    </section>
+  </main>
+</div>
 
-    <div id="testResults" style="display:none"></div>
-  </div>
-
-  <!-- ==================== TENSES REFERENCE ==================== -->
-  <div class="page" id="page-tenses">
-    <div class="section-title">⏱️ Temps verbaux anglais</div>
-    <div class="section-subtitle">Référence complète avec explications, exemples et nuances d'usage.</div>
-
-    <div class="tabs" id="tenseCategoryTabs"></div>
-    <div id="tenseContent"></div>
-  </div>
-
-  <!-- ==================== VERBS DICTIONARY ==================== -->
-  <div class="page" id="page-verbs">
-    <div class="section-title">📘 Dictionnaire des verbes irréguliers</div>
-    <div class="section-subtitle">Plus de 200 verbes irréguliers avec conjugaison complète.</div>
-
-    <div class="verb-search-container">
-      <span class="search-icon">🔍</span>
-      <input class="input" type="text" id="verbSearch" placeholder="Rechercher un verbe (ex: go, take, understand...)" oninput="filterVerbs()">
-    </div>
-    <div id="verbsList"></div>
-  </div>
-
-  <!-- ==================== COMPARISON ==================== -->
-  <div class="page" id="page-comparison">
-    <div class="section-title">📊 Tableau comparatif des temps</div>
-    <div class="section-subtitle">Comparez les temps verbaux côte à côte pour mieux les différencier.</div>
-
-    <div class="tabs" id="comparisonTabs"></div>
-    <div id="comparisonContent"></div>
-  </div>
-
-  <!-- ==================== REVISION ==================== -->
-  <div class="page" id="page-revision">
-    <div class="section-title">🔄 Révisions — Répétition espacée</div>
-    <div class="section-subtitle">Révisez les points qui en ont le plus besoin, au bon moment.</div>
-
-    <div id="revisionContent"></div>
-  </div>
-
-  <!-- ==================== WEAKPOINTS ==================== -->
-  <div class="page" id="page-weakpoints">
-    <div class="section-title">🎯 Entraînement ciblé</div>
-    <div class="section-subtitle">Travaillez spécifiquement vos points faibles identifiés.</div>
-
-    <div id="weakpointsContent"></div>
-  </div>
-
-  <!-- ==================== SEARCH ==================== -->
-  <div class="page" id="page-search">
-    <div class="section-title">🔍 Recherche globale</div>
-    <div class="section-subtitle">Trouvez rapidement une règle, un temps ou un verbe.</div>
-
-    <div class="verb-search-container">
-      <span class="search-icon">🔍</span>
-      <input class="input" type="text" id="globalSearch" placeholder="Rechercher..." oninput="performGlobalSearch()">
-    </div>
-    <div class="search-results" id="searchResults"></div>
-  </div>
-
-  <!-- ==================== FAVORITES ==================== -->
-  <div class="page" id="page-favorites">
-    <div class="section-title">⭐ Mes favoris</div>
-    <div class="section-subtitle">Retrouvez ici toutes les leçons et verbes que vous avez marqués.</div>
-    <div id="favoritesContent"></div>
-  </div>
-
-  <!-- ==================== STATS ==================== -->
-  <div class="page" id="page-stats">
-    <div class="section-title">📈 Statistiques détaillées</div>
-    <div class="section-subtitle">Visualisez votre progression dans le temps.</div>
-
-    <div class="grid grid-4" style="margin-bottom:28px">
-      <div class="card stat-card">
-        <div class="stat-value" id="statTotal">0</div>
-        <div class="stat-label">Exercices totaux</div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-value" id="statCorrect">0</div>
-        <div class="stat-label">Bonnes réponses</div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-value" id="statIncorrect">0</div>
-        <div class="stat-label">Erreurs</div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-value" id="statStreak">0</div>
-        <div class="stat-label">Meilleure série</div>
-      </div>
-    </div>
-
-    <div class="grid grid-2">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">📊 Précision par temps verbal</div>
-        </div>
-        <div class="bar-chart" id="statsChart"></div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">📅 Activité récente</div>
-        </div>
-        <div id="activityLog"></div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:20px">
-      <div class="card-header">
-        <div class="card-title">⚠️ Erreurs fréquentes</div>
-      </div>
-      <div id="commonErrors"></div>
-    </div>
-  </div>
-
-  <!-- ==================== SETTINGS ==================== -->
-  <div class="page" id="page-settings">
-    <div class="section-title">⚙️ Paramètres</div>
-    <div class="section-subtitle">Personnalisez votre expérience d'apprentissage.</div>
-
-    <div class="card" style="max-width:600px;margin-bottom:20px">
-      <h3 style="margin-bottom:16px">🎨 Apparence</h3>
-      <div style="display:flex;gap:12px;margin-bottom:16px">
-        <button class="btn btn-outline" id="lightModeBtn" onclick="setTheme('light')">☀️ Clair</button>
-        <button class="btn btn-outline" id="darkModeBtn" onclick="setTheme('dark')">🌙 Sombre</button>
-      </div>
-    </div>
-
-    <div class="card" style="max-width:600px;margin-bottom:20px">
-      <h3 style="margin-bottom:16px">🔔 Notifications</h3>
-      <p style="font-size:0.9rem;color:var(--text-light);margin-bottom:12px">
-        Recevez des rappels lorsque des leçons de votre répétition espacée sont prêtes à être révisées (nécessite que l'application reste ouverte dans un onglet).
-      </p>
-      <button class="btn btn-outline btn-sm" id="notificationToggleBtn" onclick="NotificationManager.toggle()">
-        Activer les notifications
-      </button>
-    </div>
-
-    <div class="card" style="max-width:600px;margin-bottom:20px">
-      <h3 style="margin-bottom:16px">📊 Données</h3>
-      <button class="btn btn-outline btn-sm" onclick="exportData()" style="margin-right:8px">📤 Exporter mes données</button>
-      <button class="btn btn-outline btn-sm" onclick="importData()" style="margin-right:8px">📥 Importer des données</button>
-      <button class="btn btn-outline btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="resetProgress()">🗑️ Réinitialiser la progression</button>
-    </div>
-
-    <div class="card" style="max-width:600px">
-      <h3 style="margin-bottom:16px">ℹ️ À propos & Contact</h3>
-      <p style="font-size:0.9rem;color:var(--text-light);line-height:1.8;margin-bottom:16px">
-        <strong>ConjuMaster UK</strong> est une application éducative complète pour maîtriser la conjugaison anglaise.<br>
-        Conçu avec une approche cognitive basée sur la répétition espacée et le rappel actif.<br>
-        Anglais britannique (UK English) • 100% offline • Version 1.0
-      </p>
-      <div style="padding:16px;background:var(--bg);border-radius:var(--radius-sm);border-left:4px solid var(--primary);">
-        <h4 style="margin-bottom:8px;color:var(--text);display:flex;align-items:center;gap:8px"><span>👋</span> Propriété exclusive</h4>
-        <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px">
-          Cette application a été développée par mes soins. Si vous l'utilisez (amis, famille, collègues) et que vous avez des remarques, des idées d'amélioration ou si vous trouvez un bug, n'hésitez pas à m'envoyer un message !
-        </p>
-        <a href="mailto:kmsohenry@gmail.com?subject=Feedback%20ConjuMaster%20UK&body=Salut%20!%0A%0AVoici%20mon%20retour%20sur%20ton%20application%20:%0A" class="btn btn-primary btn-sm" style="text-decoration:none;">
-          ✉️ M'envoyer un email
-        </a>
-      </div>
-    </div>
+<!-- MODALS -->
+<div id="tenseModal" class="modal">
+  <div class="modal-content large">
+    <button class="modal-close" onclick="closeModalDirect()">×</button>
+    <div id="tenseModalContent"></div>
   </div>
 </div>
 
-<!-- TOAST CONTAINER -->
-<div class="toast-container" id="toastContainer"></div>
-
-<!-- MODAL -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal" id="modalContent" onclick="event.stopPropagation()"></div>
+<div id="lessonModal" class="modal">
+  <div class="modal-content large">
+    <button class="modal-close" onclick="closeModalDirect()">×</button>
+    <div id="lessonModalContent"></div>
+  </div>
 </div>
 
-<script src="data.js"></script>
-<script src="app.js"></script>
+<div id="passiveModal" class="modal">
+  <div class="modal-content large">
+    <button class="modal-close" onclick="closeModalDirect()">×</button>
+    <div id="passiveModalContent"></div>
+  </div>
+</div>
+
+<div id="reportedModal" class="modal">
+  <div class="modal-content large">
+    <button class="modal-close" onclick="closeModalDirect()">×</button>
+    <div id="reportedModalContent"></div>
+  </div>
+</div>
+
+<!-- CONFETTI CANVAS -->
+<canvas id="confettiCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999"></canvas>
+
+<!-- SCRIPTS -->
+<script type="module" src="./src/main.js"></script>
+
 </body>
 </html>
-

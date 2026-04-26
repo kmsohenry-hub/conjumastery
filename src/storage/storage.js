@@ -2,8 +2,6 @@
  * Module de gestion du stockage local et des données persistantes
  */
 
-import { State } from './state.js';
-
 export const Storage = {
   KEYS: {
     DATA: 'conjumaster_data',
