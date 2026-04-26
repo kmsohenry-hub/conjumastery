@@ -236,6 +236,7 @@ const ExerciseEngine = {
 
   getIngForm(verb) {
     if (verb.endsWith('ie')) return `${verb.slice(0, -2)}ying`;
+    if (verb.endsWith('ee')) return `${verb}ing`;
     if (verb.endsWith('e') && verb !== 'be') return `${verb.slice(0, -1)}ing`;
     return `${verb}ing`;
   },

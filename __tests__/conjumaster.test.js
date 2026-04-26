@@ -295,6 +295,8 @@ describe('ExerciseEngine - getConjugation', () => {
       expect(ExerciseEngine.getConjugation('study', 'future_continuous', 'They', false)).toBe('studying');
       expect(ExerciseEngine.getConjugation('make', 'present_continuous', 'I', false)).toBe('making');
       expect(ExerciseEngine.getConjugation('lie', 'present_continuous', 'He', true)).toBe('lying');
+      expect(ExerciseEngine.getConjugation('see', 'present_continuous', 'I', false)).toBe('seeing');
+      expect(ExerciseEngine.getConjugation('flee', 'present_continuous', 'They', false)).toBe('fleeing');
     });
   });
 
