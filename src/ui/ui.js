@@ -3,6 +3,7 @@
  */
 
 import { State } from '../core/state.js';
+import { APP_DATA, getTenseById } from '../data/data.js';
 import { formatNumber, formatRelativeDate, calculatePercentage } from '../utils/helpers.js';
 
 export const UI = {
@@ -139,7 +140,7 @@ export const UI = {
       const width = Math.max((total / maxTotal) * 100, 5);
       
       // Récupérer le nom du temps
-      const tenseInfo = this.getTenseInfo(tenseId);
+      const tenseInfo = getTenseById(tenseId) || { nameFR: tenseId };
       
       let barClass = 'bar-error';
       if (percentage >= 80) barClass = 'bar-success';
@@ -147,7 +148,7 @@ export const UI = {
 
       return `
         <div class="bar-item">
-          <div class="bar-label">${tenseInfo.name}</div>
+          <div class="bar-label">${tenseInfo.nameFR}</div>
           <div class="bar-container">
             <div class="bar-fill ${barClass}" style="width:${width}%" 
                  data-tooltip="${correct}/${total} (${percentage}%)"></div>
@@ -156,16 +157,6 @@ export const UI = {
         </div>
       `;
     }).join('');
-  },
-
-  /**
-   * Obtient les informations d'un temps verbal
-   * @param {string} tenseId - ID du temps
-   * @returns {object}
-   */
-  getTenseInfo(tenseId) {
-    // Sera implémenté avec les données
-    return { name: tenseId, category: 'general' };
   },
 
   /**
