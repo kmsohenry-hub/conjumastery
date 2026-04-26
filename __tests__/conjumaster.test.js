@@ -3,19 +3,23 @@
  * Testent les fonctionnalités principales de l'application
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Helper for Mock elements
 const createMockElement = () => ({
   style: {},
-  classList: { add: jest.fn(), remove: jest.fn(), toggle: jest.fn() },
-  appendChild: jest.fn(),
-  querySelector: jest.fn(() => null),
-  querySelectorAll: jest.fn(() => []),
-  setAttribute: jest.fn(),
-  removeAttribute: jest.fn(),
-  click: jest.fn(),
+  classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() },
+  appendChild: vi.fn(),
+  querySelector: vi.fn(() => null),
+  querySelectorAll: vi.fn(() => []),
+  setAttribute: vi.fn(),
+  removeAttribute: vi.fn(),
+  click: vi.fn(),
   innerHTML: '',
   textContent: ''
 });
@@ -23,10 +27,10 @@ const createMockElement = () => ({
 // Mock DOM & globals
 global.window = global;
 global.document = {
-  addEventListener: jest.fn(),
-  createElement: jest.fn(createMockElement),
-  getElementById: jest.fn((id) => createMockElement()),
-  documentElement: { setAttribute: jest.fn() },
+  addEventListener: vi.fn(),
+  createElement: vi.fn(createMockElement),
+  getElementById: vi.fn((id) => createMockElement()),
+  documentElement: { setAttribute: vi.fn() },
   DOMContentLoaded: 'DOMContentLoaded'
 };
 global.localStorage = {
@@ -38,13 +42,13 @@ global.localStorage = {
 };
 global.Notification = {
   permission: 'granted',
-  requestPermission: jest.fn().mockResolvedValue('granted')
+  requestPermission: vi.fn().mockResolvedValue('granted')
 };
 
 // Global mocks
-global.showToast = jest.fn();
-global.launchConfetti = jest.fn();
-global.updateUI = jest.fn();
+global.showToast = vi.fn();
+global.launchConfetti = vi.fn();
+global.updateUI = vi.fn();
 
 // Load scripts
 const loadScript = (filename) => {
