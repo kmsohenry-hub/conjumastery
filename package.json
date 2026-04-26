@@ -1,19 +1,40 @@
 {
-  "name": "workspace",
-  "version": "1.0.0",
-  "description": "Bienvenue sur le dépôt de **ConjuMaster UK**, une application web interactive et autonome pour apprendre et réviser la conjugaison de l'anglais britannique.",
-  "main": "app.js",
+  "name": "conjumaster-uk",
+  "version": "2.0.0",
+  "description": "Application web interactive pour apprendre et réviser la conjugaison de l'anglais britannique",
+  "type": "module",
   "scripts": {
-    "test": "jest"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write \"src/**/*.{js,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{js,css,json}\""
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "english",
+    "conjugation",
+    "learning",
+    "education",
+    "british-english"
+  ],
+  "author": "Kouakam Henry",
+  "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.2",
-    "jest": "^30.3.0",
-    "jest-environment-jsdom": "^30.3.0",
-    "jsdom": "^29.0.2"
+    "@vitest/coverage-v8": "^4.1.5",
+    "@vitest/ui": "^4.1.5",
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "jsdom": "^29.0.2",
+    "prettier": "^3.8.3",
+    "terser": "^5.46.2",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
   }
 }
