@@ -270,6 +270,8 @@ describe('ExerciseEngine - getConjugation', () => {
     test('devrait conjuguer les verbes réguliers', () => {
       expect(ExerciseEngine.getConjugation('work', 'past_simple', 'I', false)).toBe('worked');
       expect(ExerciseEngine.getConjugation('play', 'past_simple', 'He', true)).toBe('played');
+      expect(ExerciseEngine.getConjugation('live', 'past_simple', 'I', false)).toBe('lived');
+      expect(ExerciseEngine.getConjugation('study', 'past_simple', 'They', false)).toBe('studied');
     });
 
     test('devrait conjuguer les verbes irréguliers', () => {
@@ -291,6 +293,8 @@ describe('ExerciseEngine - getConjugation', () => {
       expect(ExerciseEngine.getConjugation('work', 'present_continuous', 'I', false)).toBe('working');
       expect(ExerciseEngine.getConjugation('play', 'past_continuous', 'He', true)).toBe('playing');
       expect(ExerciseEngine.getConjugation('study', 'future_continuous', 'They', false)).toBe('studying');
+      expect(ExerciseEngine.getConjugation('make', 'present_continuous', 'I', false)).toBe('making');
+      expect(ExerciseEngine.getConjugation('lie', 'present_continuous', 'He', true)).toBe('lying');
     });
   });
 

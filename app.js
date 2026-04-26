@@ -213,6 +213,33 @@ const ExerciseEngine = {
   score: 0,
   answered: false,
 
+  getIrregularForms(verb) {
+    const irreg = APP_DATA.irregularVerbs.find(v => v.base === verb);
+    return {
+      past: irreg ? irreg.past.split('/')[0] : this.getRegularPast(verb),
+      pp: irreg ? irreg.pp.split('/')[0] : this.getRegularPast(verb)
+    };
+  },
+
+  getRegularPast(verb) {
+    if (verb.endsWith('e')) return `${verb}d`;
+    if (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length - 2])) return `${verb.slice(0, -1)}ied`;
+    return `${verb}ed`;
+  },
+
+  getPresentSimpleForm(verb, is3rdSing) {
+    if (!is3rdSing) return verb;
+    if (verb.endsWith('s') || verb.endsWith('ch') || verb.endsWith('sh') || verb.endsWith('x') || verb.endsWith('o')) return `${verb}es`;
+    if (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length - 2])) return `${verb.slice(0, -1)}ies`;
+    return `${verb}s`;
+  },
+
+  getIngForm(verb) {
+    if (verb.endsWith('ie')) return `${verb.slice(0, -2)}ying`;
+    if (verb.endsWith('e') && verb !== 'be') return `${verb.slice(0, -1)}ing`;
+    return `${verb}ing`;
+  },
+
   generateQuestions(mode, tenseFilter, difficulty, count = 10) {
     const questions = [];
     const subjects = ['I', 'You', 'He', 'She', 'We', 'They', 'My friend', 'The teacher', 'The students', 'John', 'Sarah', 'The children', 'The dog', 'My parents'];
@@ -253,25 +280,22 @@ const ExerciseEngine = {
   },
 
   getConjugation(verb, tenseId, subject, is3rdSing) {
-    // Simple conjugation helper
-    const irreg = APP_DATA.irregularVerbs.find(v => v.base === verb);
-    const pp = irreg ? irreg.pp : verb + 'ed';
-    const past = irreg ? irreg.past : verb + 'ed';
+    const { pp, past } = this.getIrregularForms(verb);
 
     switch(tenseId) {
-      case 'present_simple': return is3rdSing ? (verb.endsWith('s') || verb.endsWith('ch') || verb.endsWith('sh') || verb.endsWith('x') || verb.endsWith('o') ? verb + 'es' : (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length-2]) ? verb.slice(0,-1) + 'ies' : verb + 's')) : verb;
-      case 'present_continuous': return verb + 'ing';
+      case 'present_simple': return this.getPresentSimpleForm(verb, is3rdSing);
+      case 'present_continuous': return this.getIngForm(verb);
       case 'present_perfect': return pp;
-      case 'present_perfect_continuous': return verb + 'ing';
+      case 'present_perfect_continuous': return this.getIngForm(verb);
       case 'past_simple': return past;
-      case 'past_continuous': return verb + 'ing';
+      case 'past_continuous': return this.getIngForm(verb);
       case 'past_perfect': return pp;
-      case 'past_perfect_continuous': return verb + 'ing';
+      case 'past_perfect_continuous': return this.getIngForm(verb);
       case 'future_will': return verb;
       case 'future_going_to': return verb;
-      case 'future_continuous': return verb + 'ing';
+      case 'future_continuous': return this.getIngForm(verb);
       case 'future_perfect': return pp;
-      case 'future_perfect_continuous': return verb + 'ing';
+      case 'future_perfect_continuous': return this.getIngForm(verb);
       default: return verb;
     }
   },
@@ -362,9 +386,9 @@ const ExerciseEngine = {
         allForms.add(v.pp.split('/')[0]);
       }
     });
-    allForms.add(verb + 'ed');
-    allForms.add(verb + 'ing');
-    allForms.add(verb + 's');
+    allForms.add(this.getRegularPast(verb));
+    allForms.add(this.getIngForm(verb));
+    allForms.add(this.getPresentSimpleForm(verb, true));
 
     for (const f of allForms) {
       if (f !== correctForm && !distractors.has(f)) distractors.add(f);
@@ -376,7 +400,7 @@ const ExerciseEngine = {
       distractors.add(verb); // missing -s
     }
     if (!is3rdSing && tense.id === 'present_simple') {
-      distractors.add(verb + 's'); // extra -s
+      distractors.add(this.getPresentSimpleForm(verb, true)); // extra -s
     }
 
     options = [correctAnswer];
@@ -384,7 +408,7 @@ const ExerciseEngine = {
       if (options.length >= 4) break;
       if (!options.includes(d)) options.push(d);
     }
-    const fillers = [verb + 'ed', verb + 'ing', verb + 's', verb];
+    const fillers = [this.getRegularPast(verb), this.getIngForm(verb), this.getPresentSimpleForm(verb, true), verb];
     let fi = 0;
     while (options.length < 4 && fi < fillers.length) {
       if (!options.includes(fillers[fi])) options.push(fillers[fi]);
@@ -426,19 +450,17 @@ return {
 
     if (tense.id === 'present_simple') {
       fullSentence = `${subj} ___ (${verb}) every morning.`;
-      answer = is3rdSing ? (verb.endsWith('s') || verb.endsWith('ch') || verb.endsWith('sh') || verb.endsWith('x') || verb.endsWith('o') ? verb + 'es' : (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length-2]) ? verb.slice(0,-1) + 'ies' : verb + 's')) : verb;
+      answer = this.getPresentSimpleForm(verb, is3rdSing);
     } else if (tense.id === 'present_continuous') {
       const contAux = subj === 'I' ? 'am' : (is3rdSing ? 'is' : 'are');
       fullSentence = `${subj} ___ (${verb}) at the moment.`;
-      answer = `${contAux} ${verb}ing`;
+      answer = `${contAux} ${this.getIngForm(verb)}`;
     } else if (tense.id === 'past_simple') {
-      const irreg = APP_DATA.irregularVerbs.find(v => v.base === verb);
-      const pastForm = irreg ? irreg.past.split('/')[0] : verb + 'ed';
+      const { past: pastForm } = this.getIrregularForms(verb);
       fullSentence = `${subj} ___ (${verb}) last week.`;
       answer = pastForm;
     } else if (tense.id === 'present_perfect') {
-      const irreg = APP_DATA.irregularVerbs.find(v => v.base === verb);
-      const ppForm = irreg ? irreg.pp.split('/')[0] : verb + 'ed';
+      const { pp: ppForm } = this.getIrregularForms(verb);
       const hasAux = is3rdSing ? 'has' : 'have';
       fullSentence = `${subj} ___ (${verb}) already.`;
       answer = `${hasAux} ${ppForm}`;
@@ -452,10 +474,9 @@ return {
     } else if (tense.id === 'past_continuous') {
       const contAux = is3rdSing ? 'was' : 'were';
       fullSentence = `${subj} ___ (${verb}) when I arrived.`;
-      answer = `${contAux} ${verb}ing`;
+      answer = `${contAux} ${this.getIngForm(verb)}`;
     } else {
-      const irreg = APP_DATA.irregularVerbs.find(v => v.base === verb);
-      const ppForm = irreg ? irreg.pp.split('/')[0] : verb + 'ed';
+      const { pp: ppForm } = this.getIrregularForms(verb);
       const hasAux = is3rdSing ? 'has' : 'have';
       fullSentence = `${subj} ___ (${verb}) recently.`;
       answer = `${hasAux} ${ppForm}`;
@@ -475,14 +496,13 @@ return {
     let affirmative, negative, question;
 
     if (tense.id === 'present_simple') {
-      const form = is3rdSing ? (verb.endsWith('s') || verb.endsWith('ch') || verb.endsWith('sh') || verb.endsWith('x') || verb.endsWith('o') ? verb + 'es' : (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length-2]) ? verb.slice(0,-1) + 'ies' : verb + 's')) : verb;
+      const form = this.getPresentSimpleForm(verb, is3rdSing);
       affirmative = `${subj} ${form} every day.`;
       negative = `${subj} ${is3rdSing ? "doesn't" : "don't"} ${verb} every day.`;
       const s = ['I', 'John', 'Sarah'].includes(subj) ? subj : subj.toLowerCase();
       question = `${is3rdSing ? 'Does' : 'Do'} ${s} ${verb} every day?`;
     } else if (tense.id === 'past_simple') {
-      const irreg = APP_DATA.irregularVerbs.find(v => v.base === verb);
-      const pastForm = irreg ? irreg.past.split('/')[0] : verb + 'ed';
+      const { past: pastForm } = this.getIrregularForms(verb);
       affirmative = `${subj} ${pastForm} yesterday.`;
       negative = `${subj} didn't ${verb} yesterday.`;
       const s = ['I', 'John', 'Sarah'].includes(subj) ? subj : subj.toLowerCase();
@@ -492,8 +512,9 @@ return {
       const s = ['I', 'John', 'Sarah'].includes(subj) ? subj : subj.toLowerCase();
       if (tense.id === 'present_continuous' || tense.id === 'past_continuous') {
         const aux = correctForm.split(' ')[0]; // am/is/are/was/were
-        negative = `${subj} ${aux} not ${verb}ing.`;
-        question = `${aux.charAt(0).toUpperCase() + aux.slice(1)} ${s} ${verb}ing?`;
+        const ingForm = this.getIngForm(verb);
+        negative = `${subj} ${aux} not ${ingForm}.`;
+        question = `${aux.charAt(0).toUpperCase() + aux.slice(1)} ${s} ${ingForm}?`;
       } else if (tense.id === 'present_perfect') {
         const aux = is3rdSing ? 'has' : 'have';
         const pp = this.getConjugation(verb, 'present_perfect', subj, is3rdSing);
@@ -531,7 +552,7 @@ return {
     let correctSentence, incorrectSentence, explanation;
 
     if (tense.id === 'present_simple') {
-      const form = is3rdSing ? (verb.endsWith('s') || verb.endsWith('ch') || verb.endsWith('sh') || verb.endsWith('x') || verb.endsWith('o') ? verb + 'es' : (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length-2]) ? verb.slice(0,-1) + 'ies' : verb + 's')) : verb;
+      const form = this.getPresentSimpleForm(verb, is3rdSing);
       if (is3rdSing) {
         correctSentence = `${subj} ${form} every day.`;
         incorrectSentence = `${subj} ${verb} every day.`;
@@ -543,7 +564,7 @@ return {
       }
     } else if (tense.id === 'past_simple') {
       const irreg = APP_DATA.irregularVerbs.find(v => v.base === verb);
-      const pastForm = irreg ? irreg.past.split('/')[0] : verb + 'ed';
+      const { past: pastForm } = this.getIrregularForms(verb);
       correctSentence = `${subj} ${pastForm} yesterday.`;
       incorrectSentence = irreg ? `${subj} ${verb}ed yesterday.` : `${subj} ${verb} yesterday.`;
       explanation = irreg ? `"${verb}" est irrégulier : ${verb} → ${pastForm}.` : `Il faut ajouter -ed pour le Past Simple : "${pastForm}".`;
@@ -575,14 +596,13 @@ return {
 
     let answer;
     if (chosen.tense === 'present_simple') {
-      const form = is3rdSing ? (verb.endsWith('s') || verb.endsWith('ch') || verb.endsWith('sh') || verb.endsWith('x') || verb.endsWith('o') ? verb + 'es' : (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length-2]) ? verb.slice(0,-1) + 'ies' : verb + 's')) : verb;
+      const form = this.getPresentSimpleForm(verb, is3rdSing);
       answer = `${subj} ${form} every day.`;
     } else if (chosen.tense === 'present_continuous') {
       const contAux = subj === 'I' ? 'am' : (is3rdSing ? 'is' : 'are');
-      answer = `${subj} ${contAux} ${verb}ing right now.`;
+      answer = `${subj} ${contAux} ${this.getIngForm(verb)} right now.`;
     } else if (chosen.tense === 'past_simple') {
-      const irreg = APP_DATA.irregularVerbs.find(v => v.base === verb);
-      const pastForm = irreg ? irreg.past.split('/')[0] : verb + 'ed';
+      const { past: pastForm } = this.getIrregularForms(verb);
       answer = `${subj} ${pastForm} yesterday.`;
     } else {
       answer = `${subj} will ${verb} tomorrow.`;
