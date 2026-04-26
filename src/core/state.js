@@ -2,9 +2,6 @@
  * Module de gestion des données et de l'état de l'application
  */
 
-import { Storage } from '../storage/storage.js';
-import { UI } from '../ui/ui.js';
-
 // ============================================================
 // UTILITAIRES DE SÉCURITÉ
 // ============================================================
@@ -59,9 +56,14 @@ export const State = {
    * Initialise l'état depuis le localStorage
    */
   init() {
-    const saved = Storage.load(Storage.KEYS.DATA, null);
+    const saved = localStorage.getItem('conjumaster_data');
     if (saved) {
-      this.data = { ...this.data, ...saved };
+      try {
+        const parsed = JSON.parse(saved);
+        this.data = { ...this.data, ...parsed };
+      } catch(e) { 
+        console.error('Failed to load data', e); 
+      }
     }
     this.checkStreak();
     this.save();
@@ -71,7 +73,11 @@ export const State = {
    * Sauvegarde l'état dans le localStorage
    */
   save() {
-    Storage.save(Storage.KEYS.DATA, this.data);
+    try {
+      localStorage.setItem('conjumaster_data', JSON.stringify(this.data));
+    } catch(e) { 
+      console.error('Failed to save data', e); 
+    }
   },
 
   /**
@@ -99,7 +105,7 @@ export const State = {
     const newLevel = Math.floor(this.data.xp / 100) + 1;
     if (newLevel > this.data.level) {
       this.data.level = newLevel;
-      UI.showToast(`🎉 Niveau ${newLevel} atteint !`, 'success');
+      showToast(`🎉 Niveau ${newLevel} atteint !`, 'success');
       launchConfetti();
     }
     this.data.lastActiveDate = new Date().toDateString();
@@ -108,7 +114,7 @@ export const State = {
       this.data.activityLog = this.data.activityLog.slice(-100);
     }
     this.save();
-    UI.updateAll();
+    updateUI();
   },
 
   /**
@@ -146,7 +152,7 @@ export const State = {
     if (!this.data.completedLessons.includes(lessonId)) {
       this.data.completedLessons.push(lessonId);
       this.addXP(50);
-      UI.showToast('✅ Leçon terminée ! +50 XP', 'success');
+      showToast('✅ Leçon terminée ! +50 XP', 'success');
       this.save();
     }
   },
@@ -160,13 +166,13 @@ export const State = {
     const index = this.data.favorites.findIndex(f => f.id === itemId && f.type === type);
     if (index >= 0) {
       this.data.favorites.splice(index, 1);
-      UI.showToast('Retiré des favoris', 'info');
+      showToast('Retiré des favoris', 'info');
     } else {
       this.data.favorites.push({ id: itemId, type, addedAt: new Date().toISOString() });
-      UI.showToast('Ajouté aux favoris ⭐', 'success');
+      showToast('Ajouté aux favoris ⭐', 'success');
     }
     this.save();
-    UI.updateAll();
+    updateUI();
   },
 
   /**
@@ -240,7 +246,7 @@ export const State = {
    */
   reset() {
     if (confirm('Êtes-vous sûr de vouloir réinitialiser toutes vos données ? Cette action est irréversible.')) {
-      Storage.remove(Storage.KEYS.DATA);
+      localStorage.removeItem('conjumaster_data');
       location.reload();
     }
   },
@@ -262,11 +268,11 @@ export const State = {
       const parsed = JSON.parse(jsonString);
       this.data = { ...this.data, ...parsed };
       this.save();
-      UI.showToast('Données importées avec succès !', 'success');
-      UI.updateAll();
+      showToast('Données importées avec succès !', 'success');
+      updateUI();
     } catch(e) {
       console.error('Import failed', e);
-      UI.showToast('Erreur lors de l\'import des données', 'error');
+      showToast('Erreur lors de l\'import des données', 'error');
     }
   }
 };
