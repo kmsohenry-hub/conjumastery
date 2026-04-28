@@ -29,7 +29,7 @@ function sanitizeInput(input) {
 // ============================================================
 
 const State = {
-  data: {
+  data: (window.StateModel?.createInitialState ? window.StateModel.createInitialState() : {
     xp: 0,
     level: 1,
     totalExercises: 0,
@@ -41,28 +41,26 @@ const State = {
     lastActiveDate: null,
     completedLessons: [],
     tenseStats: {},
+    exerciseTypeStats: {},
+    unlockedModes: ['qcm'],
     errorLog: [],
     activityLog: [],
     favorites: [],
     spacedRepetition: {},
     settings: { theme: 'light' }
-  },
+  }),
 
   init() {
-    const saved = localStorage.getItem('conjumaster_data');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        this.data = { ...this.data, ...parsed };
-      } catch(e) { console.error('Failed to load data'); }
-    }
+    this.data = window.AppStorage?.load ? window.AppStorage.load(this.data) : this.data;
+    this.updateUnlockedModes();
     this.checkStreak();
     this.save();
   },
 
   save() {
     try {
-      localStorage.setItem('conjumaster_data', JSON.stringify(this.data));
+      if (window.AppStorage?.save) window.AppStorage.save(this.data);
+      else localStorage.setItem('conjumaster_data', JSON.stringify(this.data));
     } catch(e) { console.error('Failed to save data'); }
   },
 
@@ -94,15 +92,20 @@ const State = {
     updateUI();
   },
 
-  recordAnswer(tenseId, correct) {
+  recordAnswer(tenseId, correct, questionType = null) {
     this.data.totalExercises++;
+    if (!this.data.exerciseTypeStats) this.data.exerciseTypeStats = {};
+    if (questionType && !this.data.exerciseTypeStats[questionType]) this.data.exerciseTypeStats[questionType] = { correct: 0, total: 0 };
+
     if (!this.data.tenseStats[tenseId]) {
       this.data.tenseStats[tenseId] = { correct: 0, total: 0 };
     }
     this.data.tenseStats[tenseId].total++;
+    if (questionType) this.data.exerciseTypeStats[questionType].total++;
     if (correct) {
       this.data.tenseStats[tenseId].correct++;
       this.data.correctAnswers++;
+      if (questionType) this.data.exerciseTypeStats[questionType].correct++;
       this.data.currentStreak++;
       if (this.data.currentStreak > this.data.bestStreak) {
         this.data.bestStreak = this.data.currentStreak;
@@ -126,8 +129,20 @@ const State = {
   completeLesson(lessonId) {
     if (!this.data.completedLessons.includes(lessonId)) {
       this.data.completedLessons.push(lessonId);
+      this.updateUnlockedModes();
       this.addXP(25);
     }
+  },
+
+  updateUnlockedModes() {
+    const completedCount = this.data.completedLessons.length;
+    const unlocked = ['qcm'];
+    if (completedCount >= 1) unlocked.push('fill');
+    if (completedCount >= 3) unlocked.push('translation');
+    if (completedCount >= 5) unlocked.push('transform');
+    if (completedCount >= 7) unlocked.push('correction');
+    this.data.unlockedModes = unlocked;
+    this.save();
   },
 
   addFavorite(item) {
@@ -189,10 +204,10 @@ const State = {
   },
 
   reset() {
-    this.data = {
+    this.data = window.StateModel?.createInitialState ? window.StateModel.createInitialState() : {
       xp: 0, level: 1, totalExercises: 0, correctAnswers: 0, incorrectAnswers: 0,
       bestStreak: 0, currentStreak: 0, daysStreak: 0, lastActiveDate: null,
-      completedLessons: [], tenseStats: {}, errorLog: [], activityLog: [],
+      completedLessons: [], tenseStats: {}, exerciseTypeStats: {}, unlockedModes: ['qcm'], errorLog: [], activityLog: [],
       favorites: [], spacedRepetition: {}, settings: { theme: 'light' }
     };
     this.save();
@@ -246,14 +261,23 @@ const ExerciseEngine = {
     const regularVerbs = ['work', 'play', 'study', 'cook', 'read', 'write', 'walk', 'talk', 'clean', 'watch', 'listen', 'help', 'ask', 'call', 'wait', 'start', 'finish', 'open', 'close', 'use'];
     const allVerbs = [...regularVerbs, ...APP_DATA.irregularVerbs.map(v => v.base)];
 
-    const tenses = tenseFilter && tenseFilter.length > 0 ? tenseFilter : APP_DATA.tenses.map(t => t.id);
+    const unlockedTenses = window.ExercisePedagogy?.getUnlockedTenseIds
+      ? window.ExercisePedagogy.getUnlockedTenseIds(State.data.completedLessons)
+      : APP_DATA.tenses.map(t => t.id);
+    const tenses = tenseFilter && tenseFilter.length > 0
+      ? tenseFilter
+      : (mode === 'mixed' ? unlockedTenses : APP_DATA.tenses.map(t => t.id));
 
     for (let i = 0; i < count; i++) {
       const tenseId = tenses[Math.floor(Math.random() * tenses.length)];
       const tense = APP_DATA.tenses.find(t => t.id === tenseId);
       if (!tense) continue;
 
-      const modeType = mode === 'mixed' ? ['qcm', 'fill', 'transform', 'correction', 'translation'][Math.floor(Math.random() * 5)] : mode;
+      const availableModes = (State.data.unlockedModes || ['qcm']).filter(m => m !== 'mixed');
+      const mixedPool = availableModes.length > 0 ? availableModes : ['qcm'];
+      const modeType = mode === 'mixed'
+        ? mixedPool[Math.floor(Math.random() * mixedPool.length)]
+        : mode;
       const question = this.generateSingleQuestion(modeType, tense, subjects, allVerbs, difficulty);
       if (question) {
         question.tenseId = tenseId;
@@ -828,9 +852,11 @@ function showModule(index, tabEl) {
     <div class="grid" style="gap:12px">
       ${mod.lessons.map((lesson, i) => {
         const isCompleted = completed.includes(lesson.id);
-        const isLocked = i > 0 && !completed.includes(mod.lessons[i-1].id) && !isCompleted;
+        const isLocked = window.ExercisePedagogy?.isLessonLocked
+          ? window.ExercisePedagogy.isLessonLocked(lesson.id, completed)
+          : (i > 0 && !completed.includes(mod.lessons[i - 1].id) && !isCompleted);
         const tense = lesson.tenseId ? APP_DATA.tenses.find(t => t.id === lesson.tenseId) : null;
-        return `<div class="lesson-card ${isLocked ? 'locked' : ''}" onclick="${isLocked ? '' : `openLesson('${lesson.id}', '${lesson.tenseId || ''}')`}">
+        return `<div class="lesson-card ${isLocked ? 'locked' : ''}" onclick="handleLessonClick('${lesson.id}', '${lesson.tenseId || ''}', ${isLocked})">
           <div class="lesson-icon" style="background:${isCompleted ? 'var(--success)20' : isLocked ? 'var(--text-light)10' : mod.color + '20'};color:${isCompleted ? 'var(--success)' : isLocked ? 'var(--text-light)' : mod.color}">
             ${isCompleted ? '✅' : isLocked ? '🔒' : mod.icon}
           </div>
@@ -846,6 +872,14 @@ function showModule(index, tabEl) {
         </div>`;
       }).join('')}
     </div>`;
+}
+
+function handleLessonClick(lessonId, tenseId, isLocked) {
+  if (isLocked) {
+    showToast(window.UiHelpers?.lessonLockedMessage?.() || 'Termine la leçon précédente pour débloquer celle-ci.', 'info');
+    return;
+  }
+  openLesson(lessonId, tenseId);
 }
 
 function openLesson(lessonId, tenseId) {
@@ -1036,6 +1070,11 @@ function resetExerciseUI() {
 }
 
 function startExercise(mode, tenseFilter, difficulty) {
+  if (mode !== 'mixed' && !(State.data.unlockedModes || ['qcm']).includes(mode)) {
+    showToast('Ce type d’exercice est verrouillé. Complète plus de leçons pour le débloquer.', 'info');
+    return;
+  }
+
   if (tenseFilter === undefined || tenseFilter === null) {
   tenseFilter = mode === 'mixed' ? [] : null;
 }
@@ -1135,28 +1174,36 @@ function validateExercise() {
     const input = document.getElementById('exerciseInput');
     if (!input || !input.value.trim()) return;
     userAnswer = input.value.trim();
-    correct = normalizeAnswer(userAnswer) === normalizeAnswer(q.answer);
+    const validation = window.AnswerValidator?.validate
+      ? window.AnswerValidator.validate(userAnswer, q.answer)
+      : { isCorrect: normalizeAnswer(userAnswer) === normalizeAnswer(q.answer), reason: 'exact', acceptedAnswer: q.answer, explanation: q.explanation };
+    correct = validation.isCorrect;
+    q.validationMeta = validation;
   }
 
   ExerciseEngine.answered = true;
   if (correct) {
     ExerciseEngine.score++;
     State.addXP(10);
-    State.recordAnswer(q.tenseId, true);
+    State.recordAnswer(q.tenseId, true, q.type);
     State.updateSpacedRepetition(q.tenseId, true);
   } else {
-    State.recordAnswer(q.tenseId, false);
+    State.recordAnswer(q.tenseId, false, q.type);
     State.updateSpacedRepetition(q.tenseId, false);
   }
 
   // Show feedback
   const feedbackEl = document.getElementById('exerciseFeedback');
   feedbackEl.style.display = 'block';
-  const safeAnswer = escapeHtml(q.answer || q.options[q.correct]);
+  const expectedAnswer = q.validationMeta?.acceptedAnswer || q.answer || q.options[q.correct];
+  const safeAnswer = escapeHtml(expectedAnswer);
   const safeUserAnswer = escapeHtml(userAnswer);
-  const safeExplanation = escapeHtml(q.explanation);
+  const safeExplanation = escapeHtml(q.validationMeta?.explanation || q.explanation);
+  const feedbackTitle = window.UiHelpers?.getFeedbackTitle
+    ? window.UiHelpers.getFeedbackTitle(q.validationMeta || { isCorrect: correct, reason: 'exact' })
+    : (correct ? '✅ Correct !' : '❌ Incorrect');
   feedbackEl.innerHTML = `<div class="feedback-box ${correct ? 'correct' : 'incorrect'}">
-    <strong>${correct ? '✅ Correct !' : '❌ Incorrect'}</strong>
+    <strong>${feedbackTitle}</strong>
     ${!correct ? `<br>Réponse attendue : <strong>${safeAnswer}</strong><br>Votre réponse : ${safeUserAnswer}` : ''}
     <br><br><em>${safeExplanation}</em>
   </div>`;
@@ -1169,6 +1216,7 @@ function validateExercise() {
 }
 
 function normalizeAnswer(str) {
+  if (window.AnswerValidator?.normalize) return window.AnswerValidator.normalize(str);
   return str.toLowerCase().replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
 }
 
@@ -1267,10 +1315,14 @@ function renderTestSetup() {
   document.getElementById('testArea').style.display = 'none';
   document.getElementById('testResults').style.display = 'none';
 
+  const unlockedTenseIds = window.ExercisePedagogy?.getUnlockedTenseIds
+    ? window.ExercisePedagogy.getUnlockedTenseIds(State.data.completedLessons)
+    : APP_DATA.tenses.map(t => t.id);
+
   const container = document.getElementById('testTenseCheckboxes');
   container.innerHTML = APP_DATA.tenses.map(t =>
-    `<label style="display:inline-flex;align-items:center;gap:4px;font-size:0.8rem;padding:4px 8px;background:var(--bg);border-radius:var(--radius-xs);cursor:pointer;margin:2px">
-      <input type="checkbox" value="${t.id}" checked style="accent-color:var(--primary)"> ${t.nameFR.split(' ')[0]}
+    `<label style="display:inline-flex;align-items:center;gap:4px;font-size:0.8rem;padding:4px 8px;background:var(--bg);border-radius:var(--radius-xs);cursor:${unlockedTenseIds.includes(t.id) ? 'pointer' : 'not-allowed'};margin:2px;opacity:${unlockedTenseIds.includes(t.id) ? '1' : '0.5'}">
+      <input type="checkbox" value="${t.id}" ${unlockedTenseIds.includes(t.id) ? 'checked' : 'disabled'} style="accent-color:var(--primary)"> ${t.nameFR.split(' ')[0]}
     </label>`
   ).join('');
 }
@@ -1367,7 +1419,11 @@ function validateTestAnswer() {
     const input = document.getElementById('testInput');
     if (!input || !input.value.trim()) return;
     userAnswer = input.value.trim();
-    correct = normalizeAnswer(userAnswer) === normalizeAnswer(q.answer);
+    const validation = window.AnswerValidator?.validate
+      ? window.AnswerValidator.validate(userAnswer, q.answer)
+      : { isCorrect: normalizeAnswer(userAnswer) === normalizeAnswer(q.answer), reason: 'exact', acceptedAnswer: q.answer, explanation: q.explanation };
+    correct = validation.isCorrect;
+    q.validationMeta = validation;
   }
 
   ExerciseEngine.answered = true;
@@ -1375,17 +1431,20 @@ function validateTestAnswer() {
   if (correct) {
     ExerciseEngine.score++;
     State.addXP(15);
-    State.recordAnswer(q.tenseId, true);
+    State.recordAnswer(q.tenseId, true, q.type);
   } else {
-    State.recordAnswer(q.tenseId, false);
+    State.recordAnswer(q.tenseId, false, q.type);
   }
 
   const feedbackEl = document.getElementById('testFeedback');
   feedbackEl.style.display = 'block';
-  const safeAnswer = escapeHtml(q.answer || q.options[q.correct]);
-  const safeExplanation = escapeHtml(q.explanation);
+  const safeAnswer = escapeHtml(q.validationMeta?.acceptedAnswer || q.answer || q.options[q.correct]);
+  const safeExplanation = escapeHtml(q.validationMeta?.explanation || q.explanation);
+  const feedbackTitle = window.UiHelpers?.getFeedbackTitle
+    ? window.UiHelpers.getFeedbackTitle(q.validationMeta || { isCorrect: correct, reason: 'exact' })
+    : (correct ? '✅' : '❌');
   feedbackEl.innerHTML = `<div class="feedback-box ${correct ? 'correct' : 'incorrect'}">
-    <strong>${correct ? '✅' : '❌'}</strong>
+    <strong>${feedbackTitle}</strong>
     ${!correct ? `<br>Réponse : <strong>${safeAnswer}</strong>` : ''}
     <br><em>${safeExplanation}</em>
   </div>`;
