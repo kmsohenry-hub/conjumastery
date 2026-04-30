@@ -1,7 +1,7 @@
 # ConjuMaster UK 🇬🇧
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-ISC-green.svg)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-stable-success)
 
 **Application web interactive pour apprendre et maîtriser la conjugaison de l'anglais britannique**
@@ -61,23 +61,33 @@
 
 ## 🚀 Démarrage rapide
 
-ConjuMaster UK est une application **100% front-end** qui ne nécessite **aucune installation de serveur ou de base de données**.
+ConjuMaster UK est une application **100% front-end** qui ne nécessite **aucun backend ni base de données**.
 
-### Option 1 : Utilisation directe (recommandé)
+### Option 1 : Utilisation directe (la plus simple)
 
 ```bash
 # 1. Clonez ou téléchargez ce dépôt
-git clone https://github.com/votre-utilisateur/conjumaster.git
-cd conjumaster
+git clone https://github.com/kmsohenry-hub/conjumastery.git
+cd conjumastery
 
 # 2. Ouvrez simplement le fichier dans votre navigateur
 # Double-cliquez sur index.html ou utilisez :
-open index.html  # macOS
-start index.html # Windows
-xdg-open index.html # Linux
+open index.html       # macOS
+start index.html      # Windows
+xdg-open index.html   # Linux
 ```
 
-### Option 2 : Serveur local (optionnel)
+### Option 2 : Serveur de développement Vite (recommandé pour développer)
+
+```bash
+# Installer les dépendances
+npm install
+
+# Lancer le serveur de développement
+npm run dev
+```
+
+### Option 3 : Serveur statique simple
 
 ```bash
 # Avec Python
@@ -99,34 +109,53 @@ Toutes vos données (statistiques, niveaux, leçons complétées) sont sauvegard
 ## 🛠️ Installation pour développeurs
 
 ### Prérequis
-- Node.js >= 16.x
-- npm >= 7.x
+- Node.js >= 18.x (recommandé)
+- npm >= 9.x
 
 ### Installation des dépendances
 
 ```bash
-# Installer toutes les dépendances de développement
 npm install
 ```
 
 ### Scripts disponibles
 
 ```bash
-# Lancer les tests unitaires
+# Serveur de développement (Vite)
+npm run dev
+
+# Build de production
+npm run build
+
+# Prévisualiser le build de production
+npm run preview
+
+# Lancer les tests unitaires (Vitest, exécution unique)
 npm test
 
-# Lancer les tests avec coverage (couverture de code)
-npm test -- --coverage
+# Lancer les tests en mode watch
+npm run test:watch
 
-# Lancer les tests en mode watch (re-run automatique)
-npm test -- --watch
+# Lancer les tests avec interface graphique
+npm run test:ui
+
+# Lancer les tests avec couverture de code
+npm run test:coverage
+
+# Lint
+npm run lint
+npm run lint:fix
+
+# Formatage Prettier
+npm run format
+npm run format:check
 ```
 
 ### Structure de développement
 
 ```
-conjumaster/
-├── __tests__/              # Tests unitaires
+conjumastery/
+├── __tests__/              # Tests unitaires (Vitest)
 │   └── conjumaster.test.js
 ├── node_modules/           # Dépendances (généré par npm install)
 ├── index.html              # Point d'entrée de l'application
@@ -134,8 +163,11 @@ conjumaster/
 ├── app.js                  # Logique métier et moteur de l'application
 ├── data.js                 # Base de données (exercices, verbes, leçons)
 ├── package.json            # Configuration du projet et dépendances
-├── jest.config.json        # Configuration de Jest
-├── babel.config.json       # Configuration Babel
+├── vite.config.js          # Configuration Vite
+├── vitest.setup.js         # Setup global des tests Vitest
+├── eslint.config.js        # Configuration ESLint
+├── .prettierrc             # Configuration Prettier
+├── .prettierignore         # Fichiers ignorés par Prettier
 └── README.md               # Ce fichier
 ```
 
@@ -170,11 +202,13 @@ Utilisateur → Interface (HTML/CSS)
 4. **UI Renderer** : Rendu dynamique des composants
 5. **Data Persistence** : Sauvegarde/chargement localStorage
 
+> 💡 Une réflexion de refactorisation est en cours. Voir `PROPOSITION_REFACTORISATION.md` à la racine du dépôt.
+
 ---
 
 ## ✅ Tests unitaires
 
-Le projet inclut une suite de tests complète avec **Jest** pour garantir la fiabilité du code.
+Le projet inclut une suite de tests avec **Vitest** pour garantir la fiabilité du code.
 
 ### Couverture des tests
 
@@ -189,39 +223,37 @@ Le projet inclut une suite de tests complète avec **Jest** pour garantir la fia
 ### Exécuter les tests
 
 ```bash
-# Tous les tests
+# Tous les tests (exécution unique)
 npm test
 
-# Avec détails verbose
-npm test -- --verbose
+# Mode watch (re-run automatique)
+npm run test:watch
 
-# Un fichier de test spécifique
-npm test -- conjumaster.test.js
+# Interface graphique Vitest
+npm run test:ui
+
+# Avec couverture de code
+npm run test:coverage
 ```
-
-### Statut actuel des tests
-
-> ⚠️ **Note** : Certains tests peuvent échouer si `APP_DATA` n'est pas correctement exporté dans l'environnement de test. Voir la section *Contribuer* pour plus de détails.
 
 ---
 
 ## 🔒 Sécurité
 
-### Analyse de sécurité (2024)
+### Analyse de sécurité
 
 ✅ **Aucune vulnérabilité critique détectée**
 
 #### Points forts
-- **0 vulnérabilité** dans les dépendances npm (`npm audit` clean)
 - **Pas de backend** : Toutes les opérations sont locales
 - **Sanitization** : Fonctions `escapeHtml()` et `sanitizeInput()` implémentées
 - **Pas de pratiques dangereuses** : Aucun `eval()`, `document.write()`, ou injection directe
+- **Stockage local uniquement** : pas de transmission réseau
 
 #### Bonnes pratiques implémentées
 - Validation des entrées utilisateur
 - Échappement du contenu HTML dynamique
 - Politique de sécurité CSP recommandée
-- Stockage local uniquement (pas de transmission réseau)
 
 #### Recommandation CSP
 
@@ -291,8 +323,8 @@ Les contributions sont les bienvenues ! Voici comment procéder :
 
 ### 1. Fork et clone
 ```bash
-git clone https://github.com/votre-utilisateur/conjumaster.git
-cd conjumaster
+git clone https://github.com/kmsohenry-hub/conjumastery.git
+cd conjumastery
 ```
 
 ### 2. Créer une branche
@@ -347,7 +379,7 @@ Créé avec passion pour faciliter l'apprentissage de l'anglais britannique.
 
 ## 📄 Licence
 
-Ce projet est distribué sous la licence **ISC** - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+Ce projet est distribué sous la licence **MIT** - voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
 ---
 
@@ -361,7 +393,7 @@ Ce projet est distribué sous la licence **ISC** - voir le fichier [LICENSE](LIC
 
 <div align="center">
 
-**ConjuMaster UK** v1.0.0 | Fait avec ❤️ pour l'apprentissage de l'anglais
+**ConjuMaster UK** v2.0.0 | Fait avec ❤️ pour l'apprentissage de l'anglais
 
 [⬆ Retour en haut](#conjumaster-uk-)
 
