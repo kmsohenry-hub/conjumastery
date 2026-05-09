@@ -14,11 +14,11 @@ export default [
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       'no-var': 'error',
-      'eqeqeq': ['error', 'always'],
-      'curly': ['error', 'all'],
-      'semi': ['error', 'always'],
-      'quotes': ['error', 'single', { avoidEscape: true }],
-      'indent': ['error', 2, { SwitchCase: 1 }],
+      eqeqeq: ['error', 'always'],
+      curly: ['error', 'all'],
+      semi: ['error', 'always'],
+      quotes: ['error', 'single', { avoidEscape: true }],
+      indent: ['error', 2, { SwitchCase: 1 }],
       'comma-dangle': ['error', 'always-multiline'],
       'no-trailing-spaces': 'error',
       'eol-last': 'error',
@@ -27,11 +27,14 @@ export default [
       'object-curly-spacing': ['error', 'always'],
       'array-bracket-spacing': ['error', 'never'],
       'space-in-parens': ['error', 'never'],
-      'space-before-function-paren': ['error', {
-        anonymous: 'always',
-        named: 'never',
-        asyncArrow: 'always'
-      }],
+      'space-before-function-paren': [
+        'error',
+        {
+          anonymous: 'always',
+          named: 'never',
+          asyncArrow: 'always',
+        },
+      ],
       'func-style': ['error', 'declaration'],
     },
     languageOptions: {
@@ -57,7 +60,7 @@ export default [
         XMLHttpRequest: 'readonly',
         Image: 'readonly',
         Audio: 'readonly',
-        
+
         // Test globals (Vitest)
         describe: 'readonly',
         it: 'readonly',
@@ -69,7 +72,7 @@ export default [
         afterAll: 'readonly',
         vi: 'readonly',
         vitest: 'readonly',
-        
+
         // App globals (will be loaded in browser)
         State: 'writable',
         Utils: 'writable',
@@ -93,11 +96,6 @@ export default [
   },
   eslintConfigPrettier,
   {
-    ignores: [
-      'node_modules/',
-      'dist/',
-      'coverage/',
-      '*.min.js',
-    ],
+    ignores: ['node_modules/', 'dist/', 'coverage/', '*.min.js'],
   },
 ];
