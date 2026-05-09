@@ -55,9 +55,14 @@ const loadScript = (filename) => {
   let content = fs.readFileSync(path.resolve(__dirname, '..', filename), 'utf8');
 
   // Replace const with global assignments
-  content = content.replace(/const\s+APP_DATA\s*=/, 'global.APP_DATA =');
-  content = content.replace(/const\s+State\s*=/, 'global.State =');
-  content = content.replace(/const\s+ExerciseEngine\s*=/, 'global.ExerciseEngine =');
+  content = content.replace(/const\s+APP_DATA\s*=/, 'var APP_DATA = global.APP_DATA =');
+  content = content.replace(/const\s+State\s*=/, 'var State = global.State =');
+  content = content.replace(/const\s+ExerciseEngine\s*=/, 'var ExerciseEngine = global.ExerciseEngine =');
+
+  // If loading app.js, make sure APP_DATA is available for the initialization code at the top
+  if (filename === 'app.js') {
+    content = 'var APP_DATA = global.APP_DATA; (function() { ' + content + ' })();';
+  }
 
   // Neutralize functions that use the DOM
   content = content.replace(/function\s+showToast/, 'function _original_showToast');

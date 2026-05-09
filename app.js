@@ -28,6 +28,17 @@ function sanitizeInput(input) {
 // 1. STATE MANAGEMENT
 // ============================================================
 
+// Index APP_DATA for O(1) lookups
+APP_DATA.tensesById = APP_DATA.tenses.reduce((acc, t) => {
+  acc[t.id] = t;
+  return acc;
+}, {});
+
+APP_DATA.verbsByBase = APP_DATA.irregularVerbs.reduce((acc, v) => {
+  acc[v.base] = v;
+  return acc;
+}, {});
+
 const State = {
   data: {
     xp: 0,
@@ -214,7 +225,7 @@ const ExerciseEngine = {
   answered: false,
 
   getIrregularForms(verb) {
-    const irreg = APP_DATA.irregularVerbs.find(v => v.base === verb);
+    const irreg = APP_DATA.verbsByBase[verb];
     return {
       past: irreg ? irreg.past.split('/')[0] : this.getRegularPast(verb),
       pp: irreg ? irreg.pp.split('/')[0] : this.getRegularPast(verb)
@@ -250,7 +261,7 @@ const ExerciseEngine = {
 
     for (let i = 0; i < count; i++) {
       const tenseId = tenses[Math.floor(Math.random() * tenses.length)];
-      const tense = APP_DATA.tenses.find(t => t.id === tenseId);
+      const tense = APP_DATA.tensesById[tenseId];
       if (!tense) continue;
 
       const modeType = mode === 'mixed' ? ['qcm', 'fill', 'transform', 'correction', 'translation'][Math.floor(Math.random() * 5)] : mode;
@@ -563,7 +574,7 @@ return {
         explanation = `Avec I/you/we/they, on utilise la base verbale sans -s.`;
       }
     } else if (tense.id === 'past_simple') {
-      const irreg = APP_DATA.irregularVerbs.find(v => v.base === verb);
+      const irreg = APP_DATA.verbsByBase[verb];
       const { past: pastForm } = this.getIrregularForms(verb);
       correctSentence = `${subj} ${pastForm} yesterday.`;
       incorrectSentence = irreg ? `${subj} ${verb}ed yesterday.` : `${subj} ${verb} yesterday.`;
@@ -763,7 +774,7 @@ function renderDashboard() {
   const queueEl = document.getElementById('dashRevisionQueue');
   if (queue.length > 0) {
     queueEl.innerHTML = queue.slice(0, 5).map(q => {
-      const tense = APP_DATA.tenses.find(t => t.id === q.tenseId);
+      const tense = APP_DATA.tensesById[q.tenseId];
       return `<div class="revision-item">
         <span class="ri-icon">📖</span>
         <div class="ri-info">
@@ -829,7 +840,7 @@ function showModule(index, tabEl) {
       ${mod.lessons.map((lesson, i) => {
         const isCompleted = completed.includes(lesson.id);
         const isLocked = i > 0 && !completed.includes(mod.lessons[i-1].id) && !isCompleted;
-        const tense = lesson.tenseId ? APP_DATA.tenses.find(t => t.id === lesson.tenseId) : null;
+        const tense = lesson.tenseId ? APP_DATA.tensesById[lesson.tenseId] : null;
         return `<div class="lesson-card ${isLocked ? 'locked' : ''}" onclick="${isLocked ? '' : `openLesson('${lesson.id}', '${lesson.tenseId || ''}')`}">
           <div class="lesson-icon" style="background:${isCompleted ? 'var(--success)20' : isLocked ? 'var(--text-light)10' : mod.color + '20'};color:${isCompleted ? 'var(--success)' : isLocked ? 'var(--text-light)' : mod.color}">
             ${isCompleted ? '✅' : isLocked ? '🔒' : mod.icon}
@@ -850,7 +861,7 @@ function showModule(index, tabEl) {
 
 function openLesson(lessonId, tenseId) {
   if (tenseId) {
-    const tense = APP_DATA.tenses.find(t => t.id === tenseId);
+    const tense = APP_DATA.tensesById[tenseId];
     if (tense) {
       openTenseModal(tense);
     }
@@ -1068,7 +1079,7 @@ function renderExerciseQuestion(q) {
 
   let html = `<div class="exercise-card">`;
   html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-    <span class="tag tag-blue">${escapeHtml(APP_DATA.tenses.find(t => t.id === q.tenseId)?.nameFR || q.tenseId)}</span>
+    <span class="tag tag-blue">${escapeHtml(APP_DATA.tensesById[q.tenseId]?.nameFR || q.tenseId)}</span>
     <span style="font-size:0.8rem;color:var(--text-light)">Type : ${escapeHtml(q.type === 'qcm' ? 'QCM' : q.type === 'fill' ? 'Compléter' : q.type === 'transform' ? 'Transformer' : q.type === 'correction' ? 'Corriger' : 'Traduire')}</span>
   </div>`;
 
@@ -1321,7 +1332,7 @@ function renderTestQuestion() {
   const container = document.getElementById('testQuestionContainer');
   let html = `<div class="exercise-card">`;
   html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-    <span class="tag tag-blue">${escapeHtml(APP_DATA.tenses.find(t => t.id === q.tenseId)?.nameFR || q.tenseId)}</span>
+    <span class="tag tag-blue">${escapeHtml(APP_DATA.tensesById[q.tenseId]?.nameFR || q.tenseId)}</span>
   </div>`;
   html += `<div class="exercise-question">${escapeHtml(q.sentence).replace(/\n/g, '<br>')}</div>`;
 
@@ -1438,7 +1449,7 @@ function finishTest() {
       ${ExerciseEngine.questions.map((q, i) => {
         return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:0.85rem">
           <span style="color:${q.answeredCorrectly ? 'var(--success)' : 'var(--danger)'}">${q.answeredCorrectly ? '✅' : '❌'}</span>
-          <strong>${APP_DATA.tenses.find(t => t.id === q.tenseId)?.nameFR || ''}</strong>
+          <strong>${APP_DATA.tensesById[q.tenseId]?.nameFR || ''}</strong>
           <span style="color:var(--text-light);margin-left:8px">${q.sentence.substring(0, 60)}...</span>
         </div>`;
       }).join('')}
@@ -1479,7 +1490,7 @@ function showTenseCategory(category, tabEl) {
 
   contentEl.innerHTML = `<div class="grid" style="gap:16px">
     ${tenses.map(t => `
-      <div class="lesson-card" onclick="openTenseModal(APP_DATA.tenses.find(x => x.id === '${t.id}'))">
+      <div class="lesson-card" onclick="openTenseModal(APP_DATA.tensesById['${t.id}'])">
         <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">${t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
         <div class="lesson-info">
           <div class="lesson-title">${t.nameFR}</div>
@@ -1603,7 +1614,7 @@ function showComparison(category, tabEl) {
     ${tenses.length >= 2 ? `
     <h3 style="margin:24px 0 12px">🔍 Comparaison détaillée</h3>
     ${tenses.slice(0, 2).map(t => `
-      <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="openTenseModal(APP_DATA.tenses.find(x => x.id === '${t.id}'))">
+      <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="openTenseModal(APP_DATA.tensesById['${t.id}'])">
         <h4>${t.nameFR}</h4>
         <p style="font-size:0.9rem;color:var(--text-light);margin-top:8px">${t.nuances || t.explanation.substring(0, 200)}</p>
       </div>
@@ -1635,7 +1646,7 @@ function renderRevision() {
       <button class="btn btn-primary" style="margin-top:12px" onclick="startRevisionSession()">🚀 Démarrer la session de révision</button>
     </div>
     ${queue.map(q => {
-      const tense = APP_DATA.tenses.find(t => t.id === q.tenseId);
+      const tense = APP_DATA.tensesById[q.tenseId];
       return `<div class="revision-item">
         <span class="ri-icon">📖</span>
         <div class="ri-info">
@@ -1679,7 +1690,7 @@ function renderWeakpoints() {
     <p style="color:var(--text-light);margin-bottom:20px">${weak.length} point${weak.length > 1 ? 's' : ''} faible${weak.length > 1 ? 's' : ''} détecté${weak.length > 1 ? 's' : ''}</p>
     <div class="grid" style="gap:12px">
       ${weak.map(w => {
-        const tense = APP_DATA.tenses.find(t => t.id === w.tenseId);
+        const tense = APP_DATA.tensesById[w.tenseId];
         const accuracy = Math.round(w.accuracy * 100);
         return `<div class="card" style="display:flex;align-items:center;gap:16px">
           <div style="text-align:center;min-width:80px">
@@ -1717,7 +1728,7 @@ function performGlobalSearch() {
   // Search tenses
   APP_DATA.tenses.forEach(t => {
     if (t.name.toLowerCase().includes(query) || t.nameFR.toLowerCase().includes(query) || t.explanation.toLowerCase().includes(query)) {
-      results.push({ type: 'temps', title: t.nameFR, desc: t.explanation.substring(0, 100), action: `openTenseModal(APP_DATA.tenses.find(x => x.id === '${t.id}'))` });
+      results.push({ type: 'temps', title: t.nameFR, desc: t.explanation.substring(0, 100), action: `openTenseModal(APP_DATA.tensesById['${t.id}'])` });
     }
   });
 
@@ -1772,7 +1783,7 @@ function renderFavorites() {
   container.innerHTML = favs.map(f => {
     if (f.startsWith('verb_')) {
       const verbName = f.replace('verb_', '');
-      const verb = APP_DATA.irregularVerbs.find(v => v.base === verbName);
+      const verb = APP_DATA.verbsByBase[verbName];
       if (verb) {
         return `<div class="verb-card" style="cursor:default">
           <span class="verb-base">${verb.base}</span> → <span style="color:var(--accent)">${verb.past}</span> → <span style="color:var(--secondary)">${verb.pp}</span>
@@ -1781,9 +1792,9 @@ function renderFavorites() {
         </div>`;
       }
     } else {
-      const tense = APP_DATA.tenses.find(t => t.id === f);
+      const tense = APP_DATA.tensesById[f];
       if (tense) {
-        return `<div class="lesson-card" onclick="openTenseModal(APP_DATA.tenses.find(x => x.id === '${f}'))">
+        return `<div class="lesson-card" onclick="openTenseModal(APP_DATA.tensesById['${f}'])">
           <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">📖</div>
           <div class="lesson-info">
             <div class="lesson-title">${tense.nameFR}</div>
@@ -1871,7 +1882,7 @@ function renderStats() {
     });
     const sorted = Object.entries(tenseErrors).sort((a, b) => b[1] - a[1]).slice(0, 8);
     errorsEl.innerHTML = sorted.map(([tenseId, count]) => {
-      const tense = APP_DATA.tenses.find(t => t.id === tenseId);
+      const tense = APP_DATA.tensesById[tenseId];
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
         <span style="font-size:0.9rem">${tense ? tense.nameFR : tenseId}</span>
         <span style="background:rgba(225,112,85,0.1);color:var(--danger);padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:700">${count} erreur${count > 1 ? 's' : ''}</span>
