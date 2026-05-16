@@ -224,12 +224,27 @@ const ExerciseEngine = {
   score: 0,
   answered: false,
 
-  getIrregularForms(verb) {
+  /**
+   * Renvoie toutes les variantes BrE/AmE du past et du past participle.
+   * Ex: learn -> { past: ['learnt','learned'], pp: ['learnt','learned'] }
+   * Pour les verbes réguliers, renvoie un tableau à un seul élément.
+   */
+  getAllIrregularForms(verb) {
     const irreg = APP_DATA.verbsByBase[verb];
-    return {
-      past: irreg ? irreg.past.split('/')[0] : this.getRegularPast(verb),
-      pp: irreg ? irreg.pp.split('/')[0] : this.getRegularPast(verb)
-    };
+    if (irreg) {
+      return {
+        past: irreg.past.split('/').map(s => s.trim()).filter(Boolean),
+        pp: irreg.pp.split('/').map(s => s.trim()).filter(Boolean)
+      };
+    }
+    const reg = this.getRegularPast(verb);
+    return { past: [reg], pp: [reg] };
+  },
+
+  // Conserve la signature historique : retourne UNE forme (la première / forme principale)
+  getIrregularForms(verb) {
+    const all = this.getAllIrregularForms(verb);
+    return { past: all.past[0], pp: all.pp[0] };
   },
 
   getRegularPast(verb) {
@@ -312,17 +327,46 @@ const ExerciseEngine = {
   },
 
   getAuxiliary(tenseId, subject, is3rdSing, negative = false) {
+    // Helper "to be" en fonction du sujet et du temps
+    const beNow = subject === 'I'
+      ? (negative ? "am not" : "am")
+      : is3rdSing
+        ? (negative ? "isn't" : "is")
+        : (negative ? "aren't" : "are");
+    const bePast = (subject === 'I' || is3rdSing)
+      ? (negative ? "wasn't" : "was")
+      : (negative ? "weren't" : "were");
+    const hasHave = is3rdSing
+      ? (negative ? "hasn't" : "has")
+      : (negative ? "haven't" : "have");
+
     const aux = {
       present_simple: is3rdSing ? (negative ? "doesn't" : "does") : (negative ? "don't" : "do"),
-      present_continuous: subject === 'I' ? (negative ? "am not" : "am") : (!is3rdSing && subject !== 'I') ? (negative ? "aren't" : "are") : (negative ? "isn't" : "is"),
-      present_perfect: is3rdSing ? (negative ? "hasn't" : "has") : (negative ? "haven't" : "have"),
+      present_continuous: beNow,
+      present_perfect: hasHave,
+      present_perfect_continuous: `${hasHave} been`,
       past_simple: negative ? "didn't" : "did",
-      past_continuous: (subject === 'I' || is3rdSing) ? (negative ? "wasn't" : "was") : (negative ? "weren't" : "were"),
+      past_continuous: bePast,
       past_perfect: negative ? "hadn't" : "had",
+      past_perfect_continuous: `${negative ? "hadn't" : "had"} been`,
       future_will: negative ? "won't" : "will",
-      future_going_to: subject === 'I' ? (negative ? "am not going to" : "am going to") : is3rdSing ? (negative ? "isn't going to" : "is going to") : (negative ? "aren't going to" : "are going to")
+      future_going_to: subject === 'I'
+        ? (negative ? "am not going to" : "am going to")
+        : is3rdSing
+          ? (negative ? "isn't going to" : "is going to")
+          : (negative ? "aren't going to" : "are going to"),
+      future_continuous: `${negative ? "won't" : "will"} be`,
+      future_perfect: `${negative ? "won't" : "will"} have`,
+      future_perfect_continuous: `${negative ? "won't" : "will"} have been`
     };
-    return aux[tenseId] || (negative ? "don't" : "do");
+
+    // En dernier recours, on remonte une erreur explicite plutôt que de
+    // produire silencieusement une phrase grammaticalement fausse.
+    if (!(tenseId in aux)) {
+      console.warn(`[getAuxiliary] Temps non géré: ${tenseId}`);
+      return negative ? "don't" : "do";
+    }
+    return aux[tenseId];
   },
 
   generateQCM(tense, subj, verb, is3rdSing, difficulty) {
@@ -393,8 +437,8 @@ const ExerciseEngine = {
     const allForms = new Set();
     APP_DATA.irregularVerbs.forEach(v => {
       if (v.base === verb) {
-        allForms.add(v.past.split('/')[0]);
-        allForms.add(v.pp.split('/')[0]);
+        v.past.split('/').forEach(p => allForms.add(p.trim()));
+        v.pp.split('/').forEach(p => allForms.add(p.trim()));
       }
     });
     allForms.add(this.getRegularPast(verb));
@@ -435,7 +479,7 @@ return {
   sentence: fullSentence.replace(correctAnswer, '___'),
   options: shuffled,
   correct: correctIndex,
-  explanation: `La forme correcte est "${correctAnswer}". ${tense.name} : ${tense.structure}`,
+  explanation: `La forme correcte est "${correctAnswer}". ${tense.nameFR} : ${tense.structure}`,
   tenseId: tense.id,
   hint: `Temps : ${tense.nameFR}`
 };
@@ -498,7 +542,7 @@ return {
       sentence: fullSentence,
       answer: answer,
       tenseId: tense.id,
-      explanation: `La réponse est "${answer}". ${tense.name} : ${tense.structure}`
+      explanation: `La réponse est "${answer}". ${tense.nameFR} : ${tense.structure}`
     };
   },
 
@@ -1126,6 +1170,27 @@ function selectOption(btn, index) {
   selectedOptionIndex = index;
 }
 
+/**
+ * Compare la réponse utilisateur à la réponse attendue.
+ * Accepte plusieurs variantes séparées par "/" dans la réponse attendue
+ * (utile pour BrE/AmE : "learnt/learned", "dreamt/dreamed", etc.).
+ */
+function answerMatches(userAnswer, expectedAnswer) {
+  if (typeof expectedAnswer !== 'string') return false;
+  const userNorm = normalizeAnswer(userAnswer);
+
+  // Découpe sur "/" pour récupérer toutes les variantes éventuelles
+  // tout en restant tolérant aux espaces.
+  const variants = expectedAnswer.split('/').map(v => normalizeAnswer(v.trim())).filter(Boolean);
+  if (variants.length > 0 && variants.includes(userNorm)) return true;
+
+  // Fallback : si la réponse contient des mots, on essaie également de remplacer
+  // toute occurrence "x/y" par x ou y et de comparer.
+  const expandedA = normalizeAnswer(expectedAnswer.replace(/(\w+)\/(\w+)/g, '$1'));
+  const expandedB = normalizeAnswer(expectedAnswer.replace(/(\w+)\/(\w+)/g, '$2'));
+  return userNorm === expandedA || userNorm === expandedB;
+}
+
 function validateExercise() {
   if (ExerciseEngine.answered) return;
 
@@ -1146,7 +1211,7 @@ function validateExercise() {
     const input = document.getElementById('exerciseInput');
     if (!input || !input.value.trim()) return;
     userAnswer = input.value.trim();
-    correct = normalizeAnswer(userAnswer) === normalizeAnswer(q.answer);
+    correct = answerMatches(userAnswer, q.answer);
   }
 
   ExerciseEngine.answered = true;
@@ -1180,7 +1245,7 @@ function validateExercise() {
 }
 
 function normalizeAnswer(str) {
-  return str.toLowerCase().replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
+  return str.toLowerCase().replace(/[''']/g, "'").replace(/\s+/g, ' ').trim();
 }
 
 function skipExercise() {
@@ -1378,7 +1443,7 @@ function validateTestAnswer() {
     const input = document.getElementById('testInput');
     if (!input || !input.value.trim()) return;
     userAnswer = input.value.trim();
-    correct = normalizeAnswer(userAnswer) === normalizeAnswer(q.answer);
+    correct = answerMatches(userAnswer, q.answer);
   }
 
   ExerciseEngine.answered = true;
