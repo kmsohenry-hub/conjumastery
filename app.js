@@ -28,16 +28,18 @@ function sanitizeInput(input) {
 // 1. STATE MANAGEMENT
 // ============================================================
 
-// Index APP_DATA for O(1) lookups
-APP_DATA.tensesById = APP_DATA.tenses.reduce((acc, t) => {
-  acc[t.id] = t;
-  return acc;
-}, {});
-
-APP_DATA.verbsByBase = APP_DATA.irregularVerbs.reduce((acc, v) => {
-  acc[v.base] = v;
-  return acc;
-}, {});
+// Index APP_DATA for O(1) lookups — C1 fix: encapsulated in a pure factory
+// instead of mutating the shared dataset at the top level.
+function buildIndexes(data) {
+  data.tensesById = data.tenses.reduce((acc, t) => {
+    acc[t.id] = t;
+    return acc;
+  }, {});
+  data.verbsByBase = data.irregularVerbs.reduce((acc, v) => {
+    acc[v.base] = v;
+    return acc;
+  }, {});
+}
 
 const State = {
   data: {
@@ -60,6 +62,8 @@ const State = {
   },
 
   init() {
+    // C1: build indexes here instead of at module top-level
+    buildIndexes(APP_DATA);
     const saved = localStorage.getItem('conjumaster_data');
     if (saved) {
       try {
@@ -78,10 +82,15 @@ const State = {
   },
 
   checkStreak() {
-    const today = new Date().toDateString();
+    // C3 fix: compare dates as YYYY-MM-DD local strings to avoid timezone/DST issues
+    const today = new Date();
+    const todayStr = today.getFullYear() + '-' +
+      String(today.getMonth() + 1).padStart(2, '0') + '-' +
+      String(today.getDate()).padStart(2, '0');
     if (this.data.lastActiveDate) {
-      const last = new Date(this.data.lastActiveDate);
-      const diff = Math.floor((new Date(today) - last) / (1000 * 60 * 60 * 24));
+      const last = new Date(this.data.lastActiveDate + 'T00:00:00');
+      const diffMs = new Date(todayStr + 'T00:00:00') - last;
+      const diff = Math.round(diffMs / (1000 * 60 * 60 * 24));
       if (diff === 1) {
         this.data.daysStreak++;
       } else if (diff > 1) {
@@ -98,7 +107,11 @@ const State = {
       showToast(`🎉 Niveau ${newLevel} atteint !`, 'success');
       launchConfetti();
     }
-    this.data.lastActiveDate = new Date().toDateString();
+    // C3 fix: store as YYYY-MM-DD local to be consistent with checkStreak
+    const _now = new Date();
+    this.data.lastActiveDate = _now.getFullYear() + '-' +
+      String(_now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(_now.getDate()).padStart(2, '0');
     this.data.activityLog.push({ date: new Date().toISOString(), xp: amount });
     if (this.data.activityLog.length > 100) this.data.activityLog = this.data.activityLog.slice(-100);
     this.save();
@@ -106,6 +119,11 @@ const State = {
   },
 
   recordAnswer(tenseId, correct) {
+    // C3 fix: update lastActiveDate on any activity, not just XP gain
+    const _d = new Date();
+    this.data.lastActiveDate = _d.getFullYear() + '-' +
+      String(_d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(_d.getDate()).padStart(2, '0');
     this.data.totalExercises++;
     if (!this.data.tenseStats[tenseId]) {
       this.data.tenseStats[tenseId] = { correct: 0, total: 0 };
@@ -274,7 +292,11 @@ const ExerciseEngine = {
 
     const tenses = tenseFilter && tenseFilter.length > 0 ? tenseFilter : APP_DATA.tenses.map(t => t.id);
 
-    for (let i = 0; i < count; i++) {
+    // C5 fix: retry until we have exactly `count` valid questions (max 3x attempts to avoid infinite loop)
+    const maxAttempts = count * 3;
+    let attempts = 0;
+    while (questions.length < count && attempts < maxAttempts) {
+      attempts++;
       const tenseId = tenses[Math.floor(Math.random() * tenses.length)];
       const tense = APP_DATA.tensesById[tenseId];
       if (!tense) continue;
@@ -285,6 +307,9 @@ const ExerciseEngine = {
         question.tenseId = tenseId;
         questions.push(question);
       }
+    }
+    if (questions.length < count) {
+      console.warn(`[generateQuestions] Only generated ${questions.length}/${count} questions after ${attempts} attempts.`);
     }
     return questions;
   },
