@@ -8,45 +8,8 @@
 
 // @vitest-environment jsdom
 
-import { describe, test, expect, beforeAll } from 'vitest';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Stubs minimaux pour que app.js puisse être évalué sans crasher.
-// L'objet APP_DATA est requis car app.js mute APP_DATA.tensesById/verbsByBase
-// au chargement du fichier (cf. issue #31 C1).
-beforeAll(() => {
-  globalThis.APP_DATA = {
-    tenses: [],
-    irregularVerbs: [],
-    modules: [],
-    phrasalVerbs: [],
-    modals: [],
-    exerciseTemplates: {},
-    passiveInfo: {},
-    reportedSpeech: {}
-  };
-  globalThis.showToast = () => {};
-  globalThis.launchConfetti = () => {};
-  globalThis.updateUI = () => {};
-
-  const appContent = fs.readFileSync(
-    path.resolve(__dirname, '..', 'app.js'),
-    'utf8'
-  );
-
-  // On expose escapeHtml et sanitizeInput sur globalThis pour les assertions.
-  const exposed = appContent
-    .replace(/function\s+escapeHtml/g, 'globalThis.escapeHtml = function escapeHtml')
-    .replace(/function\s+sanitizeInput/g, 'globalThis.sanitizeInput = function sanitizeInput');
-
-  // eslint-disable-next-line no-eval
-  eval(exposed);
-});
+import { describe, test, expect } from 'vitest';
+import { escapeHtml, sanitizeInput } from '../src/core/security.js';
 
 describe('Security Utilities', () => {
   describe('sanitizeInput', () => {

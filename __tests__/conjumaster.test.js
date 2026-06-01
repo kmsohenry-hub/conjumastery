@@ -3,12 +3,7 @@
  * Testent les fonctionnalités principales de l'application
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 // Helper for Mock elements
 const createMockElement = () => ({
@@ -21,16 +16,18 @@ const createMockElement = () => ({
   removeAttribute: vi.fn(),
   click: vi.fn(),
   innerHTML: '',
-  textContent: ''
+  textContent: '',
+  remove: vi.fn()
 });
 
-// Mock DOM & globals
+// Mock DOM & globals before importing the application module.
 global.window = global;
 global.document = {
   addEventListener: vi.fn(),
   createElement: vi.fn(createMockElement),
-  getElementById: vi.fn((id) => createMockElement()),
+  getElementById: vi.fn(() => createMockElement()),
   documentElement: { setAttribute: vi.fn() },
+  body: { appendChild: vi.fn() },
   DOMContentLoaded: 'DOMContentLoaded'
 };
 global.localStorage = {
@@ -45,37 +42,7 @@ global.Notification = {
   requestPermission: vi.fn().mockResolvedValue('granted')
 };
 
-// Global mocks
-global.showToast = vi.fn();
-global.launchConfetti = vi.fn();
-global.updateUI = vi.fn();
-
-// Load scripts
-const loadScript = (filename) => {
-  let content = fs.readFileSync(path.resolve(__dirname, '..', filename), 'utf8');
-
-  // Replace const with global assignments
-  content = content.replace(/const\s+APP_DATA\s*=/, 'var APP_DATA = global.APP_DATA =');
-  content = content.replace(/const\s+State\s*=/, 'var State = global.State =');
-  content = content.replace(/const\s+ExerciseEngine\s*=/, 'var ExerciseEngine = global.ExerciseEngine =');
-
-  // If loading app.js, make sure APP_DATA is available for the initialization code at the top
-  if (filename === 'app.js') {
-    content = 'var APP_DATA = global.APP_DATA; (function() { ' + content + ' })();';
-  }
-
-  // Neutralize functions that use the DOM
-  content = content.replace(/function\s+showToast/, 'function _original_showToast');
-  content = content.replace(/function\s+updateUI/, 'function _original_updateUI');
-  content = content.replace(/function\s+launchConfetti/, 'function _original_launchConfetti');
-  
-  eval(content);
-};
-
-loadScript('data.js');
-loadScript('app.js');
-
-const { State, ExerciseEngine, APP_DATA } = global;
+const { State, ExerciseEngine, APP_DATA } = await import('../app.js');
 
 beforeEach(() => {
   // Réinitialiser l'état avant chaque test
@@ -98,10 +65,6 @@ beforeEach(() => {
     settings: { theme: 'light' }
   };
   localStorage.clear();
-  // Clear mocks
-  global.showToast.mockClear();
-  global.launchConfetti.mockClear();
-  global.updateUI.mockClear();
 });
 
 describe('State Management', () => {
