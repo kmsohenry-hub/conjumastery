@@ -1,28 +1,13 @@
-// ============================================================
-// UTILITAIRES DE SÉCURITÉ
-// ============================================================
-
-/**
- * Échappe les caractères HTML spéciaux pour prévenir les attaques XSS
- * @param {string} str - La chaîne à échapper
- * @returns {string} - La chaîne échappée
- */
-function escapeHtml(str) {
-  if (typeof str !== 'string') return str;
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-/**
- * Valide et nettoie une entrée utilisateur
- * @param {string} input - L'entrée à valider
- * @returns {string} - L'entrée nettoyée
- */
-function sanitizeInput(input) {
-  if (typeof input !== 'string') return '';
-  return input.trim().slice(0, 500); // Limite de longueur
-}
+import { APP_DATA } from './data.js';
+import { escapeHtml, sanitizeInput } from './src/core/security.js';
+import {
+  getAllIrregularForms as getAllIrregularFormsCore,
+  getIrregularForms as getIrregularFormsCore,
+  getRegularPast as getRegularPastCore,
+  getPresentSimpleForm as getPresentSimpleFormCore,
+  getIngForm as getIngFormCore,
+  getConjugation as getConjugationCore
+} from './src/core/exercises/conjugation.js';
 
 // ============================================================
 // 1. STATE MANAGEMENT
@@ -230,40 +215,24 @@ const ExerciseEngine = {
    * Pour les verbes réguliers, renvoie un tableau à un seul élément.
    */
   getAllIrregularForms(verb) {
-    const irreg = APP_DATA.verbsByBase[verb];
-    if (irreg) {
-      return {
-        past: irreg.past.split('/').map(s => s.trim()).filter(Boolean),
-        pp: irreg.pp.split('/').map(s => s.trim()).filter(Boolean)
-      };
-    }
-    const reg = this.getRegularPast(verb);
-    return { past: [reg], pp: [reg] };
+    return getAllIrregularFormsCore(APP_DATA.verbsByBase, verb);
   },
 
   // Conserve la signature historique : retourne UNE forme (la première / forme principale)
   getIrregularForms(verb) {
-    const all = this.getAllIrregularForms(verb);
-    return { past: all.past[0], pp: all.pp[0] };
+    return getIrregularFormsCore(APP_DATA.verbsByBase, verb);
   },
 
   getRegularPast(verb) {
-    if (verb.endsWith('e')) return `${verb}d`;
-    if (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length - 2])) return `${verb.slice(0, -1)}ied`;
-    return `${verb}ed`;
+    return getRegularPastCore(verb);
   },
 
   getPresentSimpleForm(verb, is3rdSing) {
-    if (!is3rdSing) return verb;
-    if (verb.endsWith('s') || verb.endsWith('ch') || verb.endsWith('sh') || verb.endsWith('x') || verb.endsWith('o')) return `${verb}es`;
-    if (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length - 2])) return `${verb.slice(0, -1)}ies`;
-    return `${verb}s`;
+    return getPresentSimpleFormCore(verb, is3rdSing);
   },
 
   getIngForm(verb) {
-    if (verb.endsWith('ie')) return `${verb.slice(0, -2)}ying`;
-    if (verb.endsWith('e') && verb !== 'be') return `${verb.slice(0, -1)}ing`;
-    return `${verb}ing`;
+    return getIngFormCore(verb);
   },
 
   generateQuestions(mode, tenseFilter, difficulty, count = 10) {
@@ -306,24 +275,7 @@ const ExerciseEngine = {
   },
 
   getConjugation(verb, tenseId, subject, is3rdSing) {
-    const { pp, past } = this.getIrregularForms(verb);
-
-    switch(tenseId) {
-      case 'present_simple': return this.getPresentSimpleForm(verb, is3rdSing);
-      case 'present_continuous': return this.getIngForm(verb);
-      case 'present_perfect': return pp;
-      case 'present_perfect_continuous': return this.getIngForm(verb);
-      case 'past_simple': return past;
-      case 'past_continuous': return this.getIngForm(verb);
-      case 'past_perfect': return pp;
-      case 'past_perfect_continuous': return this.getIngForm(verb);
-      case 'future_will': return verb;
-      case 'future_going_to': return verb;
-      case 'future_continuous': return this.getIngForm(verb);
-      case 'future_perfect': return pp;
-      case 'future_perfect_continuous': return this.getIngForm(verb);
-      default: return verb;
-    }
+    return getConjugationCore(APP_DATA.verbsByBase, verb, tenseId, subject, is3rdSing);
   },
 
   getAuxiliary(tenseId, subject, is3rdSing, negative = false) {
@@ -2182,6 +2134,52 @@ function init() {
     setTheme('dark');
   }
 }
+
+export { APP_DATA, State, ExerciseEngine, NotificationManager, escapeHtml, sanitizeInput };
+
+Object.assign(window, {
+  APP_DATA,
+  State,
+  ExerciseEngine,
+  NotificationManager,
+  escapeHtml,
+  sanitizeInput,
+  navigateTo,
+  toggleSidebar,
+  toggleTheme,
+  setTheme,
+  showModule,
+  openLesson,
+  openTenseModal,
+  openPassiveModal,
+  openReportedModal,
+  startExercise,
+  startExerciseForTense,
+  selectOption,
+  validateExercise,
+  skipExercise,
+  nextExercise,
+  exitExercise,
+  startTest,
+  validateTestAnswer,
+  nextTestQuestion,
+  showTenseCategory,
+  filterVerbs,
+  toggleVerbCard,
+  showComparison,
+  startRevisionSession,
+  performGlobalSearch,
+  toggleFav,
+  closeModal,
+  closeModalDirect,
+  showToast,
+  launchConfetti,
+  exportData,
+  importData,
+  resetProgress,
+  updateUI,
+  init
+});
 
 // Start the app
 document.addEventListener('DOMContentLoaded', init);
