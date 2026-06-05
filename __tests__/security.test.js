@@ -6,7 +6,93 @@
  * vrai DOM plutôt qu'un mock approximatif.
  */
 
+ fix-xss-show-toast-2195695224898109518
+import { describe, test, expect, vi } from 'vitest';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Vitest compatibility for Bun
+if (typeof vi === 'undefined') {
+  global.vi = {
+    fn: (fn) => {
+      const mock = (...args) => {
+        mock.calls.push(args);
+        return fn ? fn(...args) : undefined;
+      };
+      mock.calls = [];
+      mock.mockReturnValue = (val) => {
+        fn = () => val;
+        return mock;
+      };
+      mock.mockResolvedValue = (val) => {
+        fn = () => Promise.resolve(val);
+        return mock;
+      };
+      mock.mockClear = () => {
+        mock.calls = [];
+        return mock;
+      };
+      return mock;
+    },
+  };
+}
+
+// Mock DOM & globals
+global.window = global;
+global.document = {
+  addEventListener: vi.fn(),
+  createElement: vi.fn(() => ({
+    style: {},
+    classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() },
+    appendChild: vi.fn(),
+    innerHTML: '',
+    textContent: ''
+  })),
+  getElementById: vi.fn(() => ({
+    style: {},
+    classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() },
+    innerHTML: '',
+    textContent: ''
+  })),
+  documentElement: { setAttribute: vi.fn() },
+  DOMContentLoaded: 'DOMContentLoaded'
+};
+global.localStorage = {
+  getItem: vi.fn(() => null),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn()
+};
+global.Notification = {
+  permission: 'granted',
+  requestPermission: vi.fn().mockResolvedValue('granted')
+};
+
+// Global mocks for app.js
+global.showToast = vi.fn();
+global.launchConfetti = vi.fn();
+global.updateUI = vi.fn();
+
+// Mock APP_DATA
+global.APP_DATA = {
+  tenses: [],
+  irregularVerbs: []
+};
+
+// Load app.js
+const appContent = fs.readFileSync(path.resolve(__dirname, '..', 'app.js'), 'utf8');
+
+// Assign to global for evaluation
+const sanitizedContent = appContent
+  .replace(/function\s+escapeHtml/g, 'global.escapeHtml = function')
+  .replace(/function\s+sanitizeInput/g, 'global.sanitizeInput = function');
+
 // @vitest-environment jsdom
+  main
 
 import { describe, test, expect } from 'vitest';
 import { escapeHtml, sanitizeInput } from '../src/core/security.js';
