@@ -1,28 +1,13 @@
-// ============================================================
-// UTILITAIRES DE SÉCURITÉ
-// ============================================================
-
-/**
- * Échappe les caractères HTML spéciaux pour prévenir les attaques XSS
- * @param {string} str - La chaîne à échapper
- * @returns {string} - La chaîne échappée
- */
-function escapeHtml(str) {
-  if (typeof str !== 'string') return str;
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-/**
- * Valide et nettoie une entrée utilisateur
- * @param {string} input - L'entrée à valider
- * @returns {string} - L'entrée nettoyée
- */
-function sanitizeInput(input) {
-  if (typeof input !== 'string') return '';
-  return input.trim().slice(0, 500); // Limite de longueur
-}
+import { APP_DATA } from './data.js';
+import { escapeHtml, sanitizeInput } from './src/core/security.js';
+import {
+  getAllIrregularForms as getAllIrregularFormsCore,
+  getIrregularForms as getIrregularFormsCore,
+  getRegularPast as getRegularPastCore,
+  getPresentSimpleForm as getPresentSimpleFormCore,
+  getIngForm as getIngFormCore,
+  getConjugation as getConjugationCore
+} from './src/core/exercises/conjugation.js';
 
 // ============================================================
 // 1. STATE MANAGEMENT
@@ -224,31 +209,30 @@ const ExerciseEngine = {
   score: 0,
   answered: false,
 
+  /**
+   * Renvoie toutes les variantes BrE/AmE du past et du past participle.
+   * Ex: learn -> { past: ['learnt','learned'], pp: ['learnt','learned'] }
+   * Pour les verbes réguliers, renvoie un tableau à un seul élément.
+   */
+  getAllIrregularForms(verb) {
+    return getAllIrregularFormsCore(APP_DATA.verbsByBase, verb);
+  },
+
+  // Conserve la signature historique : retourne UNE forme (la première / forme principale)
   getIrregularForms(verb) {
-    const irreg = APP_DATA.verbsByBase[verb];
-    return {
-      past: irreg ? irreg.past.split('/')[0] : this.getRegularPast(verb),
-      pp: irreg ? irreg.pp.split('/')[0] : this.getRegularPast(verb)
-    };
+    return getIrregularFormsCore(APP_DATA.verbsByBase, verb);
   },
 
   getRegularPast(verb) {
-    if (verb.endsWith('e')) return `${verb}d`;
-    if (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length - 2])) return `${verb.slice(0, -1)}ied`;
-    return `${verb}ed`;
+    return getRegularPastCore(verb);
   },
 
   getPresentSimpleForm(verb, is3rdSing) {
-    if (!is3rdSing) return verb;
-    if (verb.endsWith('s') || verb.endsWith('ch') || verb.endsWith('sh') || verb.endsWith('x') || verb.endsWith('o')) return `${verb}es`;
-    if (verb.endsWith('y') && !'aeiou'.includes(verb[verb.length - 2])) return `${verb.slice(0, -1)}ies`;
-    return `${verb}s`;
+    return getPresentSimpleFormCore(verb, is3rdSing);
   },
 
   getIngForm(verb) {
-    if (verb.endsWith('ie')) return `${verb.slice(0, -2)}ying`;
-    if (verb.endsWith('e') && verb !== 'be') return `${verb.slice(0, -1)}ing`;
-    return `${verb}ing`;
+    return getIngFormCore(verb);
   },
 
   generateQuestions(mode, tenseFilter, difficulty, count = 10) {
@@ -291,38 +275,50 @@ const ExerciseEngine = {
   },
 
   getConjugation(verb, tenseId, subject, is3rdSing) {
-    const { pp, past } = this.getIrregularForms(verb);
-
-    switch(tenseId) {
-      case 'present_simple': return this.getPresentSimpleForm(verb, is3rdSing);
-      case 'present_continuous': return this.getIngForm(verb);
-      case 'present_perfect': return pp;
-      case 'present_perfect_continuous': return this.getIngForm(verb);
-      case 'past_simple': return past;
-      case 'past_continuous': return this.getIngForm(verb);
-      case 'past_perfect': return pp;
-      case 'past_perfect_continuous': return this.getIngForm(verb);
-      case 'future_will': return verb;
-      case 'future_going_to': return verb;
-      case 'future_continuous': return this.getIngForm(verb);
-      case 'future_perfect': return pp;
-      case 'future_perfect_continuous': return this.getIngForm(verb);
-      default: return verb;
-    }
+    return getConjugationCore(APP_DATA.verbsByBase, verb, tenseId, subject, is3rdSing);
   },
 
   getAuxiliary(tenseId, subject, is3rdSing, negative = false) {
+    // Helper "to be" en fonction du sujet et du temps
+    const beNow = subject === 'I'
+      ? (negative ? "am not" : "am")
+      : is3rdSing
+        ? (negative ? "isn't" : "is")
+        : (negative ? "aren't" : "are");
+    const bePast = (subject === 'I' || is3rdSing)
+      ? (negative ? "wasn't" : "was")
+      : (negative ? "weren't" : "were");
+    const hasHave = is3rdSing
+      ? (negative ? "hasn't" : "has")
+      : (negative ? "haven't" : "have");
+
     const aux = {
       present_simple: is3rdSing ? (negative ? "doesn't" : "does") : (negative ? "don't" : "do"),
-      present_continuous: subject === 'I' ? (negative ? "am not" : "am") : (!is3rdSing && subject !== 'I') ? (negative ? "aren't" : "are") : (negative ? "isn't" : "is"),
-      present_perfect: is3rdSing ? (negative ? "hasn't" : "has") : (negative ? "haven't" : "have"),
+      present_continuous: beNow,
+      present_perfect: hasHave,
+      present_perfect_continuous: `${hasHave} been`,
       past_simple: negative ? "didn't" : "did",
-      past_continuous: (subject === 'I' || is3rdSing) ? (negative ? "wasn't" : "was") : (negative ? "weren't" : "were"),
+      past_continuous: bePast,
       past_perfect: negative ? "hadn't" : "had",
+      past_perfect_continuous: `${negative ? "hadn't" : "had"} been`,
       future_will: negative ? "won't" : "will",
-      future_going_to: subject === 'I' ? (negative ? "am not going to" : "am going to") : is3rdSing ? (negative ? "isn't going to" : "is going to") : (negative ? "aren't going to" : "are going to")
+      future_going_to: subject === 'I'
+        ? (negative ? "am not going to" : "am going to")
+        : is3rdSing
+          ? (negative ? "isn't going to" : "is going to")
+          : (negative ? "aren't going to" : "are going to"),
+      future_continuous: `${negative ? "won't" : "will"} be`,
+      future_perfect: `${negative ? "won't" : "will"} have`,
+      future_perfect_continuous: `${negative ? "won't" : "will"} have been`
     };
-    return aux[tenseId] || (negative ? "don't" : "do");
+
+    // En dernier recours, on remonte une erreur explicite plutôt que de
+    // produire silencieusement une phrase grammaticalement fausse.
+    if (!(tenseId in aux)) {
+      console.warn(`[getAuxiliary] Temps non géré: ${tenseId}`);
+      return negative ? "don't" : "do";
+    }
+    return aux[tenseId];
   },
 
   generateQCM(tense, subj, verb, is3rdSing, difficulty) {
@@ -393,8 +389,8 @@ const ExerciseEngine = {
     const allForms = new Set();
     APP_DATA.irregularVerbs.forEach(v => {
       if (v.base === verb) {
-        allForms.add(v.past.split('/')[0]);
-        allForms.add(v.pp.split('/')[0]);
+        v.past.split('/').forEach(p => allForms.add(p.trim()));
+        v.pp.split('/').forEach(p => allForms.add(p.trim()));
       }
     });
     allForms.add(this.getRegularPast(verb));
@@ -435,7 +431,7 @@ return {
   sentence: fullSentence.replace(correctAnswer, '___'),
   options: shuffled,
   correct: correctIndex,
-  explanation: `La forme correcte est "${correctAnswer}". ${tense.name} : ${tense.structure}`,
+  explanation: `La forme correcte est "${correctAnswer}". ${tense.nameFR} : ${tense.structure}`,
   tenseId: tense.id,
   hint: `Temps : ${tense.nameFR}`
 };
@@ -498,7 +494,7 @@ return {
       sentence: fullSentence,
       answer: answer,
       tenseId: tense.id,
-      explanation: `La réponse est "${answer}". ${tense.name} : ${tense.structure}`
+      explanation: `La réponse est "${answer}". ${tense.nameFR} : ${tense.structure}`
     };
   },
 
@@ -734,19 +730,28 @@ function setTheme(theme) {
 
 function renderDashboard() {
   const d = State.data;
-  document.getElementById('dashXP').textContent = d.xp;
-  document.getElementById('dashLevel').textContent = d.level;
-  document.getElementById('dashExercises').textContent = d.totalExercises;
-  const accuracy = d.totalExercises > 0 ? Math.round((d.correctAnswers / d.totalExercises) * 100) : 0;
-  document.getElementById('dashAccuracy').textContent = accuracy + '%';
+  renderDashboardStats(d);
 
-  // Next lesson
+  renderDashboardNextLesson(d.completedLessons);
+
+  const queue = State.getReviewQueue();
+  renderDashboardRevisionQueue(queue);
+
+  // Chart
+  renderDashboardChart();
+}
+
+function renderDashboardNextLesson(completedLessons) {
   const nextLessonEl = document.getElementById('dashNextLesson');
   const incompleteLessons = [];
   const completedSet = new Set(d.completedLessons);
   APP_DATA.modules.forEach(mod => {
     mod.lessons.forEach(l => {
+ perf-lesson-lookup-optimization-3882686976540258157
       if (!completedSet.has(l.id)) {
+
+      if (!completedLessons.includes(l.id)) {
+ main
         incompleteLessons.push({ ...l, module: mod });
       }
     });
@@ -769,9 +774,9 @@ function renderDashboard() {
   } else {
     nextLessonEl.innerHTML = '<p style="color:var(--text-light);font-size:0.9rem">🎉 Toutes les leçons sont terminées !</p>';
   }
+}
 
-  // Revision queue
-  const queue = State.getReviewQueue();
+function renderDashboardRevisionQueue(queue) {
   const queueEl = document.getElementById('dashRevisionQueue');
   if (queue.length > 0) {
     queueEl.innerHTML = queue.slice(0, 5).map(q => {
@@ -788,10 +793,15 @@ function renderDashboard() {
   } else {
     queueEl.innerHTML = '<p style="color:var(--text-light);font-size:0.9rem">✅ Aucune révision en attente. Continuez les leçons !</p>';
   }
-
-  // Chart
-  renderDashboardChart();
   document.getElementById('revisionBadge').textContent = queue.length;
+}
+
+function renderDashboardStats(d) {
+  document.getElementById('dashXP').textContent = d.xp;
+  document.getElementById('dashLevel').textContent = d.level;
+  document.getElementById('dashExercises').textContent = d.totalExercises;
+  const accuracy = d.totalExercises > 0 ? Math.round((d.correctAnswers / d.totalExercises) * 100) : 0;
+  document.getElementById('dashAccuracy').textContent = accuracy + '%';
 }
 
 function renderDashboardChart() {
@@ -1128,6 +1138,27 @@ function selectOption(btn, index) {
   selectedOptionIndex = index;
 }
 
+/**
+ * Compare la réponse utilisateur à la réponse attendue.
+ * Accepte plusieurs variantes séparées par "/" dans la réponse attendue
+ * (utile pour BrE/AmE : "learnt/learned", "dreamt/dreamed", etc.).
+ */
+function answerMatches(userAnswer, expectedAnswer) {
+  if (typeof expectedAnswer !== 'string') return false;
+  const userNorm = normalizeAnswer(userAnswer);
+
+  // Découpe sur "/" pour récupérer toutes les variantes éventuelles
+  // tout en restant tolérant aux espaces.
+  const variants = expectedAnswer.split('/').map(v => normalizeAnswer(v.trim())).filter(Boolean);
+  if (variants.length > 0 && variants.includes(userNorm)) return true;
+
+  // Fallback : si la réponse contient des mots, on essaie également de remplacer
+  // toute occurrence "x/y" par x ou y et de comparer.
+  const expandedA = normalizeAnswer(expectedAnswer.replace(/(\w+)\/(\w+)/g, '$1'));
+  const expandedB = normalizeAnswer(expectedAnswer.replace(/(\w+)\/(\w+)/g, '$2'));
+  return userNorm === expandedA || userNorm === expandedB;
+}
+
 function validateExercise() {
   if (ExerciseEngine.answered) return;
 
@@ -1148,7 +1179,7 @@ function validateExercise() {
     const input = document.getElementById('exerciseInput');
     if (!input || !input.value.trim()) return;
     userAnswer = input.value.trim();
-    correct = normalizeAnswer(userAnswer) === normalizeAnswer(q.answer);
+    correct = answerMatches(userAnswer, q.answer);
   }
 
   ExerciseEngine.answered = true;
@@ -1182,7 +1213,7 @@ function validateExercise() {
 }
 
 function normalizeAnswer(str) {
-  return str.toLowerCase().replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
+  return str.toLowerCase().replace(/[''']/g, "'").replace(/\s+/g, ' ').trim();
 }
 
 function skipExercise() {
@@ -1380,7 +1411,7 @@ function validateTestAnswer() {
     const input = document.getElementById('testInput');
     if (!input || !input.value.trim()) return;
     userAnswer = input.value.trim();
-    correct = normalizeAnswer(userAnswer) === normalizeAnswer(q.answer);
+    correct = answerMatches(userAnswer, q.answer);
   }
 
   ExerciseEngine.answered = true;
@@ -1913,7 +1944,7 @@ function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  toast.innerHTML = message;
+  toast.textContent = message;
   container.appendChild(toast);
   setTimeout(() => {
     toast.style.opacity = '0';
@@ -2120,6 +2151,52 @@ function init() {
     setTheme('dark');
   }
 }
+
+export { APP_DATA, State, ExerciseEngine, NotificationManager, escapeHtml, sanitizeInput };
+
+Object.assign(window, {
+  APP_DATA,
+  State,
+  ExerciseEngine,
+  NotificationManager,
+  escapeHtml,
+  sanitizeInput,
+  navigateTo,
+  toggleSidebar,
+  toggleTheme,
+  setTheme,
+  showModule,
+  openLesson,
+  openTenseModal,
+  openPassiveModal,
+  openReportedModal,
+  startExercise,
+  startExerciseForTense,
+  selectOption,
+  validateExercise,
+  skipExercise,
+  nextExercise,
+  exitExercise,
+  startTest,
+  validateTestAnswer,
+  nextTestQuestion,
+  showTenseCategory,
+  filterVerbs,
+  toggleVerbCard,
+  showComparison,
+  startRevisionSession,
+  performGlobalSearch,
+  toggleFav,
+  closeModal,
+  closeModalDirect,
+  showToast,
+  launchConfetti,
+  exportData,
+  importData,
+  resetProgress,
+  updateUI,
+  init
+});
 
 // Start the app
 document.addEventListener('DOMContentLoaded', init);
