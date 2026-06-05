@@ -744,9 +744,14 @@ function renderDashboard() {
 function renderDashboardNextLesson(completedLessons) {
   const nextLessonEl = document.getElementById('dashNextLesson');
   const incompleteLessons = [];
+  const completedSet = new Set(d.completedLessons);
   APP_DATA.modules.forEach(mod => {
     mod.lessons.forEach(l => {
+ perf-lesson-lookup-optimization-3882686976540258157
+      if (!completedSet.has(l.id)) {
+
       if (!completedLessons.includes(l.id)) {
+ main
         incompleteLessons.push({ ...l, module: mod });
       }
     });
@@ -836,6 +841,7 @@ function showModule(index, tabEl) {
   const mod = APP_DATA.modules[index];
   const contentEl = document.getElementById('lessonContent');
   const completed = State.data.completedLessons;
+  const completedSet = new Set(completed);
 
   contentEl.innerHTML = `
     <div style="margin-bottom:20px">
@@ -844,8 +850,8 @@ function showModule(index, tabEl) {
     </div>
     <div class="grid" style="gap:12px">
       ${mod.lessons.map((lesson, i) => {
-        const isCompleted = completed.includes(lesson.id);
-        const isLocked = i > 0 && !completed.includes(mod.lessons[i-1].id) && !isCompleted;
+        const isCompleted = completedSet.has(lesson.id);
+        const isLocked = i > 0 && !completedSet.has(mod.lessons[i-1].id) && !isCompleted;
         const tense = lesson.tenseId ? APP_DATA.tensesById[lesson.tenseId] : null;
         return `<div class="lesson-card ${isLocked ? 'locked' : ''}" onclick="${isLocked ? '' : `openLesson('${lesson.id}', '${lesson.tenseId || ''}')`}">
           <div class="lesson-icon" style="background:${isCompleted ? 'var(--success)20' : isLocked ? 'var(--text-light)10' : mod.color + '20'};color:${isCompleted ? 'var(--success)' : isLocked ? 'var(--text-light)' : mod.color}">
@@ -2038,7 +2044,8 @@ document.getElementById('sidebarXPBar').style.width = `${displayXP}%`;
   const lessonsBadge = document.getElementById('lessonsBadge');
   if (lessonsBadge) {
     let incomplete = 0;
-    APP_DATA.modules.forEach(mod => mod.lessons.forEach(l => { if (!d.completedLessons.includes(l.id)) incomplete++; }));
+    const completedSet = new Set(d.completedLessons);
+    APP_DATA.modules.forEach(mod => mod.lessons.forEach(l => { if (!completedSet.has(l.id)) incomplete++; }));
     lessonsBadge.textContent = incomplete;
   }
 }
