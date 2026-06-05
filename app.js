@@ -734,18 +734,23 @@ function setTheme(theme) {
 
 function renderDashboard() {
   const d = State.data;
-  document.getElementById('dashXP').textContent = d.xp;
-  document.getElementById('dashLevel').textContent = d.level;
-  document.getElementById('dashExercises').textContent = d.totalExercises;
-  const accuracy = d.totalExercises > 0 ? Math.round((d.correctAnswers / d.totalExercises) * 100) : 0;
-  document.getElementById('dashAccuracy').textContent = accuracy + '%';
+  renderDashboardStats(d);
 
-  // Next lesson
+  renderDashboardNextLesson(d.completedLessons);
+
+  const queue = State.getReviewQueue();
+  renderDashboardRevisionQueue(queue);
+
+  // Chart
+  renderDashboardChart();
+}
+
+function renderDashboardNextLesson(completedLessons) {
   const nextLessonEl = document.getElementById('dashNextLesson');
   const incompleteLessons = [];
   APP_DATA.modules.forEach(mod => {
     mod.lessons.forEach(l => {
-      if (!d.completedLessons.includes(l.id)) {
+      if (!completedLessons.includes(l.id)) {
         incompleteLessons.push({ ...l, module: mod });
       }
     });
@@ -768,9 +773,9 @@ function renderDashboard() {
   } else {
     nextLessonEl.innerHTML = '<p style="color:var(--text-light);font-size:0.9rem">🎉 Toutes les leçons sont terminées !</p>';
   }
+}
 
-  // Revision queue
-  const queue = State.getReviewQueue();
+function renderDashboardRevisionQueue(queue) {
   const queueEl = document.getElementById('dashRevisionQueue');
   if (queue.length > 0) {
     queueEl.innerHTML = queue.slice(0, 5).map(q => {
@@ -787,10 +792,15 @@ function renderDashboard() {
   } else {
     queueEl.innerHTML = '<p style="color:var(--text-light);font-size:0.9rem">✅ Aucune révision en attente. Continuez les leçons !</p>';
   }
-
-  // Chart
-  renderDashboardChart();
   document.getElementById('revisionBadge').textContent = queue.length;
+}
+
+function renderDashboardStats(d) {
+  document.getElementById('dashXP').textContent = d.xp;
+  document.getElementById('dashLevel').textContent = d.level;
+  document.getElementById('dashExercises').textContent = d.totalExercises;
+  const accuracy = d.totalExercises > 0 ? Math.round((d.correctAnswers / d.totalExercises) * 100) : 0;
+  document.getElementById('dashAccuracy').textContent = accuracy + '%';
 }
 
 function renderDashboardChart() {
