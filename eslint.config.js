@@ -1,24 +1,28 @@
-import js from '@eslint/js';
-import prettier from 'eslint-plugin-prettier';
+import { builtinRules } from 'eslint/use-at-your-own-risk';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
+const recommendedRules = Object.fromEntries(
+  [...builtinRules]
+    .filter(([, rule]) => rule.meta?.docs?.recommended)
+    .map(([ruleName]) => [ruleName, 'error']),
+);
+
 export default [
-  js.configs.recommended,
   {
-    plugins: {
-      prettier,
-    },
+    rules: recommendedRules,
+  },
+  {
     rules: {
-      ...prettier.rules,
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-useless-assignment': 'warn',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       'no-var': 'error',
-      'eqeqeq': ['error', 'always'],
-      'curly': ['error', 'all'],
-      'semi': ['error', 'always'],
-      'quotes': ['error', 'single', { avoidEscape: true }],
-      'indent': ['error', 2, { SwitchCase: 1 }],
+      eqeqeq: ['error', 'always'],
+      curly: ['error', 'all'],
+      semi: ['error', 'always'],
+      quotes: ['error', 'single', { avoidEscape: true }],
+      indent: ['error', 2, { SwitchCase: 1 }],
       'comma-dangle': ['error', 'always-multiline'],
       'no-trailing-spaces': 'error',
       'eol-last': 'error',
@@ -27,12 +31,14 @@ export default [
       'object-curly-spacing': ['error', 'always'],
       'array-bracket-spacing': ['error', 'never'],
       'space-in-parens': ['error', 'never'],
-      'space-before-function-paren': ['error', {
-        anonymous: 'always',
-        named: 'never',
-        asyncArrow: 'always'
-      }],
-      'func-style': ['error', 'declaration'],
+      'space-before-function-paren': [
+        'error',
+        {
+          anonymous: 'always',
+          named: 'never',
+          asyncArrow: 'always',
+        },
+      ],
     },
     languageOptions: {
       ecmaVersion: 'latest',
@@ -45,6 +51,7 @@ export default [
         sessionStorage: 'readonly',
         navigator: 'readonly',
         console: 'readonly',
+        global: 'readonly',
         alert: 'readonly',
         confirm: 'readonly',
         prompt: 'readonly',
@@ -55,9 +62,13 @@ export default [
         requestAnimationFrame: 'readonly',
         fetch: 'readonly',
         XMLHttpRequest: 'readonly',
+        Blob: 'readonly',
+        URL: 'readonly',
+        FileReader: 'readonly',
+        Notification: 'readonly',
         Image: 'readonly',
         Audio: 'readonly',
-        
+
         // Test globals (Vitest)
         describe: 'readonly',
         it: 'readonly',
@@ -69,7 +80,7 @@ export default [
         afterAll: 'readonly',
         vi: 'readonly',
         vitest: 'readonly',
-        
+
         // App globals (will be loaded in browser)
         State: 'writable',
         Utils: 'writable',
@@ -93,11 +104,6 @@ export default [
   },
   eslintConfigPrettier,
   {
-    ignores: [
-      'node_modules/',
-      'dist/',
-      'coverage/',
-      '*.min.js',
-    ],
+    ignores: ['node_modules/', 'dist/', 'coverage/', '*.min.js'],
   },
 ];

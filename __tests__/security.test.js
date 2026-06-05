@@ -1,7 +1,12 @@
 /**
- * Tests unitaires pour les fonctions de sécurité
+ * Tests unitaires pour les fonctions de sécurité.
+ *
+ * Note: ce fichier s'exécute dans l'environnement jsdom configuré par
+ * vitest.config.js, ce qui nous permet de tester escapeHtml() contre un
+ * vrai DOM plutôt qu'un mock approximatif.
  */
 
+ fix-xss-show-toast-2195695224898109518
 import { describe, test, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -86,22 +91,26 @@ const sanitizedContent = appContent
   .replace(/function\s+escapeHtml/g, 'global.escapeHtml = function')
   .replace(/function\s+sanitizeInput/g, 'global.sanitizeInput = function');
 
-eval(sanitizedContent);
+// @vitest-environment jsdom
+  main
+
+import { describe, test, expect } from 'vitest';
+import { escapeHtml, sanitizeInput } from '../src/core/security.js';
 
 describe('Security Utilities', () => {
   describe('sanitizeInput', () => {
-    test('should trim whitespace from both ends', () => {
+    test('trims whitespace from both ends', () => {
       expect(sanitizeInput('  test string  ')).toBe('test string');
     });
 
-    test('should truncate string to 500 characters', () => {
+    test('truncates string to 500 characters', () => {
       const longString = 'a'.repeat(600);
       const sanitized = sanitizeInput(longString);
       expect(sanitized.length).toBe(500);
       expect(sanitized).toBe('a'.repeat(500));
     });
 
-    test('should return empty string for non-string inputs', () => {
+    test('returns empty string for non-string inputs', () => {
       expect(sanitizeInput(null)).toBe('');
       expect(sanitizeInput(undefined)).toBe('');
       expect(sanitizeInput(123)).toBe('');
@@ -109,43 +118,43 @@ describe('Security Utilities', () => {
       expect(sanitizeInput(['a', 'b'])).toBe('');
     });
 
-    test('should return original string if within limit and no whitespace', () => {
+    test('preserves a normal string unchanged', () => {
       const input = 'just-a-normal-string';
       expect(sanitizeInput(input)).toBe(input);
     });
 
-    test('should handle empty string', () => {
+    test('handles empty string', () => {
       expect(sanitizeInput('')).toBe('');
     });
   });
 
   describe('escapeHtml', () => {
-    test('should escape HTML special characters', () => {
-      // Note: Since we're mocking document.createElement and div.innerHTML,
-      // we might need to adjust the mock to actually perform escaping if we want to test it properly,
-      // but here we just check if it's called correctly if we used the mock.
-      // However, the original function uses document.createElement('div').textContent = str; return div.innerHTML;
-
-      // Let's refine the mock to act like a real DOM element for this test
-      const mockDiv = {
-        textContent: '',
-        get innerHTML() {
-          return this.textContent
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-        }
-      };
-      global.document.createElement = vi.fn().mockReturnValue(mockDiv);
-
-      expect(escapeHtml('<script>alert("xss")</script>')).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+    test('escapes the canonical XSS payload', () => {
+      const out = escapeHtml('<script>alert("xss")</script>');
+      // jsdom n'échappe pas les guillemets via textContent/innerHTML
+      // (comportement conforme au navigateur réel).
+      expect(out).toBe('&lt;script&gt;alert("xss")&lt;/script&gt;');
+      expect(out).not.toContain('<script>');
     });
 
-    test('should return input as is if not a string', () => {
+    test('escapes ampersand and angle brackets', () => {
+      expect(escapeHtml('a < b && c > d')).toBe('a &lt; b &amp;&amp; c &gt; d');
+    });
+
+    test('returns input as-is when not a string', () => {
       expect(escapeHtml(123)).toBe(123);
       expect(escapeHtml(null)).toBe(null);
+      expect(escapeHtml(undefined)).toBe(undefined);
+    });
+
+    test('passes through plain text without modification', () => {
+      expect(escapeHtml('Hello world!')).toBe('Hello world!');
+    });
+
+    test('escapes nested HTML elements', () => {
+      const out = escapeHtml('<img src=x onerror="alert(1)">');
+      expect(out).not.toContain('<img');
+      expect(out).toContain('&lt;img');
     });
   });
 });
