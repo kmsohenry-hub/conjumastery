@@ -3,12 +3,39 @@
  * Testent les fonctionnalités principales de l'application
  */
 
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Vitest compatibility for Bun
+if (typeof vi === 'undefined') {
+  global.vi = {
+    fn: (fn) => {
+      const mock = (...args) => {
+        mock.calls.push(args);
+        return fn ? fn(...args) : undefined;
+      };
+      mock.calls = [];
+      mock.mockReturnValue = (val) => {
+        fn = () => val;
+        return mock;
+      };
+      mock.mockResolvedValue = (val) => {
+        fn = () => Promise.resolve(val);
+        return mock;
+      };
+      mock.mockClear = () => {
+        mock.calls = [];
+        return mock;
+      };
+      return mock;
+    },
+  };
+}
 
 // Helper for Mock elements
 const createMockElement = () => ({

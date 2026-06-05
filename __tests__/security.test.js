@@ -2,7 +2,7 @@
  * Tests unitaires pour les fonctions de sécurité
  */
 
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -71,6 +71,12 @@ global.Notification = {
 global.showToast = vi.fn();
 global.launchConfetti = vi.fn();
 global.updateUI = vi.fn();
+
+// Mock APP_DATA
+global.APP_DATA = {
+  tenses: [],
+  irregularVerbs: []
+};
 
 // Load app.js
 const appContent = fs.readFileSync(path.resolve(__dirname, '..', 'app.js'), 'utf8');
