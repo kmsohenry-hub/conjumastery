@@ -744,14 +744,10 @@ function renderDashboard() {
 function renderDashboardNextLesson(completedLessons) {
   const nextLessonEl = document.getElementById('dashNextLesson');
   const incompleteLessons = [];
-  const completedSet = new Set(d.completedLessons);
+  const completedSet = new Set(completedLessons);
   APP_DATA.modules.forEach(mod => {
     mod.lessons.forEach(l => {
- perf-lesson-lookup-optimization-3882686976540258157
       if (!completedSet.has(l.id)) {
-
-      if (!completedLessons.includes(l.id)) {
- main
         incompleteLessons.push({ ...l, module: mod });
       }
     });
