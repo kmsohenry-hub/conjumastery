@@ -3,17 +3,7 @@
  * Testent les fonctionnalités principales de l'application
  */
 
- fix-xss-show-toast-2195695224898109518
 import { describe, test, expect, beforeEach, vi } from 'vitest';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-import { beforeEach, describe, expect, test, vi } from 'vitest';
- main
 
 // Vitest compatibility for Bun
 if (typeof vi === 'undefined') {
@@ -385,7 +375,6 @@ describe('Spaced Repetition', () => {
 
   describe('getReviewQueue', () => {
     test('devrait retourner les éléments à réviser', () => {
-      // Ajouter un élément avec une révision due maintenant
       State.data.spacedRepetition['present_simple'] = {
         interval: 1,
         nextReview: 0, // Déjà dû

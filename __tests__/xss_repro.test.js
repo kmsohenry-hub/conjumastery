@@ -2,13 +2,8 @@
  * Reproduction test for XSS vulnerability in showToast
  */
 
-import { describe, test, expect, beforeEach } from 'vitest';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { describe, test, expect } from 'vitest';
+import { showToast } from '../app.js';
 
 // Vitest compatibility for Bun
 if (typeof vi === 'undefined') {
@@ -56,7 +51,7 @@ global.window = global;
 global.document = {
   addEventListener: vi.fn(),
   createElement: vi.fn(createMockElement),
-  getElementById: vi.fn((id) => createMockElement()),
+  getElementById: vi.fn((_id) => createMockElement()),
   documentElement: { setAttribute: vi.fn() },
   DOMContentLoaded: 'DOMContentLoaded'
 };
@@ -81,17 +76,6 @@ global.APP_DATA = {
   irregularVerbs: []
 };
 
-// Load app.js
-const appContent = fs.readFileSync(path.resolve(__dirname, '..', 'app.js'), 'utf8');
-
-// evaluate app.js content but making functions global
-const sanitizedContent = appContent.replace(/function\s+(\w+)/g, 'global.$1 = function');
-
-try {
-  eval(sanitizedContent);
-} catch (e) {
-  // Ignore errors from initialization
-}
 
 describe('showToast XSS Vulnerability', () => {
   test('showToast should NOT render HTML in the message', () => {
@@ -111,7 +95,7 @@ describe('showToast XSS Vulnerability', () => {
     const maliciousPayload = '<img src=x onerror=alert(1)>';
 
     // Call the vulnerable function
-    global.showToast(maliciousPayload, 'error');
+    showToast(maliciousPayload, 'error');
 
     // Check if innerHTML was used (vulnerable) or textContent (secure)
     expect(toastMock.innerHTML).toBe('');

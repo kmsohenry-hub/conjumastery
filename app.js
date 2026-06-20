@@ -50,7 +50,7 @@ const State = {
       try {
         const parsed = JSON.parse(saved);
         this.data = { ...this.data, ...parsed };
-      } catch(e) { console.error('Failed to load data'); }
+      } catch(_e) { console.error('Failed to load data'); }
     }
     this.checkStreak();
     this.save();
@@ -59,7 +59,7 @@ const State = {
   save() {
     try {
       localStorage.setItem('conjumaster_data', JSON.stringify(this.data));
-    } catch(e) { console.error('Failed to save data'); }
+    } catch(_e) { console.error('Failed to save data'); }
   },
 
   checkStreak() {
@@ -309,7 +309,12 @@ const ExerciseEngine = {
           : (negative ? "aren't going to" : "are going to"),
       future_continuous: `${negative ? "won't" : "will"} be`,
       future_perfect: `${negative ? "won't" : "will"} have`,
-      future_perfect_continuous: `${negative ? "won't" : "will"} have been`
+      future_perfect_continuous: `${negative ? "won't" : "will"} have been`,
+      conditional_0: is3rdSing ? (negative ? "doesn't" : "does") : (negative ? "don't" : "do"),
+      conditional_1: negative ? "won't" : "will",
+      conditional_2: negative ? "wouldn't" : "would",
+      conditional_3: `${negative ? "wouldn't" : "would"} have`,
+      mixed_conditional: negative ? "wouldn't" : "would"
     };
 
     // En dernier recours, on remonte une erreur explicite plutôt que de
@@ -321,7 +326,7 @@ const ExerciseEngine = {
     return aux[tenseId];
   },
 
-  generateQCM(tense, subj, verb, is3rdSing, difficulty) {
+  generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
     // MOTEUR HYBRIDE : On cherche d'abord dans la base de données de phrases riches (70% de chances)
     if (APP_DATA.exerciseTemplates[tense.id] && APP_DATA.exerciseTemplates[tense.id].qcm && Math.random() < 0.7) {
       const templates = APP_DATA.exerciseTemplates[tense.id].qcm;
@@ -452,8 +457,7 @@ return {
     }
 
     // GÉNÉRATION DYNAMIQUE (Secours)
-    const correctForm = this.getConjugation(verb, tense.id, subj, is3rdSing);
-    let fullSentence, answer, aux;
+    let fullSentence, answer;
 
     if (tense.id === 'present_simple') {
       fullSentence = `${subj} ___ (${verb}) every morning.`;
@@ -655,10 +659,7 @@ return {
 // 4. UI CONTROLLER
 // ============================================================
 
-let currentPage = 'dashboard';
-
 function navigateTo(page) {
-  currentPage = page;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(`page-${page}`).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -820,7 +821,6 @@ function renderDashboardChart() {
 
 function renderLessons() {
   const tabsEl = document.getElementById('lessonTabs');
-  const contentEl = document.getElementById('lessonContent');
 
   tabsEl.innerHTML = APP_DATA.modules.map((mod, i) =>
     `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showModule(${i}, this)">${mod.icon} ${mod.name}</button>`
@@ -1160,7 +1160,7 @@ function validateExercise() {
 
   const q = ExerciseEngine.getCurrent();
   let correct = false;
-  let userAnswer = '';
+  let userAnswer;
 
   if (q.type === 'qcm') {
     if (selectedOptionIndex === -1) return;
@@ -1393,12 +1393,12 @@ function validateTestAnswer() {
 
   const q = ExerciseEngine.getCurrent();
   let correct = false;
-  let userAnswer = '';
+  let userAnswer;
 
   if (q.type === 'qcm') {
     if (selectedOptionIndex === -1) return;
     correct = selectedOptionIndex === q.correct;
-    userAnswer = q.options[selectedOptionIndex];
+
     document.querySelectorAll('.option-btn').forEach((btn, i) => {
       if (i === q.correct) btn.classList.add('correct');
       else if (i === selectedOptionIndex && !correct) btn.classList.add('incorrect');
@@ -1454,7 +1454,7 @@ function finishTest() {
   const mins = Math.floor(testSeconds / 60);
   const secs = testSeconds % 60;
 
-  let grade = '';
+  let grade;
   if (pct >= 90) grade = { emoji: '🏆', text: 'Exceptionnel !', color: 'var(--success)' };
   else if (pct >= 70) grade = { emoji: '🌟', text: 'Très bien !', color: 'var(--primary)' };
   else if (pct >= 50) grade = { emoji: '👍', text: 'Pas mal !', color: 'var(--warning)' };
@@ -1475,7 +1475,7 @@ function finishTest() {
 
     <div class="card">
       <h3 style="margin-bottom:16px">📋 Détail des réponses</h3>
-      ${ExerciseEngine.questions.map((q, i) => {
+      ${ExerciseEngine.questions.map((q, _i) => {
         return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:0.85rem">
           <span style="color:${q.answeredCorrectly ? 'var(--success)' : 'var(--danger)'}">${q.answeredCorrectly ? '✅' : '❌'}</span>
           <strong>${APP_DATA.tensesById[q.tenseId]?.nameFR || ''}</strong>
@@ -2002,7 +2002,7 @@ function importData() {
         State.save();
         updateUI();
         showToast('📥 Données importées avec succès', 'success');
-      } catch(err) {
+      } catch(_err) {
         showToast('❌ Fichier invalide', 'error');
       }
     };
@@ -2148,7 +2148,7 @@ function init() {
   }
 }
 
-export { APP_DATA, State, ExerciseEngine, NotificationManager, escapeHtml, sanitizeInput };
+export { APP_DATA, State, ExerciseEngine, NotificationManager, escapeHtml, sanitizeInput, showToast };
 
 Object.assign(window, {
   APP_DATA,
