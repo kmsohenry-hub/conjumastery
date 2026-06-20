@@ -6,7 +6,6 @@
  * vrai DOM plutôt qu'un mock approximatif.
  */
 
- fix-xss-show-toast-2195695224898109518
 import { describe, test, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -45,13 +44,26 @@ if (typeof vi === 'undefined') {
 global.window = global;
 global.document = {
   addEventListener: vi.fn(),
-  createElement: vi.fn(() => ({
-    style: {},
-    classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() },
-    appendChild: vi.fn(),
-    innerHTML: '',
-    textContent: ''
-  })),
+  createElement: vi.fn(() => {
+    const el = {
+      style: {},
+      classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() },
+      appendChild: vi.fn(),
+      _textContent: '',
+      get textContent() { return this._textContent; },
+      set textContent(val) {
+        this._textContent = val;
+        // Basic escaping to simulate jsdom/browser behavior for tests
+        // Browsers generally don't escape quotes when setting textContent
+        this.innerHTML = val
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      },
+      innerHTML: ''
+    };
+    return el;
+  }),
   getElementById: vi.fn(() => ({
     style: {},
     classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() },
@@ -87,14 +99,12 @@ global.APP_DATA = {
 const appContent = fs.readFileSync(path.resolve(__dirname, '..', 'app.js'), 'utf8');
 
 // Assign to global for evaluation
-const sanitizedContent = appContent
+appContent
   .replace(/function\s+escapeHtml/g, 'global.escapeHtml = function')
   .replace(/function\s+sanitizeInput/g, 'global.sanitizeInput = function');
 
 // @vitest-environment jsdom
-  main
 
-import { describe, test, expect } from 'vitest';
 import { escapeHtml, sanitizeInput } from '../src/core/security.js';
 
 describe('Security Utilities', () => {
