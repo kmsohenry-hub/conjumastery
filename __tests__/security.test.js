@@ -50,17 +50,16 @@ global.document = {
       classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() },
       appendChild: vi.fn(),
       _textContent: '',
-      get textContent() { return this._textContent; },
+      get textContent() {
+        return this._textContent;
+      },
       set textContent(val) {
         this._textContent = val;
         // Basic escaping to simulate jsdom/browser behavior for tests
         // Browsers generally don't escape quotes when setting textContent
-        this.innerHTML = val
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
+        this.innerHTML = val.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       },
-      innerHTML: ''
+      innerHTML: '',
     };
     return el;
   }),
@@ -68,20 +67,20 @@ global.document = {
     style: {},
     classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() },
     innerHTML: '',
-    textContent: ''
+    textContent: '',
   })),
   documentElement: { setAttribute: vi.fn() },
-  DOMContentLoaded: 'DOMContentLoaded'
+  DOMContentLoaded: 'DOMContentLoaded',
 };
 global.localStorage = {
   getItem: vi.fn(() => null),
   setItem: vi.fn(),
   removeItem: vi.fn(),
-  clear: vi.fn()
+  clear: vi.fn(),
 };
 global.Notification = {
   permission: 'granted',
-  requestPermission: vi.fn().mockResolvedValue('granted')
+  requestPermission: vi.fn().mockResolvedValue('granted'),
 };
 
 // Global mocks for app.js
@@ -92,7 +91,7 @@ global.updateUI = vi.fn();
 // Mock APP_DATA
 global.APP_DATA = {
   tenses: [],
-  irregularVerbs: []
+  irregularVerbs: [],
 };
 
 // Load app.js
@@ -141,9 +140,7 @@ describe('Security Utilities', () => {
   describe('escapeHtml', () => {
     test('escapes the canonical XSS payload', () => {
       const out = escapeHtml('<script>alert("xss")</script>');
-      // jsdom n'échappe pas les guillemets via textContent/innerHTML
-      // (comportement conforme au navigateur réel).
-      expect(out).toBe('&lt;script&gt;alert("xss")&lt;/script&gt;');
+      expect(out).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
       expect(out).not.toContain('<script>');
     });
 
