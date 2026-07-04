@@ -1789,9 +1789,9 @@ function performGlobalSearch() {
 
   container.innerHTML = results.map(r => `
     <div class="search-result-item" onclick="${r.action || ''}">
-      <div class="sr-type">${r.type}</div>
-      <div class="sr-title">${r.title}</div>
-      <div class="sr-desc">${r.desc}</div>
+      <div class="sr-type">${escapeHtml(r.type)}</div>
+      <div class="sr-title">${escapeHtml(r.title)}</div>
+      <div class="sr-desc">${escapeHtml(r.desc)}</div>
     </div>
   `).join('');
 }
