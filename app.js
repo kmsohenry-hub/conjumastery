@@ -1119,6 +1119,7 @@ function renderExerciseQuestion(q) {
 
   html += `</div>`;
   container.innerHTML = html;
+  currentOptionButtons = Array.from(container.querySelectorAll('.option-btn'));
 
   if (q.type !== 'qcm') {
     setTimeout(() => document.getElementById('exerciseInput')?.focus(), 100);
@@ -1126,10 +1127,11 @@ function renderExerciseQuestion(q) {
 }
 
 let selectedOptionIndex = -1;
+let currentOptionButtons = [];
 
 function selectOption(btn, index) {
   if (ExerciseEngine.answered) return;
-  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  currentOptionButtons.forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedOptionIndex = index;
 }
@@ -1167,7 +1169,7 @@ function validateExercise() {
     correct = selectedOptionIndex === q.correct;
     userAnswer = q.options[selectedOptionIndex];
 
-    document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    currentOptionButtons.forEach((btn, i) => {
       if (i === q.correct) btn.classList.add('correct');
       else if (i === selectedOptionIndex && !correct) btn.classList.add('incorrect');
     });
@@ -1382,6 +1384,7 @@ function renderTestQuestion() {
   }
   html += `</div>`;
   container.innerHTML = html;
+  currentOptionButtons = Array.from(container.querySelectorAll('.option-btn'));
 
   if (q.type !== 'qcm') {
     setTimeout(() => document.getElementById('testInput')?.focus(), 100);
@@ -1399,7 +1402,7 @@ function validateTestAnswer() {
     if (selectedOptionIndex === -1) return;
     correct = selectedOptionIndex === q.correct;
 
-    document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    currentOptionButtons.forEach((btn, i) => {
       if (i === q.correct) btn.classList.add('correct');
       else if (i === selectedOptionIndex && !correct) btn.classList.add('incorrect');
     });
