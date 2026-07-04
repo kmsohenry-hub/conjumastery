@@ -97,16 +97,54 @@ export function getConjugation(verbsByBase, verb, tenseId, subject, is3rdSing) {
 }
 
 export function getAuxiliary(tenseId, subject, is3rdSing, negative = false) {
-  switch (tenseId) {
-    case 'present_perfect':
-      return is3rdSing ? 'has' : 'have';
-    case 'past_perfect':
-      return 'had';
-    case 'future_will':
-      return 'will';
-    case 'future_going_to':
-      return subject === 'I' ? 'am going to' : is3rdSing ? 'is going to' : 'are going to';
-    default:
-      return '';
-  }
+  // Helper "to be" en fonction du sujet et du temps
+  const beNow =
+    subject === 'I'
+      ? negative
+        ? 'am not'
+        : 'am'
+      : is3rdSing
+        ? negative
+          ? "isn't"
+          : 'is'
+        : negative
+          ? "aren't"
+          : 'are';
+  const bePast =
+    subject === 'I' || is3rdSing ? (negative ? "wasn't" : 'was') : negative ? "weren't" : 'were';
+  const hasHave = is3rdSing ? (negative ? "hasn't" : 'has') : negative ? "haven't" : 'have';
+
+  const aux = {
+    present_simple: is3rdSing ? (negative ? "doesn't" : 'does') : negative ? "don't" : 'do',
+    present_continuous: beNow,
+    present_perfect: hasHave,
+    present_perfect_continuous: `${hasHave} been`,
+    past_simple: negative ? "didn't" : 'did',
+    past_continuous: bePast,
+    past_perfect: negative ? "hadn't" : 'had',
+    past_perfect_continuous: `${negative ? "hadn't" : 'had'} been`,
+    future_will: negative ? "won't" : 'will',
+    future_going_to:
+      subject === 'I'
+        ? negative
+          ? 'am not going to'
+          : 'am going to'
+        : is3rdSing
+          ? negative
+            ? "isn't going to"
+            : 'is going to'
+          : negative
+            ? "aren't going to"
+            : 'are going to',
+    future_continuous: `${negative ? "won't" : 'will'} be`,
+    future_perfect: `${negative ? "won't" : 'will'} have`,
+    future_perfect_continuous: `${negative ? "won't" : 'will'} have been`,
+    conditional_0: is3rdSing ? (negative ? "doesn't" : 'does') : negative ? "don't" : 'do',
+    conditional_1: negative ? "won't" : 'will',
+    conditional_2: negative ? "wouldn't" : 'would',
+    conditional_3: `${negative ? "wouldn't" : 'would'} have`,
+    mixed_conditional: negative ? "wouldn't" : 'would',
+  };
+
+  return aux[tenseId] || '';
 }

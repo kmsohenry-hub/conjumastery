@@ -43,7 +43,7 @@ const createMockElement = () => ({
   click: vi.fn(),
   innerHTML: '',
   textContent: '',
-  remove: vi.fn()
+  remove: vi.fn(),
 });
 
 describe('answerMatches', () => {
@@ -71,8 +71,8 @@ describe('answerMatches', () => {
 
   test('devrait normaliser les apostrophes', () => {
     expect(answerMatches("I've", "I've")).toBe(true);
-    expect(answerMatches("I’ve", "I've")).toBe(true);
-    expect(answerMatches("I've", "I’ve")).toBe(true);
+    expect(answerMatches('I’ve', "I've")).toBe(true);
+    expect(answerMatches("I've", 'I’ve')).toBe(true);
   });
 
   test('devrait gérer les variantes exactes avec des barres obliques', () => {
@@ -104,18 +104,26 @@ global.document = {
   getElementById: vi.fn(() => createMockElement()),
   documentElement: { setAttribute: vi.fn() },
   body: { appendChild: vi.fn() },
-  DOMContentLoaded: 'DOMContentLoaded'
+  DOMContentLoaded: 'DOMContentLoaded',
 };
 global.localStorage = {
   store: {},
-  clear() { this.store = {}; },
-  getItem(key) { return this.store[key] || null; },
-  setItem(key, value) { this.store[key] = String(value); },
-  removeItem(key) { delete this.store[key]; }
+  clear() {
+    this.store = {};
+  },
+  getItem(key) {
+    return this.store[key] || null;
+  },
+  setItem(key, value) {
+    this.store[key] = String(value);
+  },
+  removeItem(key) {
+    delete this.store[key];
+  },
 };
 global.Notification = {
   permission: 'granted',
-  requestPermission: vi.fn().mockResolvedValue('granted')
+  requestPermission: vi.fn().mockResolvedValue('granted'),
 };
 
 const { State, ExerciseEngine, APP_DATA, answerMatches } = await import('../app.js');
@@ -138,7 +146,7 @@ beforeEach(() => {
     activityLog: [],
     favorites: [],
     spacedRepetition: {},
-    settings: { theme: 'light' }
+    settings: { theme: 'light' },
   };
   localStorage.clear();
 });
@@ -148,7 +156,7 @@ describe('State Management', () => {
     test('devrait ajouter des XP correctement', () => {
       State.addXP(50);
       expect(State.data.xp).toBe(50);
-      
+
       State.addXP(30);
       expect(State.data.xp).toBe(80);
     });
@@ -156,12 +164,12 @@ describe('State Management', () => {
     test('devrait augmenter le niveau quand le seuil est atteint', () => {
       State.addXP(100);
       expect(State.data.level).toBe(2);
-      
+
       State.addXP(100);
       expect(State.data.level).toBe(3);
     });
 
-    test('devrait enregistrer l\'activité dans le log', () => {
+    test("devrait enregistrer l'activité dans le log", () => {
       State.addXP(25);
       expect(State.data.activityLog.length).toBe(1);
       expect(State.data.activityLog[0].xp).toBe(25);
@@ -171,7 +179,7 @@ describe('State Management', () => {
   describe('recordAnswer', () => {
     test('devrait enregistrer une réponse correcte', () => {
       State.recordAnswer('present_simple', true);
-      
+
       expect(State.data.totalExercises).toBe(1);
       expect(State.data.correctAnswers).toBe(1);
       expect(State.data.currentStreak).toBe(1);
@@ -182,7 +190,7 @@ describe('State Management', () => {
 
     test('devrait enregistrer une réponse incorrecte', () => {
       State.recordAnswer('past_simple', false);
-      
+
       expect(State.data.totalExercises).toBe(1);
       expect(State.data.incorrectAnswers).toBe(1);
       expect(State.data.currentStreak).toBe(0);
@@ -194,10 +202,10 @@ describe('State Management', () => {
       State.recordAnswer('present_simple', true);
       State.recordAnswer('present_simple', true);
       State.recordAnswer('present_simple', true);
-      
+
       expect(State.data.currentStreak).toBe(3);
       expect(State.data.bestStreak).toBe(3);
-      
+
       // Une réponse incorrecte réinitialise la série actuelle
       State.recordAnswer('present_simple', false);
       expect(State.data.currentStreak).toBe(0);
@@ -221,14 +229,14 @@ describe('State Management', () => {
     test('devrait supprimer un favori', () => {
       State.addFavorite('test_item');
       expect(State.isFavorite('test_item')).toBe(true);
-      
+
       State.removeFavorite('test_item');
       expect(State.isFavorite('test_item')).toBe(false);
     });
 
     test('devrait vérifier si un élément est favori', () => {
       expect(State.isFavorite('new_item')).toBe(false);
-      
+
       State.addFavorite('new_item');
       expect(State.isFavorite('new_item')).toBe(true);
     });
@@ -240,11 +248,11 @@ describe('State Management', () => {
       for (let i = 0; i < 5; i++) {
         State.recordAnswer('past_perfect', i < 2); // 2/5 correct = 40%
       }
-      
+
       const weakPoints = State.getWeakPoints();
       expect(weakPoints.length).toBeGreaterThan(0);
-      
-      const pastPerfectWeak = weakPoints.find(wp => wp.tenseId === 'past_perfect');
+
+      const pastPerfectWeak = weakPoints.find((wp) => wp.tenseId === 'past_perfect');
       if (pastPerfectWeak) {
         expect(pastPerfectWeak.accuracy).toBeLessThan(0.7);
       }
@@ -254,9 +262,9 @@ describe('State Management', () => {
       State.recordAnswer('present_simple', false);
       State.recordAnswer('present_simple', true);
       // Seulement 2 exercices, moins que le minimum de 3
-      
+
       const weakPoints = State.getWeakPoints();
-      const presentSimple = weakPoints.find(wp => wp.tenseId === 'present_simple');
+      const presentSimple = weakPoints.find((wp) => wp.tenseId === 'present_simple');
       expect(presentSimple).toBeUndefined();
     });
   });
@@ -265,7 +273,7 @@ describe('State Management', () => {
     test('devrait marquer une leçon comme terminée et ajouter des XP', () => {
       const initialXP = State.data.xp;
       State.completeLesson('lesson_1');
-      
+
       expect(State.data.completedLessons).toContain('lesson_1');
       expect(State.data.xp).toBe(initialXP + 25);
     });
@@ -273,7 +281,7 @@ describe('State Management', () => {
     test('ne devrait pas ajouter des XP pour une leçon déjà complétée', () => {
       State.completeLesson('lesson_1');
       const xpAfterFirst = State.data.xp;
-      
+
       State.completeLesson('lesson_1');
       expect(State.data.xp).toBe(xpAfterFirst); // Pas de XP supplémentaires
     });
@@ -285,9 +293,9 @@ describe('State Management', () => {
       State.recordAnswer('test', true);
       State.addFavorite('fav');
       State.completeLesson('lesson_1');
-      
+
       State.reset();
-      
+
       expect(State.data.xp).toBe(0);
       expect(State.data.level).toBe(1);
       expect(State.data.totalExercises).toBe(0);
@@ -338,10 +346,16 @@ describe('ExerciseEngine - getConjugation', () => {
 
   describe('Continuous tenses', () => {
     test('devrait ajouter -ing pour les temps continus', () => {
-      expect(ExerciseEngine.getConjugation('work', 'present_continuous', 'I', false)).toBe('working');
+      expect(ExerciseEngine.getConjugation('work', 'present_continuous', 'I', false)).toBe(
+        'working',
+      );
       expect(ExerciseEngine.getConjugation('play', 'past_continuous', 'He', true)).toBe('playing');
-      expect(ExerciseEngine.getConjugation('study', 'future_continuous', 'They', false)).toBe('studying');
-      expect(ExerciseEngine.getConjugation('make', 'present_continuous', 'I', false)).toBe('making');
+      expect(ExerciseEngine.getConjugation('study', 'future_continuous', 'They', false)).toBe(
+        'studying',
+      );
+      expect(ExerciseEngine.getConjugation('make', 'present_continuous', 'I', false)).toBe(
+        'making',
+      );
       expect(ExerciseEngine.getConjugation('lie', 'present_continuous', 'He', true)).toBe('lying');
     });
   });
@@ -367,7 +381,7 @@ describe('ExerciseEngine - generateQuestions', () => {
 
   test('devrait générer des questions avec un type spécifique', () => {
     const questions = ExerciseEngine.generateQuestions('qcm', ['present_simple'], 'easy', 3);
-    questions.forEach(q => {
+    questions.forEach((q) => {
       expect(q.type).toBe('qcm');
       expect(q.sentence).toBeDefined();
       expect(q.options).toBeDefined();
@@ -376,15 +390,15 @@ describe('ExerciseEngine - generateQuestions', () => {
 
   test('devrait générer des questions de type fill', () => {
     const questions = ExerciseEngine.generateQuestions('fill', ['past_simple'], 'easy', 2);
-    questions.forEach(q => {
+    questions.forEach((q) => {
       expect(q.type).toBe('fill');
       expect(q.answer).toBeDefined();
     });
   });
 
-  test('devrait inclure l\'ID du temps dans chaque question', () => {
+  test("devrait inclure l'ID du temps dans chaque question", () => {
     const questions = ExerciseEngine.generateQuestions('qcm', ['present_simple'], 'easy', 3);
-    questions.forEach(q => {
+    questions.forEach((q) => {
       expect(q.tenseId).toBeDefined();
     });
   });
@@ -396,17 +410,17 @@ describe('Spaced Repetition', () => {
   });
 
   describe('updateSpacedRepetition', () => {
-    test('devrait augmenter l\'intervalle pour une réponse correcte', () => {
+    test("devrait augmenter l'intervalle pour une réponse correcte", () => {
       State.updateSpacedRepetition('present_simple', true);
-      
+
       const sr = State.data.spacedRepetition['present_simple'];
       expect(sr.interval).toBeGreaterThan(1);
       expect(sr.ease).toBeGreaterThan(2.5);
     });
 
-    test('devrait réinitialiser l\'intervalle pour une réponse incorrecte', () => {
+    test("devrait réinitialiser l'intervalle pour une réponse incorrecte", () => {
       State.updateSpacedRepetition('past_simple', false);
-      
+
       const sr = State.data.spacedRepetition['past_simple'];
       expect(sr.interval).toBe(1);
       expect(sr.errors).toBeGreaterThan(0);
@@ -416,7 +430,7 @@ describe('Spaced Repetition', () => {
       const before = Date.now();
       State.updateSpacedRepetition('present_perfect', true);
       const after = Date.now();
-      
+
       const sr = State.data.spacedRepetition['present_perfect'];
       expect(sr.nextReview).toBeGreaterThan(before);
       expect(sr.nextReview).toBeLessThanOrEqual(after + sr.interval * 60 * 1000);
@@ -429,19 +443,34 @@ describe('Spaced Repetition', () => {
         interval: 1,
         nextReview: 0, // Déjà dû
         ease: 2.5,
-        errors: 0
+        errors: 0,
       };
-      
+
       const queue = State.getReviewQueue();
       expect(queue.length).toBe(1);
       expect(queue[0].tenseId).toBe('present_simple');
     });
 
     test('devrait trier par date de révision', () => {
-      State.data.spacedRepetition['tense_1'] = { interval: 1, nextReview: 1000, ease: 2.5, errors: 0 };
-      State.data.spacedRepetition['tense_2'] = { interval: 1, nextReview: 500, ease: 2.5, errors: 0 };
-      State.data.spacedRepetition['tense_3'] = { interval: 1, nextReview: 1500, ease: 2.5, errors: 0 };
-      
+      State.data.spacedRepetition['tense_1'] = {
+        interval: 1,
+        nextReview: 1000,
+        ease: 2.5,
+        errors: 0,
+      };
+      State.data.spacedRepetition['tense_2'] = {
+        interval: 1,
+        nextReview: 500,
+        ease: 2.5,
+        errors: 0,
+      };
+      State.data.spacedRepetition['tense_3'] = {
+        interval: 1,
+        nextReview: 1500,
+        ease: 2.5,
+        errors: 0,
+      };
+
       const queue = State.getReviewQueue();
       expect(queue[0].tenseId).toBe('tense_2');
       expect(queue[1].tenseId).toBe('tense_1');
@@ -453,13 +482,23 @@ describe('Spaced Repetition', () => {
 describe('APP_DATA Structure', () => {
   test('devrait avoir tous les temps définis', () => {
     const expectedTenses = [
-      'present_simple', 'present_continuous', 'present_perfect', 'present_perfect_continuous',
-      'past_simple', 'past_continuous', 'past_perfect', 'past_perfect_continuous',
-      'future_will', 'future_going_to', 'future_continuous', 'future_perfect', 'future_perfect_continuous'
+      'present_simple',
+      'present_continuous',
+      'present_perfect',
+      'present_perfect_continuous',
+      'past_simple',
+      'past_continuous',
+      'past_perfect',
+      'past_perfect_continuous',
+      'future_will',
+      'future_going_to',
+      'future_continuous',
+      'future_perfect',
+      'future_perfect_continuous',
     ];
-    
-    expectedTenses.forEach(tenseId => {
-      const tense = APP_DATA.tenses.find(t => t.id === tenseId);
+
+    expectedTenses.forEach((tenseId) => {
+      const tense = APP_DATA.tenses.find((t) => t.id === tenseId);
       expect(tense).toBeDefined();
       expect(tense.name).toBeDefined();
       expect(tense.nameFR).toBeDefined();
@@ -468,15 +507,15 @@ describe('APP_DATA Structure', () => {
 
   test('devrait avoir des verbes irréguliers', () => {
     expect(APP_DATA.irregularVerbs.length).toBeGreaterThan(0);
-    
-    const go = APP_DATA.irregularVerbs.find(v => v.base === 'go');
+
+    const go = APP_DATA.irregularVerbs.find((v) => v.base === 'go');
     expect(go).toBeDefined();
     expect(go.past).toBe('went');
     expect(go.pp).toBe('gone');
   });
 
   test('chaque temps devrait avoir une structure définie', () => {
-    APP_DATA.tenses.forEach(tense => {
+    APP_DATA.tenses.forEach((tense) => {
       expect(tense.structure).toBeDefined();
       expect(tense.explanation).toBeDefined();
       expect(tense.examples).toBeDefined();

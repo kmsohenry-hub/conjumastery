@@ -43,7 +43,7 @@ const createMockElement = () => ({
   click: vi.fn(),
   innerHTML: '',
   textContent: '',
-  remove: vi.fn()
+  remove: vi.fn(),
 });
 
 // Mock DOM & globals
@@ -53,17 +53,17 @@ global.document = {
   createElement: vi.fn(createMockElement),
   getElementById: vi.fn((_id) => createMockElement()),
   documentElement: { setAttribute: vi.fn() },
-  DOMContentLoaded: 'DOMContentLoaded'
+  DOMContentLoaded: 'DOMContentLoaded',
 };
 global.localStorage = {
   getItem: vi.fn(() => null),
   setItem: vi.fn(),
   removeItem: vi.fn(),
-  clear: vi.fn()
+  clear: vi.fn(),
 };
 global.Notification = {
   permission: 'granted',
-  requestPermission: vi.fn().mockResolvedValue('granted')
+  requestPermission: vi.fn().mockResolvedValue('granted'),
 };
 
 // Global mocks for app.js
@@ -73,9 +73,8 @@ global.updateUI = vi.fn();
 // Mock APP_DATA
 global.APP_DATA = {
   tenses: [],
-  irregularVerbs: []
+  irregularVerbs: [],
 };
-
 
 describe('showToast XSS Vulnerability', () => {
   test('showToast should NOT render HTML in the message', () => {

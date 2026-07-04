@@ -5,50 +5,8 @@ import {
   getPresentSimpleForm,
   getIngForm,
   getConjugation,
+  getAuxiliary,
 } from './conjugation.js';
-
-export function getAuxiliary(tenseId, subject, is3rdSing, negative = false) {
-  // Helper "to be" en fonction du sujet et du temps
-  const beNow =
-    subject === 'I'
-      ? negative
-        ? 'am not'
-        : 'am'
-      : is3rdSing
-        ? negative
-          ? "isn't"
-          : 'is'
-        : negative
-          ? "aren't"
-          : 'are';
-  const bePast =
-    subject === 'I' || is3rdSing ? (negative ? "wasn't" : 'was') : negative ? "weren't" : 'were';
-
-  switch (tenseId) {
-    case 'present_simple':
-      return is3rdSing ? (negative ? "doesn't" : 'does') : negative ? "don't" : 'do';
-    case 'past_simple':
-      return negative ? "didn't" : 'did';
-    case 'present_continuous':
-      return beNow;
-    case 'past_continuous':
-      return bePast;
-    case 'present_perfect':
-    case 'present_perfect_continuous':
-      return is3rdSing ? (negative ? "hasn't" : 'has') : negative ? "haven't" : 'have';
-    case 'past_perfect':
-    case 'past_perfect_continuous':
-      return negative ? "hadn't" : 'had';
-    case 'future_will':
-    case 'future_continuous':
-    case 'future_perfect':
-      return negative ? "won't" : 'will';
-    case 'future_going_to':
-      return beNow + ' going to';
-    default:
-      return '';
-  }
-}
 
 export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
   let fullSentence, correctAnswer;
@@ -65,12 +23,13 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
   ) {
     const templates = APP_DATA.exerciseTemplates[tense.id].qcm;
     const tpl = templates[Math.floor(Math.random() * templates.length)];
+    const originalAnswer = tpl.options[tpl.correct];
     const shuf = [...tpl.options].sort(() => Math.random() - 0.5);
     return {
       type: 'qcm',
       sentence: tpl.sentence,
       options: shuf,
-      correct: shuf.indexOf(tpl.answer),
+      correct: shuf.indexOf(originalAnswer),
       explanation: tpl.explanation,
       tenseId: tense.id,
       hint: `Temps : ${tense.nameFR}`,
