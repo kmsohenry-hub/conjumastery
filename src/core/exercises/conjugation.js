@@ -96,7 +96,7 @@ export function getConjugation(verbsByBase, verb, tenseId, subject, is3rdSing) {
   }
 }
 
-export function getAuxiliary(tenseId, subject, is3rdSing) {
+export function getAuxiliary(tenseId, subject, is3rdSing, negative = false) {
   switch (tenseId) {
     case 'present_perfect':
       return is3rdSing ? 'has' : 'have';
