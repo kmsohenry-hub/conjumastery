@@ -856,9 +856,18 @@ function renderDashboardChart() {
 function renderLessons() {
   const tabsEl = document.getElementById('lessonTabs');
 
-  tabsEl.innerHTML = APP_DATA.modules.map((mod, i) =>
-    `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showModule(${i}, this)">${mod.icon} ${mod.name}</button>`
-  ).join('');
+  const fragment = document.createDocumentFragment();
+  const len = APP_DATA.modules.length;
+  for (let i = 0; i < len; i++) {
+    const mod = APP_DATA.modules[i];
+    const btn = document.createElement('button');
+    btn.className = `tab ${i === 0 ? 'active' : ''}`;
+    btn.setAttribute('onclick', `showModule(${i}, this)`);
+    btn.innerHTML = `${mod.icon} ${mod.name}`;
+    fragment.appendChild(btn);
+  }
+  tabsEl.innerHTML = '';
+  tabsEl.appendChild(fragment);
 
   showModule(0);
 }
