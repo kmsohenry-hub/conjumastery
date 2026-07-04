@@ -144,7 +144,9 @@ const State = {
 
   getWeakPoints() {
     const weak = [];
-    for (const [tenseId, stats] of Object.entries(this.data.tenseStats)) {
+    for (const tenseId in this.data.tenseStats) {
+      if (!Object.prototype.hasOwnProperty.call(this.data.tenseStats, tenseId)) continue;
+      const stats = this.data.tenseStats[tenseId];
       const accuracy = stats.correct / stats.total;
       if (stats.total >= 3 && accuracy < 0.7) {
         weak.push({ tenseId, accuracy, total: stats.total, errors: stats.total - stats.correct });
