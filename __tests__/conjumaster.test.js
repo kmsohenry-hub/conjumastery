@@ -46,6 +46,56 @@ const createMockElement = () => ({
   remove: vi.fn()
 });
 
+describe('answerMatches', () => {
+  test('devrait retourner false pour un type expectedAnswer invalide', () => {
+    expect(answerMatches('test', undefined)).toBe(false);
+    expect(answerMatches('test', null)).toBe(false);
+    expect(answerMatches('test', 123)).toBe(false);
+    expect(answerMatches('test', true)).toBe(false);
+  });
+
+  test('devrait correspondre exactement', () => {
+    expect(answerMatches('I went', 'I went')).toBe(true);
+    expect(answerMatches('she goes', 'she goes')).toBe(true);
+  });
+
+  test('devrait être insensible à la casse', () => {
+    expect(answerMatches('I WENT', 'i went')).toBe(true);
+    expect(answerMatches('She Goes', 'she goes')).toBe(true);
+  });
+
+  test('devrait ignorer les espaces supplémentaires', () => {
+    expect(answerMatches('  I   went  ', 'I went')).toBe(true);
+    expect(answerMatches('she goes', '  she   goes  ')).toBe(true);
+  });
+
+  test('devrait normaliser les apostrophes', () => {
+    expect(answerMatches("I've", "I've")).toBe(true);
+    expect(answerMatches("I’ve", "I've")).toBe(true);
+    expect(answerMatches("I've", "I’ve")).toBe(true);
+  });
+
+  test('devrait gérer les variantes exactes avec des barres obliques', () => {
+    expect(answerMatches('dreamt', 'dreamt/dreamed')).toBe(true);
+    expect(answerMatches('dreamed', 'dreamt/dreamed')).toBe(true);
+    expect(answerMatches('dreamed', 'dreamed/dreamt')).toBe(true);
+    expect(answerMatches('learned', 'learnt / learned')).toBe(true);
+  });
+
+  test('devrait gérer les variantes dans des phrases', () => {
+    expect(answerMatches('I dreamt of it', 'I dreamt/dreamed of it')).toBe(true);
+    expect(answerMatches('I dreamed of it', 'I dreamt/dreamed of it')).toBe(true);
+    expect(answerMatches('she learnt it', 'she learnt/learned it')).toBe(true);
+  });
+
+  test('ne devrait pas correspondre à des réponses incorrectes', () => {
+    expect(answerMatches('I go', 'I went')).toBe(false);
+    expect(answerMatches('dreamt', 'dream')).toBe(false);
+    expect(answerMatches('dream', 'dreamt/dreamed')).toBe(false);
+    expect(answerMatches('I dreamt of it', 'I dreamt/dreamed')).toBe(false);
+  });
+});
+
 // Mock DOM & globals before importing the application module.
 global.window = global;
 global.document = {
@@ -68,7 +118,7 @@ global.Notification = {
   requestPermission: vi.fn().mockResolvedValue('granted')
 };
 
-const { State, ExerciseEngine, APP_DATA } = await import('../app.js');
+const { State, ExerciseEngine, APP_DATA, answerMatches } = await import('../app.js');
 
 beforeEach(() => {
   // Réinitialiser l'état avant chaque test
