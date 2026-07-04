@@ -159,7 +159,9 @@ const State = {
   getReviewQueue() {
     const now = Date.now();
     const queue = [];
-    for (const [tenseId, data] of Object.entries(this.data.spacedRepetition)) {
+    for (const tenseId in this.data.spacedRepetition) {
+      if (!Object.prototype.hasOwnProperty.call(this.data.spacedRepetition, tenseId)) continue;
+      const data = this.data.spacedRepetition[tenseId];
       if (data.nextReview <= now) {
         queue.push({ tenseId, ...data });
       }
@@ -956,20 +958,20 @@ function openTenseModal(tense) {
     ${renderTimeline(tense)}
 
     <h4 style="margin:20px 0 12px">📖 Exemples</h4>
-    ${tense.examples.map(e => `<div class="example-sentence">
+    ${tense.examples.reduce((acc, e) => acc + `<div class="example-sentence">
       <div class="en">${e.en}</div>
       <div class="fr">${e.fr}</div>
-    </div>`).join('')}
+    </div>`, '')}
 
     <h4 style="margin:20px 0 12px">🎯 Usages</h4>
     <ul style="padding-left:20px;font-size:0.9rem;color:var(--text-light);line-height:2">
-      ${tense.usage.map(u => `<li>${u}</li>`).join('')}
+      ${tense.usage.reduce((acc, u) => acc + `<li>${u}</li>`, '')}
     </ul>
 
     ${tense.signalWords ? `
     <h4 style="margin:20px 0 12px">🔑 Mots indicateurs</h4>
     <div style="display:flex;flex-wrap:wrap;gap:6px">
-      ${tense.signalWords.map(w => `<span class="tag tag-blue">${w}</span>`).join('')}
+      ${tense.signalWords.reduce((acc, w) => acc + `<span class="tag tag-blue">${w}</span>`, '')}
     </div>` : ''}
 
     ${tense.nuances ? `
@@ -980,10 +982,10 @@ function openTenseModal(tense) {
 
     ${tense.commonErrors.length > 0 ? `
     <h4 style="margin:20px 0 12px">⚠️ Erreurs fréquentes</h4>
-    ${tense.commonErrors.map(e => `<div class="error-alert">
+    ${tense.commonErrors.reduce((acc, e) => acc + `<div class="error-alert">
       <span class="wrong">${e.wrong}</span> → <span class="right">${e.right}</span>
       <br><small style="color:var(--text-light)">${e.note}</small>
-    </div>`).join('')}` : ''}
+    </div>`, '')}` : ''}
 
     <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="closeModal();startExerciseForTense('${tense.id}')">🎮 Pratiquer ce temps</button>
@@ -1013,7 +1015,7 @@ function openPassiveModal() {
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Temps</th><th>Active</th><th>Passive</th></tr>
-        ${info.examples.map(e => `<tr><td>${e.tense}</td><td>${e.active}</td><td><strong>${e.passive}</strong></td></tr>`).join('')}
+        ${info.examples.reduce((acc, e) => acc + `<tr><td>${e.tense}</td><td>${e.active}</td><td><strong>${e.passive}</strong></td></tr>`, '')}
       </table>
     </div>
     <div class="explain-block" style="border-left-color:var(--accent);margin-top:16px">
@@ -1040,14 +1042,14 @@ function openReportedModal() {
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Discours direct</th><th>Discours indirect</th><th>Exemple</th></tr>
-        ${info.rules.map(r => `<tr><td>${r.direct}</td><td><strong>${r.reported}</strong></td><td><em>${r.example}</em></td></tr>`).join('')}
+        ${info.rules.reduce((acc, r) => acc + `<tr><td>${r.direct}</td><td><strong>${r.reported}</strong></td><td><em>${r.example}</em></td></tr>`, '')}
       </table>
     </div>
     <h4 style="margin:16px 0 12px">📅 Changements de temps/mots</h4>
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Direct</th><th>Indirect</th></tr>
-        ${info.timeChanges.map(t => `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`).join('')}
+        ${info.timeChanges.reduce((acc, t) => acc + `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`, '')}
       </table>
     </div>
     <div style="margin-top:20px"><button class="btn btn-primary" onclick="closeModal();startExercise('mixed')">🎮 Pratiquer</button></div>`;
@@ -1675,15 +1677,7 @@ function showComparison(category, tabEl) {
           <th>Exemple</th>
           <th>Mots-clés</th>
         </tr>
-        ${tenses.map(t => `
-          <tr>
-            <td><strong>${escapeHtml(t.nameFR)}</strong></td>
-            <td><code style="font-size:0.75rem">${escapeHtml(t.structure)}</code></td>
-            <td>${escapeHtml(t.usage[0].split(':')[1]?.trim() || t.usage[0])}</td>
-            <td><em>${escapeHtml(t.examples[0]?.en)}</em></td>
-            <td>${t.signalWords?.slice(0, 4).map(w => `<span class="tag tag-blue" style="margin:2px">${escapeHtml(w)}</span>`).join('')}</td>
-          </tr>
-        `).join('')}
+        ${tenses.reduce((acc, t) => acc + `\n          <tr>\n            <td><strong>${escapeHtml(t.nameFR)}</strong></td>\n            <td><code style="font-size:0.75rem">${escapeHtml(t.structure)}</code></td>\n            <td>${escapeHtml(t.usage[0].split(':')[1]?.trim() || t.usage[0])}</td>\n            <td><em>${escapeHtml(t.examples[0]?.en)}</em></td>\n            <td>${t.signalWords?.slice(0, 4).reduce((wAcc, w) => wAcc + `<span class="tag tag-blue" style="margin:2px">${escapeHtml(w)}</span>`, '') || ''}</td>\n          </tr>\n        `, '')}
       </table>
     </div>
 
@@ -1956,8 +1950,15 @@ function renderStats() {
     d.errorLog.forEach(e => {
       tenseErrors[e.tenseId] = (tenseErrors[e.tenseId] || 0) + 1;
     });
-    const sorted = Object.entries(tenseErrors).sort((a, b) => b[1] - a[1]).slice(0, 8);
-    errorsEl.innerHTML = sorted.map(([tenseId, count]) => {
+    const sorted = [];
+    for (const tenseId in tenseErrors) {
+      if (Object.prototype.hasOwnProperty.call(tenseErrors, tenseId)) {
+        sorted.push([tenseId, tenseErrors[tenseId]]);
+      }
+    }
+    sorted.sort((a, b) => b[1] - a[1]);
+    const topSorted = sorted.slice(0, 8);
+    errorsEl.innerHTML = topSorted.map(([tenseId, count]) => {
       const tense = APP_DATA.tensesById[tenseId];
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
         <span style="font-size:0.9rem">${tense ? tense.nameFR : tenseId}</span>
