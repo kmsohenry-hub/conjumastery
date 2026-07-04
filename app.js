@@ -831,7 +831,8 @@ function renderLessons() {
 
 function showModule(index, tabEl) {
   if (tabEl) {
-    document.querySelectorAll('#lessonTabs .tab').forEach(t => t.classList.remove('active'));
+    const active = tabEl.parentElement.querySelector('.active');
+    if (active) active.classList.remove('active');
     tabEl.classList.add('active');
   }
   const mod = APP_DATA.modules[index];
