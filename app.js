@@ -117,9 +117,8 @@ const State = {
   },
 
   updateSpacedRepetition(tenseId, correct) {
-    // In the old code, updateSpacedRepetition updated the spaced repetition queue
-    // since store.recordAnswer already does this, we might not need to do anything here if it's called with recordAnswer
-    // But if it's called separately, we'll implement it
+    // Kept for backward compatibility and tests.
+    // In normal execution, this is handled by store.recordAnswer.
     const spacedRepetition = { ...store.getState().spacedRepetition };
     if (!spacedRepetition[tenseId]) {
       spacedRepetition[tenseId] = { interval: 1, nextReview: Date.now(), ease: 2.5, errors: 0 };
@@ -838,10 +837,10 @@ function validateExercise() {
     ExerciseEngine.score++;
     State.addXP(10);
     State.recordAnswer(q.tenseId, true);
-    State.updateSpacedRepetition(q.tenseId, true);
+    // State.updateSpacedRepetition(q.tenseId, true);
   } else {
     State.recordAnswer(q.tenseId, false);
-    State.updateSpacedRepetition(q.tenseId, false);
+    // // State.updateSpacedRepetition(q.tenseId, false);
   }
 
   // Show feedback

@@ -26,12 +26,14 @@
 ## 🌟 Fonctionnalités
 
 ### 📊 Tableau de bord personnalisé
+
 - **Système de progression** : Gagnez de l'XP et montez en niveau
 - **Suivi statistique** : Visualisez vos exercices réussis/échoués
 - **Répétition espacée** : Révisez intelligemment avec un algorithme de révision optimisé
 - **File d'attente de révision** : Ne révisez que ce dont vous avez besoin
 
 ### 📚 Parcours d'apprentissage structurés
+
 - **Leçons par temps verbaux** : Du niveau débutant à expert
   - Present Simple / Continuous / Perfect
   - Past Simple / Continuous / Perfect
@@ -41,6 +43,7 @@
 - **Exemples contextuels** : Apprenez avec des phrases du quotidien
 
 ### 🎮 Exercices interactifs variés
+
 - **QCM intelligents** : Choisissez la bonne réponse parmi plusieurs options
 - **Phrases à compléter** : Complétez les trous avec la forme verbale correcte
 - **Transformations** : Passez de l'affirmatif au négatif/interrogatif
@@ -48,11 +51,13 @@
 - **Traductions** : Traduisez depuis le français vers l'anglais
 
 ### 📝 Mode Test & Évaluation
+
 - **Test de niveau** : 20 questions générées dynamiquement
 - **Score instantané** : Obtenez votre résultat immédiatement
 - **Feedback détaillé** : Comprenez vos erreurs
 
 ### 📖 Références complètes
+
 - **Dictionnaire de verbes** : Plus de 200 verbes irréguliers consultables
 - **Tableau comparatif** : Tous les temps verbaux côte à côte
 - **Mode sombre intégré** : Confort de lecture optimal
@@ -100,6 +105,7 @@ npx serve .
 ```
 
 ### 💾 Sauvegarde des données
+
 Toutes vos données (statistiques, niveaux, leçons complétées) sont sauvegardées automatiquement dans le **localStorage** de votre navigateur. Aucune donnée n'est envoyée vers un serveur externe.
 
 **Export/Import** : Utilisez la fonctionnalité de sauvegarde dans les paramètres pour exporter/importer votre progression.
@@ -109,6 +115,7 @@ Toutes vos données (statistiques, niveaux, leçons complétées) sont sauvegard
 ## 🛠️ Installation pour développeurs
 
 ### Prérequis
+
 - Node.js >= 18.x (recommandé)
 - npm >= 9.x
 
@@ -177,20 +184,20 @@ conjumastery/
 
 ### Séparation des responsabilités
 
-| Fichier | Rôle | Taille approximative |
-|---------|------|---------------------|
-| `index.html` | Structure HTML et squelette de l'UI | ~300 lignes |
-| `style.css` | Design responsive + mode sombre | ~800 lignes |
-| `data.js` | Base de données statique (APP_DATA) | ~2000+ lignes |
-| `app.js` | Moteur logique, gestion d'état, rendu dynamique | ~2500+ lignes |
+| Fichier      | Rôle                                            | Taille approximative |
+| ------------ | ----------------------------------------------- | -------------------- |
+| `index.html` | Structure HTML et squelette de l'UI             | ~300 lignes          |
+| `style.css`  | Design responsive + mode sombre                 | ~800 lignes          |
+| `data.js`    | Base de données statique (APP_DATA)             | ~2000+ lignes        |
+| `app.js`     | Moteur logique, gestion d'état, rendu dynamique | ~2500+ lignes        |
 
 ### Flux de données
 
 ```
-Utilisateur → Interface (HTML/CSS) 
-           → Événements (app.js) 
-           → Logique métier (app.js) 
-           → Données (data.js) 
+Utilisateur → Interface (HTML/CSS)
+           → Événements (app.js)
+           → Logique métier (app.js)
+           → Données (data.js)
            → Stockage (localStorage)
 ```
 
@@ -245,12 +252,14 @@ npm run test:coverage
 ✅ **Aucune vulnérabilité critique détectée**
 
 #### Points forts
+
 - **Pas de backend** : Toutes les opérations sont locales
 - **Sanitization** : Fonctions `escapeHtml()` et `sanitizeInput()` implémentées
 - **Pas de pratiques dangereuses** : Aucun `eval()`, `document.write()`, ou injection directe
 - **Stockage local uniquement** : pas de transmission réseau
 
 #### Bonnes pratiques implémentées
+
 - Validation des entrées utilisateur
 - Échappement du contenu HTML dynamique
 - Politique de sécurité CSP recommandée
@@ -260,8 +269,10 @@ npm run test:coverage
 Ajoutez cette balise dans `<head>` de `index.html` pour renforcer la sécurité :
 
 ```html
-<meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+/>
 ```
 
 ---
@@ -275,20 +286,20 @@ Ajoutez cette balise dans `<head>` de `index.html` pour renforcer la sécurité 
   irregularVerbs: [     // 200+ verbes irréguliers
     { base, pastSimple, pastParticiple, translation }
   ],
-  
+
   tenses: [            // Tous les temps verbaux
-    { 
+    {
       id, name, level,
       structure, explanation, examples,
       conjugationRules
     }
   ],
-  
+
   exercises: {         // Templates d'exercices
     templates: [...],
     lessons: [...]
   },
-  
+
   ui: {                // Textes et labels UI
     levels: [...],
     messages: [...]
@@ -322,22 +333,26 @@ Ajoutez cette balise dans `<head>` de `index.html` pour renforcer la sécurité 
 Les contributions sont les bienvenues ! Voici comment procéder :
 
 ### 1. Fork et clone
+
 ```bash
 git clone https://github.com/kmsohenry-hub/conjumastery.git
 cd conjumastery
 ```
 
 ### 2. Créer une branche
+
 ```bash
 git checkout -b feature/nouvelle-fonctionnalite
 ```
 
 ### 3. Installer les dépendances
+
 ```bash
 npm install
 ```
 
 ### 4. Développer et tester
+
 ```bash
 # Codez votre fonctionnalité
 # Assurez-vous que tous les tests passent
@@ -345,6 +360,7 @@ npm test
 ```
 
 ### 5. Commit et push
+
 ```bash
 git add .
 git commit -m "feat: ajout de [description]"
@@ -352,6 +368,7 @@ git push origin feature/nouvelle-fonctionnalite
 ```
 
 ### 6. Pull Request
+
 Ouvrez une PR sur GitHub avec une description claire de vos changements.
 
 ### Conventions de commit
@@ -372,7 +389,8 @@ Ouvrez une PR sur GitHub avec une description claire de vos changements.
 Créé avec passion pour faciliter l'apprentissage de l'anglais britannique.
 
 ### Contact & Support
-- 📧 Via l'application : Section *Paramètres* → *Contact*
+
+- 📧 Via l'application : Section _Paramètres_ → _Contact_
 - 🐛 Bugs & Features : Ouvrez une issue sur GitHub
 
 ---

@@ -59,7 +59,9 @@ function createStore(initial = {}) {
       xp,
       level,
       lastActiveDate: new Date().toDateString(),
-      activityLog: [...state.activityLog, { date: new Date().toISOString(), xp }].slice(-100),
+      activityLog: [...state.activityLog, { date: new Date().toISOString(), xp: amount }].slice(
+        -100,
+      ),
     });
     return level;
   }

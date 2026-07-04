@@ -1,6 +1,7 @@
 # Proposition de refactorisation — ConjuMaster UK
 
 ## Objectif
+
 Rendre le code plus maintenable, testable et évolutif sans changer le comportement utilisateur.
 
 ## Constats après étude du projet
@@ -67,20 +68,24 @@ Créer des ports/adaptateurs :
 ## Plan en 4 itérations (faible risque)
 
 ### Itération 1 — Extraction sûre
+
 - Déplacer les fonctions de conjugaison dans `conjugation.js`.
 - Déplacer la génération de questions dans `generator.js`.
 - Garder l'API publique actuelle comme façade pour ne rien casser.
 
 ### Itération 2 — Store modulaire
+
 - Créer un store pur + persistance dédiée.
 - Brancher l'UI via `subscribe`.
 - Remplacer les appels directs aux globals d'UI.
 
 ### Itération 3 — Données & validations
+
 - Fragmenter les datasets.
 - Ajouter validation de structure au démarrage.
 
 ### Itération 4 — Nettoyage et stabilité
+
 - Supprimer le code global résiduel.
 - Simplifier les tests (imports natifs).
 - Mesurer perf chargement initial + temps de génération.
