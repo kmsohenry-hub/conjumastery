@@ -1555,30 +1555,38 @@ function filterVerbs() {
   }
 
   container.innerHTML = filtered.map((v, i) => {
+    const safeBase = escapeHtml(v.base);
+    const safePast = escapeHtml(v.past);
+    const safePp = escapeHtml(v.pp);
+    const safeMeaning = escapeHtml(v.meaning);
     const isFav = State.isFavorite('verb_' + v.base);
+
+    // Escape for both JavaScript string literal and HTML attribute
+    const safeJsBase = escapeHtml(v.base.replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+
     return `<div class="verb-card" id="verb-card-${i}" onclick="toggleVerbCard(${i})">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <span class="verb-base">${v.base}</span>
+          <span class="verb-base">${safeBase}</span>
           <span style="color:var(--text-light);margin:0 8px">→</span>
-          <span style="font-weight:600;color:var(--accent)">${v.past}</span>
+          <span style="font-weight:600;color:var(--accent)">${safePast}</span>
           <span style="color:var(--text-light);margin:0 8px">→</span>
-          <span style="font-weight:600;color:var(--secondary)">${v.pp}</span>
-          <span style="color:var(--text-light);margin-left:8px;font-size:0.85rem">${v.meaning}</span>
+          <span style="font-weight:600;color:var(--secondary)">${safePp}</span>
+          <span style="color:var(--text-light);margin-left:8px;font-size:0.85rem">${safeMeaning}</span>
         </div>
-        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation();toggleFav('verb_${v.base}', this)">${isFav ? '★' : '☆'}</button>
+        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation();toggleFav('verb_${safeJsBase}', this)">${isFav ? '★' : '☆'}</button>
       </div>
       <div class="verb-conjugation-table">
         <div class="conj-grid">
-          <div class="conj-item"><div class="tense-label">Present Simple</div><div class="tense-form">${v.base}${v.base === 'be' ? ' (am/is/are)' : ''}</div></div>
-          <div class="conj-item"><div class="tense-label">Present Continuous</div><div class="tense-form">${v.base === 'be' ? 'being' : v.base + 'ing'}</div></div>
-          <div class="conj-item"><div class="tense-label">Past Simple</div><div class="tense-form">${v.past}</div></div>
-          <div class="conj-item"><div class="tense-label">Past Continuous</div><div class="tense-form">${v.base}ing</div></div>
-          <div class="conj-item"><div class="tense-label">Present Perfect</div><div class="tense-form">have/has ${v.pp}</div></div>
-          <div class="conj-item"><div class="tense-label">Past Perfect</div><div class="tense-form">had ${v.pp}</div></div>
-          <div class="conj-item"><div class="tense-label">Future</div><div class="tense-form">will ${v.base}</div></div>
-          <div class="conj-item"><div class="tense-label">Participe présent</div><div class="tense-form">${v.base}ing</div></div>
-          <div class="conj-item"><div class="tense-label">Participe passé</div><div class="tense-form">${v.pp}</div></div>
+          <div class="conj-item"><div class="tense-label">Present Simple</div><div class="tense-form">${safeBase}${v.base === 'be' ? ' (am/is/are)' : ''}</div></div>
+          <div class="conj-item"><div class="tense-label">Present Continuous</div><div class="tense-form">${v.base === 'be' ? 'being' : safeBase + 'ing'}</div></div>
+          <div class="conj-item"><div class="tense-label">Past Simple</div><div class="tense-form">${safePast}</div></div>
+          <div class="conj-item"><div class="tense-label">Past Continuous</div><div class="tense-form">${safeBase}ing</div></div>
+          <div class="conj-item"><div class="tense-label">Present Perfect</div><div class="tense-form">have/has ${safePp}</div></div>
+          <div class="conj-item"><div class="tense-label">Past Perfect</div><div class="tense-form">had ${safePp}</div></div>
+          <div class="conj-item"><div class="tense-label">Future</div><div class="tense-form">will ${safeBase}</div></div>
+          <div class="conj-item"><div class="tense-label">Participe présent</div><div class="tense-form">${safeBase}ing</div></div>
+          <div class="conj-item"><div class="tense-label">Participe passé</div><div class="tense-form">${safePp}</div></div>
         </div>
       </div>
     </div>`;
