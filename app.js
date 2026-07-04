@@ -1209,7 +1209,7 @@ function validateExercise() {
 }
 
 function normalizeAnswer(str) {
-  return str.toLowerCase().replace(/[''']/g, "'").replace(/\s+/g, ' ').trim();
+  return str.toLowerCase().replace(/['’]/g, "'").replace(/\s+/g, ' ').trim();
 }
 
 function skipExercise() {
@@ -2148,7 +2148,7 @@ function init() {
   }
 }
 
-export { APP_DATA, State, ExerciseEngine, NotificationManager, escapeHtml, sanitizeInput, showToast };
+export { APP_DATA, State, ExerciseEngine, NotificationManager, escapeHtml, sanitizeInput, showToast, answerMatches, normalizeAnswer };
 
 Object.assign(window, {
   APP_DATA,
