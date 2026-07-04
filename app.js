@@ -806,17 +806,36 @@ function renderDashboardChart() {
   const stats = State.data.tenseStats;
   const tenses = APP_DATA.tenses.slice(0, 8);
 
-  chartEl.innerHTML = tenses.map(t => {
+  const fragment = document.createDocumentFragment();
+  for (let i = 0; i < tenses.length; i++) {
+    const t = tenses[i];
     const s = stats[t.id];
     const accuracy = s ? Math.round((s.correct / s.total) * 100) : 0;
     const height = s ? Math.max(accuracy, 5) : 5;
     const color = accuracy >= 80 ? 'var(--success)' : accuracy >= 50 ? 'var(--warning)' : 'var(--danger)';
-    return `<div class="bar-item">
-      <div class="bar-value">${s ? accuracy + '%' : '—'}</div>
-      <div class="bar" style="height:${height}%;background:${color}"></div>
-      <div class="bar-label">${t.nameFR.split(' ')[0]}</div>
-    </div>`;
-  }).join('');
+
+    const barItem = document.createElement('div');
+    barItem.className = 'bar-item';
+
+    const barValue = document.createElement('div');
+    barValue.className = 'bar-value';
+    barValue.textContent = s ? accuracy + '%' : '—';
+
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = height + '%';
+    bar.style.background = color;
+
+    const barLabel = document.createElement('div');
+    barLabel.className = 'bar-label';
+    barLabel.textContent = t.nameFR.split(' ')[0];
+
+    barItem.appendChild(barValue);
+    barItem.appendChild(bar);
+    barItem.appendChild(barLabel);
+    fragment.appendChild(barItem);
+  }
+  chartEl.replaceChildren(fragment);
 }
 
 function renderLessons() {
