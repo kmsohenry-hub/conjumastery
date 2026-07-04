@@ -6,7 +6,7 @@ import {
   getRegularPast as getRegularPastCore,
   getPresentSimpleForm as getPresentSimpleFormCore,
   getIngForm as getIngFormCore,
-  getConjugation as getConjugationCore
+  getConjugation as getConjugationCore,
 } from './src/core/exercises/conjugation.js';
 
 // ============================================================
@@ -41,7 +41,7 @@ const State = {
     activityLog: [],
     favorites: [],
     spacedRepetition: {},
-    settings: { theme: 'light' }
+    settings: { theme: 'light' },
   },
 
   init() {
@@ -50,7 +50,9 @@ const State = {
       try {
         const parsed = JSON.parse(saved);
         this.data = { ...this.data, ...parsed };
-      } catch(_e) { console.error('Failed to load data'); }
+      } catch (_e) {
+        console.error('Failed to load data');
+      }
     }
     this.checkStreak();
     this.save();
@@ -59,7 +61,9 @@ const State = {
   save() {
     try {
       localStorage.setItem('conjumaster_data', JSON.stringify(this.data));
-    } catch(_e) { console.error('Failed to save data'); }
+    } catch (_e) {
+      console.error('Failed to save data');
+    }
   },
 
   checkStreak() {
@@ -85,7 +89,8 @@ const State = {
     }
     this.data.lastActiveDate = new Date().toDateString();
     this.data.activityLog.push({ date: new Date().toISOString(), xp: amount });
-    if (this.data.activityLog.length > 100) this.data.activityLog = this.data.activityLog.slice(-100);
+    if (this.data.activityLog.length > 100)
+      this.data.activityLog = this.data.activityLog.slice(-100);
     this.save();
     updateUI();
   },
@@ -108,7 +113,12 @@ const State = {
       this.data.currentStreak = 0;
       // Add to spaced repetition queue
       if (!this.data.spacedRepetition[tenseId]) {
-        this.data.spacedRepetition[tenseId] = { interval: 1, nextReview: Date.now(), ease: 2.5, errors: 0 };
+        this.data.spacedRepetition[tenseId] = {
+          interval: 1,
+          nextReview: Date.now(),
+          ease: 2.5,
+          errors: 0,
+        };
       }
       this.data.spacedRepetition[tenseId].errors++;
       this.data.spacedRepetition[tenseId].nextReview = Date.now();
@@ -134,7 +144,7 @@ const State = {
   },
 
   removeFavorite(item) {
-    this.data.favorites = this.data.favorites.filter(f => f !== item);
+    this.data.favorites = this.data.favorites.filter((f) => f !== item);
     this.save();
   },
 
@@ -157,9 +167,13 @@ const State = {
   getReviewQueue() {
     const now = Date.now();
     const queue = [];
-    for (const [tenseId, data] of Object.entries(this.data.spacedRepetition)) {
-      if (data.nextReview <= now) {
-        queue.push({ tenseId, ...data });
+    const sr = this.data.spacedRepetition;
+    for (const tenseId in sr) {
+      if (Object.prototype.hasOwnProperty.call(sr, tenseId)) {
+        const data = sr[tenseId];
+        if (data.nextReview <= now) {
+          queue.push({ tenseId, ...data });
+        }
       }
     }
     queue.sort((a, b) => a.nextReview - b.nextReview);
@@ -168,7 +182,12 @@ const State = {
 
   updateSpacedRepetition(tenseId, correct) {
     if (!this.data.spacedRepetition[tenseId]) {
-      this.data.spacedRepetition[tenseId] = { interval: 1, nextReview: Date.now(), ease: 2.5, errors: 0 };
+      this.data.spacedRepetition[tenseId] = {
+        interval: 1,
+        nextReview: Date.now(),
+        ease: 2.5,
+        errors: 0,
+      };
     }
     const sr = this.data.spacedRepetition[tenseId];
     if (correct) {
@@ -186,15 +205,27 @@ const State = {
 
   reset() {
     this.data = {
-      xp: 0, level: 1, totalExercises: 0, correctAnswers: 0, incorrectAnswers: 0,
-      bestStreak: 0, currentStreak: 0, daysStreak: 0, lastActiveDate: null,
-      completedLessons: [], tenseStats: {}, errorLog: [], activityLog: [],
-      favorites: [], spacedRepetition: {}, settings: { theme: 'light' }
+      xp: 0,
+      level: 1,
+      totalExercises: 0,
+      correctAnswers: 0,
+      incorrectAnswers: 0,
+      bestStreak: 0,
+      currentStreak: 0,
+      daysStreak: 0,
+      lastActiveDate: null,
+      completedLessons: [],
+      tenseStats: {},
+      errorLog: [],
+      activityLog: [],
+      favorites: [],
+      spacedRepetition: {},
+      settings: { theme: 'light' },
     };
     this.save();
     updateUI();
     showToast('Progression réinitialisée', 'info');
-  }
+  },
 };
 
 // ============================================================
@@ -237,18 +268,58 @@ const ExerciseEngine = {
 
   generateQuestions(mode, tenseFilter, difficulty, count = 10) {
     const questions = [];
-    const subjects = ['I', 'You', 'He', 'She', 'We', 'They', 'My friend', 'The teacher', 'The students', 'John', 'Sarah', 'The children', 'The dog', 'My parents'];
-    const regularVerbs = ['work', 'play', 'study', 'cook', 'read', 'write', 'walk', 'talk', 'clean', 'watch', 'listen', 'help', 'ask', 'call', 'wait', 'start', 'finish', 'open', 'close', 'use'];
-    const allVerbs = [...regularVerbs, ...APP_DATA.irregularVerbs.map(v => v.base)];
+    const subjects = [
+      'I',
+      'You',
+      'He',
+      'She',
+      'We',
+      'They',
+      'My friend',
+      'The teacher',
+      'The students',
+      'John',
+      'Sarah',
+      'The children',
+      'The dog',
+      'My parents',
+    ];
+    const regularVerbs = [
+      'work',
+      'play',
+      'study',
+      'cook',
+      'read',
+      'write',
+      'walk',
+      'talk',
+      'clean',
+      'watch',
+      'listen',
+      'help',
+      'ask',
+      'call',
+      'wait',
+      'start',
+      'finish',
+      'open',
+      'close',
+      'use',
+    ];
+    const allVerbs = [...regularVerbs, ...APP_DATA.irregularVerbs.map((v) => v.base)];
 
-    const tenses = tenseFilter && tenseFilter.length > 0 ? tenseFilter : APP_DATA.tenses.map(t => t.id);
+    const tenses =
+      tenseFilter && tenseFilter.length > 0 ? tenseFilter : APP_DATA.tenses.map((t) => t.id);
 
     for (let i = 0; i < count; i++) {
       const tenseId = tenses[Math.floor(Math.random() * tenses.length)];
       const tense = APP_DATA.tensesById[tenseId];
       if (!tense) continue;
 
-      const modeType = mode === 'mixed' ? ['qcm', 'fill', 'transform', 'correction', 'translation'][Math.floor(Math.random() * 5)] : mode;
+      const modeType =
+        mode === 'mixed'
+          ? ['qcm', 'fill', 'transform', 'correction', 'translation'][Math.floor(Math.random() * 5)]
+          : mode;
       const question = this.generateSingleQuestion(modeType, tense, subjects, allVerbs, difficulty);
       if (question) {
         question.tenseId = tenseId;
@@ -261,16 +332,30 @@ const ExerciseEngine = {
   generateSingleQuestion(mode, tense, subjects, verbs, difficulty) {
     const subj = subjects[Math.floor(Math.random() * subjects.length)];
     const verb = verbs[Math.floor(Math.random() * verbs.length)];
-    const non3rdSingSubjects = ['I', 'You', 'We', 'They', 'The students', 'The children', 'My parents'];
+    const non3rdSingSubjects = [
+      'I',
+      'You',
+      'We',
+      'They',
+      'The students',
+      'The children',
+      'My parents',
+    ];
     const is3rdSing = !non3rdSingSubjects.includes(subj);
 
-    switch(mode) {
-      case 'qcm': return this.generateQCM(tense, subj, verb, is3rdSing, difficulty);
-      case 'fill': return this.generateFill(tense, subj, verb, is3rdSing, difficulty);
-      case 'transform': return this.generateTransform(tense, subj, verb, is3rdSing);
-      case 'correction': return this.generateCorrection(tense, subj, verb, is3rdSing);
-      case 'translation': return this.generateTranslation(tense, subj, verb, is3rdSing);
-      default: return this.generateQCM(tense, subj, verb, is3rdSing, difficulty);
+    switch (mode) {
+      case 'qcm':
+        return this.generateQCM(tense, subj, verb, is3rdSing, difficulty);
+      case 'fill':
+        return this.generateFill(tense, subj, verb, is3rdSing, difficulty);
+      case 'transform':
+        return this.generateTransform(tense, subj, verb, is3rdSing);
+      case 'correction':
+        return this.generateCorrection(tense, subj, verb, is3rdSing);
+      case 'translation':
+        return this.generateTranslation(tense, subj, verb, is3rdSing);
+      default:
+        return this.generateQCM(tense, subj, verb, is3rdSing, difficulty);
     }
   },
 
@@ -280,55 +365,70 @@ const ExerciseEngine = {
 
   getAuxiliary(tenseId, subject, is3rdSing, negative = false) {
     // Helper "to be" en fonction du sujet et du temps
-    const beNow = subject === 'I'
-      ? (negative ? "am not" : "am")
-      : is3rdSing
-        ? (negative ? "isn't" : "is")
-        : (negative ? "aren't" : "are");
-    const bePast = (subject === 'I' || is3rdSing)
-      ? (negative ? "wasn't" : "was")
-      : (negative ? "weren't" : "were");
-    const hasHave = is3rdSing
-      ? (negative ? "hasn't" : "has")
-      : (negative ? "haven't" : "have");
+    const beNow =
+      subject === 'I'
+        ? negative
+          ? 'am not'
+          : 'am'
+        : is3rdSing
+          ? negative
+            ? "isn't"
+            : 'is'
+          : negative
+            ? "aren't"
+            : 'are';
+    const bePast =
+      subject === 'I' || is3rdSing ? (negative ? "wasn't" : 'was') : negative ? "weren't" : 'were';
+    const hasHave = is3rdSing ? (negative ? "hasn't" : 'has') : negative ? "haven't" : 'have';
 
     const aux = {
-      present_simple: is3rdSing ? (negative ? "doesn't" : "does") : (negative ? "don't" : "do"),
+      present_simple: is3rdSing ? (negative ? "doesn't" : 'does') : negative ? "don't" : 'do',
       present_continuous: beNow,
       present_perfect: hasHave,
       present_perfect_continuous: `${hasHave} been`,
-      past_simple: negative ? "didn't" : "did",
+      past_simple: negative ? "didn't" : 'did',
       past_continuous: bePast,
-      past_perfect: negative ? "hadn't" : "had",
-      past_perfect_continuous: `${negative ? "hadn't" : "had"} been`,
-      future_will: negative ? "won't" : "will",
-      future_going_to: subject === 'I'
-        ? (negative ? "am not going to" : "am going to")
-        : is3rdSing
-          ? (negative ? "isn't going to" : "is going to")
-          : (negative ? "aren't going to" : "are going to"),
-      future_continuous: `${negative ? "won't" : "will"} be`,
-      future_perfect: `${negative ? "won't" : "will"} have`,
-      future_perfect_continuous: `${negative ? "won't" : "will"} have been`,
-      conditional_0: is3rdSing ? (negative ? "doesn't" : "does") : (negative ? "don't" : "do"),
-      conditional_1: negative ? "won't" : "will",
-      conditional_2: negative ? "wouldn't" : "would",
-      conditional_3: `${negative ? "wouldn't" : "would"} have`,
-      mixed_conditional: negative ? "wouldn't" : "would"
+      past_perfect: negative ? "hadn't" : 'had',
+      past_perfect_continuous: `${negative ? "hadn't" : 'had'} been`,
+      future_will: negative ? "won't" : 'will',
+      future_going_to:
+        subject === 'I'
+          ? negative
+            ? 'am not going to'
+            : 'am going to'
+          : is3rdSing
+            ? negative
+              ? "isn't going to"
+              : 'is going to'
+            : negative
+              ? "aren't going to"
+              : 'are going to',
+      future_continuous: `${negative ? "won't" : 'will'} be`,
+      future_perfect: `${negative ? "won't" : 'will'} have`,
+      future_perfect_continuous: `${negative ? "won't" : 'will'} have been`,
+      conditional_0: is3rdSing ? (negative ? "doesn't" : 'does') : negative ? "don't" : 'do',
+      conditional_1: negative ? "won't" : 'will',
+      conditional_2: negative ? "wouldn't" : 'would',
+      conditional_3: `${negative ? "wouldn't" : 'would'} have`,
+      mixed_conditional: negative ? "wouldn't" : 'would',
     };
 
     // En dernier recours, on remonte une erreur explicite plutôt que de
     // produire silencieusement une phrase grammaticalement fausse.
     if (!(tenseId in aux)) {
       console.warn(`[getAuxiliary] Temps non géré: ${tenseId}`);
-      return negative ? "don't" : "do";
+      return negative ? "don't" : 'do';
     }
     return aux[tenseId];
   },
 
   generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
     // MOTEUR HYBRIDE : On cherche d'abord dans la base de données de phrases riches (70% de chances)
-    if (APP_DATA.exerciseTemplates[tense.id] && APP_DATA.exerciseTemplates[tense.id].qcm && Math.random() < 0.7) {
+    if (
+      APP_DATA.exerciseTemplates[tense.id] &&
+      APP_DATA.exerciseTemplates[tense.id].qcm &&
+      Math.random() < 0.7
+    ) {
       const templates = APP_DATA.exerciseTemplates[tense.id].qcm;
       const tpl = templates[Math.floor(Math.random() * templates.length)];
       return {
@@ -338,7 +438,7 @@ const ExerciseEngine = {
         correct: tpl.correct,
         explanation: tpl.explanation,
         tenseId: tense.id,
-        hint: `Temps : ${tense.nameFR}`
+        hint: `Temps : ${tense.nameFR}`,
       };
     }
 
@@ -348,8 +448,18 @@ const ExerciseEngine = {
 
     let fullSentence, correctAnswer, options;
 
-    if (['present_simple', 'present_continuous', 'past_simple', 'past_continuous',
-     'present_perfect', 'past_perfect', 'future_will', 'future_going_to'].includes(tense.id)) {
+    if (
+      [
+        'present_simple',
+        'present_continuous',
+        'past_simple',
+        'past_continuous',
+        'present_perfect',
+        'past_perfect',
+        'future_will',
+        'future_going_to',
+      ].includes(tense.id)
+    ) {
       if (tense.id === 'present_perfect') {
         fullSentence = `${subj} ${aux} ${correctForm} recently.`;
         correctAnswer = `${aux} ${correctForm}`;
@@ -357,18 +467,26 @@ const ExerciseEngine = {
         fullSentence = `${subj} ${aux} ${correctForm} before I arrived.`;
         correctAnswer = `${aux} ${correctForm}`;
       } else if (tense.id.includes('continuous')) {
-        const contAux = tense.id.startsWith('past') ? (is3rdSing ? 'was' : 'were') : (subj === 'I' ? 'am' : (is3rdSing ? 'is' : 'are'));
+        const contAux = tense.id.startsWith('past')
+          ? is3rdSing
+            ? 'was'
+            : 'were'
+          : subj === 'I'
+            ? 'am'
+            : is3rdSing
+              ? 'is'
+              : 'are';
         fullSentence = `${subj} ${contAux} ${correctForm}.`;
         correctAnswer = `${contAux} ${correctForm}`;
       } else if (tense.id === 'future_will') {
         fullSentence = `${subj} will ${correctForm} tomorrow.`;
         correctAnswer = `will ${correctForm}`;
       } else if (tense.id === 'future_going_to') {
-        const goAux = subj === 'I' ? 'am' : (is3rdSing ? 'is' : 'are');
+        const goAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
         fullSentence = `${subj} ${goAux} going to ${correctForm} next week.`;
         correctAnswer = `${goAux} going to ${correctForm}`;
       } else if (tense.id === 'present_continuous') {
-        const contAux = subj === 'I' ? 'am' : (is3rdSing ? 'is' : 'are');
+        const contAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
         fullSentence = `${subj} ${contAux} ${correctForm} right now.`;
         correctAnswer = `${contAux} ${correctForm}`;
       } else if (tense.id === 'past_continuous') {
@@ -392,10 +510,10 @@ const ExerciseEngine = {
     // Generate distractors
     const distractors = new Set();
     const allForms = new Set();
-    APP_DATA.irregularVerbs.forEach(v => {
+    APP_DATA.irregularVerbs.forEach((v) => {
       if (v.base === verb) {
-        v.past.split('/').forEach(p => allForms.add(p.trim()));
-        v.pp.split('/').forEach(p => allForms.add(p.trim()));
+        v.past.split('/').forEach((p) => allForms.add(p.trim()));
+        v.pp.split('/').forEach((p) => allForms.add(p.trim()));
       }
     });
     allForms.add(this.getRegularPast(verb));
@@ -420,7 +538,12 @@ const ExerciseEngine = {
       if (options.length >= 4) break;
       if (!options.includes(d)) options.push(d);
     }
-    const fillers = [this.getRegularPast(verb), this.getIngForm(verb), this.getPresentSimpleForm(verb, true), verb];
+    const fillers = [
+      this.getRegularPast(verb),
+      this.getIngForm(verb),
+      this.getPresentSimpleForm(verb, true),
+      verb,
+    ];
     let fi = 0;
     while (options.length < 4 && fi < fillers.length) {
       if (!options.includes(fillers[fi])) options.push(fillers[fi]);
@@ -429,22 +552,26 @@ const ExerciseEngine = {
     options = options.slice(0, 4);
 
     const shuffled = options.sort(() => Math.random() - 0.5);
-const correctIndex = shuffled.indexOf(correctAnswer);
+    const correctIndex = shuffled.indexOf(correctAnswer);
 
-return {
-  type: 'qcm',
-  sentence: fullSentence.replace(correctAnswer, '___'),
-  options: shuffled,
-  correct: correctIndex,
-  explanation: `La forme correcte est "${correctAnswer}". ${tense.nameFR} : ${tense.structure}`,
-  tenseId: tense.id,
-  hint: `Temps : ${tense.nameFR}`
-};
+    return {
+      type: 'qcm',
+      sentence: fullSentence.replace(correctAnswer, '___'),
+      options: shuffled,
+      correct: correctIndex,
+      explanation: `La forme correcte est "${correctAnswer}". ${tense.nameFR} : ${tense.structure}`,
+      tenseId: tense.id,
+      hint: `Temps : ${tense.nameFR}`,
+    };
   },
 
   generateFill(tense, subj, verb, is3rdSing) {
     // MOTEUR HYBRIDE : On cherche d'abord dans la base de données de phrases riches (70% de chances)
-    if (APP_DATA.exerciseTemplates[tense.id] && APP_DATA.exerciseTemplates[tense.id].fill && Math.random() < 0.7) {
+    if (
+      APP_DATA.exerciseTemplates[tense.id] &&
+      APP_DATA.exerciseTemplates[tense.id].fill &&
+      Math.random() < 0.7
+    ) {
       const templates = APP_DATA.exerciseTemplates[tense.id].fill;
       const tpl = templates[Math.floor(Math.random() * templates.length)];
       return {
@@ -452,7 +579,7 @@ return {
         sentence: tpl.sentence,
         answer: tpl.answer,
         tenseId: tense.id,
-        explanation: tpl.explanation
+        explanation: tpl.explanation,
       };
     }
 
@@ -463,7 +590,7 @@ return {
       fullSentence = `${subj} ___ (${verb}) every morning.`;
       answer = this.getPresentSimpleForm(verb, is3rdSing);
     } else if (tense.id === 'present_continuous') {
-      const contAux = subj === 'I' ? 'am' : (is3rdSing ? 'is' : 'are');
+      const contAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
       fullSentence = `${subj} ___ (${verb}) at the moment.`;
       answer = `${contAux} ${this.getIngForm(verb)}`;
     } else if (tense.id === 'past_simple') {
@@ -479,7 +606,7 @@ return {
       fullSentence = `${subj} ___ (${verb}) tomorrow.`;
       answer = `will ${verb}`;
     } else if (tense.id === 'future_going_to') {
-      const goAux = subj === 'I' ? 'am' : (is3rdSing ? 'is' : 'are');
+      const goAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
       fullSentence = `${subj} ___ (${verb}) next month.`;
       answer = `${goAux} going to ${verb}`;
     } else if (tense.id === 'past_continuous') {
@@ -498,7 +625,7 @@ return {
       sentence: fullSentence,
       answer: answer,
       tenseId: tense.id,
-      explanation: `La réponse est "${answer}". ${tense.nameFR} : ${tense.structure}`
+      explanation: `La réponse est "${answer}". ${tense.nameFR} : ${tense.structure}`,
     };
   },
 
@@ -535,7 +662,7 @@ return {
         negative = `${subj} won't ${verb}.`;
         question = `Will ${s} ${verb}?`;
       } else if (tense.id === 'future_going_to') {
-        const goAux = subj === 'I' ? 'am' : (is3rdSing ? 'is' : 'are');
+        const goAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
         negative = `${subj} ${goAux} not going to ${verb}.`;
         question = `${goAux.charAt(0).toUpperCase() + goAux.slice(1)} ${s} going to ${verb}?`;
       } else {
@@ -545,8 +672,8 @@ return {
     }
 
     const directions = [
-      { dir: "Mettez cette phrase à la forme négative :", answer: negative },
-      { dir: "Transformez en question :", answer: question }
+      { dir: 'Mettez cette phrase à la forme négative :', answer: negative },
+      { dir: 'Transformez en question :', answer: question },
     ];
     const chosen = directions[Math.floor(Math.random() * directions.length)];
 
@@ -555,7 +682,7 @@ return {
       sentence: `Phrase affirmative : "${affirmative}"\n${chosen.dir}`,
       answer: chosen.answer,
       tenseId: tense.id,
-      explanation: `La forme ${chosen.dir.includes('négative') ? 'négative' : 'interrogative'} est : "${chosen.answer}"`
+      explanation: `La forme ${chosen.dir.includes('négative') ? 'négative' : 'interrogative'} est : "${chosen.answer}"`,
     };
   },
 
@@ -578,7 +705,9 @@ return {
       const { past: pastForm } = this.getIrregularForms(verb);
       correctSentence = `${subj} ${pastForm} yesterday.`;
       incorrectSentence = irreg ? `${subj} ${verb}ed yesterday.` : `${subj} ${verb} yesterday.`;
-      explanation = irreg ? `"${verb}" est irrégulier : ${verb} → ${pastForm}.` : `Il faut ajouter -ed pour le Past Simple : "${pastForm}".`;
+      explanation = irreg
+        ? `"${verb}" est irrégulier : ${verb} → ${pastForm}.`
+        : `Il faut ajouter -ed pour le Past Simple : "${pastForm}".`;
     } else {
       correctSentence = `${subj} ${verb}ed yesterday.`;
       incorrectSentence = `${subj} ${verb} yesterday.`;
@@ -590,27 +719,36 @@ return {
       sentence: `Trouvez l'erreur et corrigez-la :\n"${incorrectSentence}"`,
       answer: correctSentence,
       tenseId: tense.id,
-      explanation: explanation
+      explanation: explanation,
     };
   },
 
   generateTranslation(tense, subj, verb, is3rdSing) {
     const frSentences = [
-      { fr: `Traduisez : "[sujet] fait l'action (${verb}) tous les jours."`, tense: 'present_simple' },
-      { fr: `Traduisez : "[sujet] est en train de faire l'action (${verb}) en ce moment."`, tense: 'present_continuous' },
+      {
+        fr: `Traduisez : "[sujet] fait l'action (${verb}) tous les jours."`,
+        tense: 'present_simple',
+      },
+      {
+        fr: `Traduisez : "[sujet] est en train de faire l'action (${verb}) en ce moment."`,
+        tense: 'present_continuous',
+      },
       { fr: `Traduisez : "[sujet] a fait l'action (${verb}) hier."`, tense: 'past_simple' },
-      { fr: `Traduisez : "[sujet] fera l'action (${verb}) demain."`, tense: 'future_will' }
+      { fr: `Traduisez : "[sujet] fera l'action (${verb}) demain."`, tense: 'future_will' },
     ];
 
-    const relevant = frSentences.filter(s => s.tense === tense.id);
-    const chosen = relevant.length > 0 ? relevant[Math.floor(Math.random() * relevant.length)] : frSentences[Math.floor(Math.random() * frSentences.length)];
+    const relevant = frSentences.filter((s) => s.tense === tense.id);
+    const chosen =
+      relevant.length > 0
+        ? relevant[Math.floor(Math.random() * relevant.length)]
+        : frSentences[Math.floor(Math.random() * frSentences.length)];
 
     let answer;
     if (chosen.tense === 'present_simple') {
       const form = this.getPresentSimpleForm(verb, is3rdSing);
       answer = `${subj} ${form} every day.`;
     } else if (chosen.tense === 'present_continuous') {
-      const contAux = subj === 'I' ? 'am' : (is3rdSing ? 'is' : 'are');
+      const contAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
       answer = `${subj} ${contAux} ${this.getIngForm(verb)} right now.`;
     } else if (chosen.tense === 'past_simple') {
       const { past: pastForm } = this.getIrregularForms(verb);
@@ -624,7 +762,7 @@ return {
       sentence: `Traduisez en anglais :\n"${chosen.fr}"`,
       answer: answer,
       tenseId: tense.id,
-      explanation: `La traduction correcte est : "${answer}"`
+      explanation: `La traduction correcte est : "${answer}"`,
     };
   },
 
@@ -652,7 +790,7 @@ return {
 
   getProgress() {
     return { current: this.currentIndex + 1, total: this.questions.length, score: this.score };
-  }
+  },
 };
 
 // ============================================================
@@ -660,9 +798,9 @@ return {
 // ============================================================
 
 function navigateTo(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
   document.getElementById(`page-${page}`).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'));
   document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
 
   const titles = {
@@ -678,25 +816,50 @@ function navigateTo(page) {
     search: 'Recherche',
     favorites: 'Favoris',
     stats: 'Statistiques',
-    settings: 'Paramètres'
+    settings: 'Paramètres',
   };
   document.getElementById('pageTitle').textContent = titles[page] || page;
 
   // Render page content
-  switch(page) {
-    case 'dashboard': renderDashboard(); break;
-    case 'lessons': renderLessons(); break;
-    case 'exercises': resetExerciseUI(); break;
-    case 'test': renderTestSetup(); break;
-    case 'tenses': renderTenses(); break;
-    case 'verbs': renderVerbs(); break;
-    case 'comparison': renderComparison(); break;
-    case 'revision': renderRevision(); break;
-    case 'weakpoints': renderWeakpoints(); break;
-    case 'search': performGlobalSearch(); break;
-    case 'favorites': renderFavorites(); break;
-    case 'stats': renderStats(); break;
-    case 'settings': break;
+  switch (page) {
+    case 'dashboard':
+      renderDashboard();
+      break;
+    case 'lessons':
+      renderLessons();
+      break;
+    case 'exercises':
+      resetExerciseUI();
+      break;
+    case 'test':
+      renderTestSetup();
+      break;
+    case 'tenses':
+      renderTenses();
+      break;
+    case 'verbs':
+      renderVerbs();
+      break;
+    case 'comparison':
+      renderComparison();
+      break;
+    case 'revision':
+      renderRevision();
+      break;
+    case 'weakpoints':
+      renderWeakpoints();
+      break;
+    case 'search':
+      performGlobalSearch();
+      break;
+    case 'favorites':
+      renderFavorites();
+      break;
+    case 'stats':
+      renderStats();
+      break;
+    case 'settings':
+      break;
   }
 
   // Close mobile sidebar
@@ -746,8 +909,8 @@ function renderDashboardNextLesson(completedLessons) {
   const nextLessonEl = document.getElementById('dashNextLesson');
   const incompleteLessons = [];
   const completedSet = new Set(completedLessons);
-  APP_DATA.modules.forEach(mod => {
-    mod.lessons.forEach(l => {
+  APP_DATA.modules.forEach((mod) => {
+    mod.lessons.forEach((l) => {
       if (!completedSet.has(l.id)) {
         incompleteLessons.push({ ...l, module: mod });
       }
@@ -769,16 +932,19 @@ function renderDashboardNextLesson(completedLessons) {
         </div>
       </div>`;
   } else {
-    nextLessonEl.innerHTML = '<p style="color:var(--text-light);font-size:0.9rem">🎉 Toutes les leçons sont terminées !</p>';
+    nextLessonEl.innerHTML =
+      '<p style="color:var(--text-light);font-size:0.9rem">🎉 Toutes les leçons sont terminées !</p>';
   }
 }
 
 function renderDashboardRevisionQueue(queue) {
   const queueEl = document.getElementById('dashRevisionQueue');
   if (queue.length > 0) {
-    queueEl.innerHTML = queue.slice(0, 5).map(q => {
-      const tense = APP_DATA.tensesById[q.tenseId];
-      return `<div class="revision-item">
+    queueEl.innerHTML = queue
+      .slice(0, 5)
+      .map((q) => {
+        const tense = APP_DATA.tensesById[q.tenseId];
+        return `<div class="revision-item">
         <span class="ri-icon">📖</span>
         <div class="ri-info">
           <div class="ri-title">${tense ? tense.nameFR : q.tenseId}</div>
@@ -786,9 +952,11 @@ function renderDashboardRevisionQueue(queue) {
         </div>
         <span class="ri-priority ${q.errors > 3 ? 'priority-high' : q.errors > 1 ? 'priority-medium' : 'priority-low'}">${q.errors > 3 ? 'Urgent' : q.errors > 1 ? 'Moyen' : 'Faible'}</span>
       </div>`;
-    }).join('');
+      })
+      .join('');
   } else {
-    queueEl.innerHTML = '<p style="color:var(--text-light);font-size:0.9rem">✅ Aucune révision en attente. Continuez les leçons !</p>';
+    queueEl.innerHTML =
+      '<p style="color:var(--text-light);font-size:0.9rem">✅ Aucune révision en attente. Continuez les leçons !</p>';
   }
   document.getElementById('revisionBadge').textContent = queue.length;
 }
@@ -797,7 +965,8 @@ function renderDashboardStats(d) {
   document.getElementById('dashXP').textContent = d.xp;
   document.getElementById('dashLevel').textContent = d.level;
   document.getElementById('dashExercises').textContent = d.totalExercises;
-  const accuracy = d.totalExercises > 0 ? Math.round((d.correctAnswers / d.totalExercises) * 100) : 0;
+  const accuracy =
+    d.totalExercises > 0 ? Math.round((d.correctAnswers / d.totalExercises) * 100) : 0;
   document.getElementById('dashAccuracy').textContent = accuracy + '%';
 }
 
@@ -806,32 +975,38 @@ function renderDashboardChart() {
   const stats = State.data.tenseStats;
   const tenses = APP_DATA.tenses.slice(0, 8);
 
-  chartEl.innerHTML = tenses.map(t => {
-    const s = stats[t.id];
-    const accuracy = s ? Math.round((s.correct / s.total) * 100) : 0;
-    const height = s ? Math.max(accuracy, 5) : 5;
-    const color = accuracy >= 80 ? 'var(--success)' : accuracy >= 50 ? 'var(--warning)' : 'var(--danger)';
-    return `<div class="bar-item">
+  chartEl.innerHTML = tenses
+    .map((t) => {
+      const s = stats[t.id];
+      const accuracy = s ? Math.round((s.correct / s.total) * 100) : 0;
+      const height = s ? Math.max(accuracy, 5) : 5;
+      const color =
+        accuracy >= 80 ? 'var(--success)' : accuracy >= 50 ? 'var(--warning)' : 'var(--danger)';
+      return `<div class="bar-item">
       <div class="bar-value">${s ? accuracy + '%' : '—'}</div>
       <div class="bar" style="height:${height}%;background:${color}"></div>
       <div class="bar-label">${t.nameFR.split(' ')[0]}</div>
     </div>`;
-  }).join('');
+    })
+    .join('');
 }
 
 function renderLessons() {
   const tabsEl = document.getElementById('lessonTabs');
 
-  tabsEl.innerHTML = APP_DATA.modules.map((mod, i) =>
-    `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showModule(${i}, this)">${mod.icon} ${mod.name}</button>`
-  ).join('');
+  tabsEl.innerHTML = APP_DATA.modules
+    .map(
+      (mod, i) =>
+        `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showModule(${i}, this)">${mod.icon} ${mod.name}</button>`,
+    )
+    .join('');
 
   showModule(0);
 }
 
 function showModule(index, tabEl) {
   if (tabEl) {
-    document.querySelectorAll('#lessonTabs .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#lessonTabs .tab').forEach((t) => t.classList.remove('active'));
     tabEl.classList.add('active');
   }
   const mod = APP_DATA.modules[index];
@@ -845,11 +1020,12 @@ function showModule(index, tabEl) {
       <p style="font-size:0.85rem;color:var(--text-light)">Niveau ${mod.level} • ${mod.lessons.length} leçons</p>
     </div>
     <div class="grid" style="gap:12px">
-      ${mod.lessons.map((lesson, i) => {
-        const isCompleted = completedSet.has(lesson.id);
-        const isLocked = i > 0 && !completedSet.has(mod.lessons[i-1].id) && !isCompleted;
-        const tense = lesson.tenseId ? APP_DATA.tensesById[lesson.tenseId] : null;
-        return `<div class="lesson-card ${isLocked ? 'locked' : ''}" onclick="${isLocked ? '' : `openLesson('${lesson.id}', '${lesson.tenseId || ''}')`}">
+      ${mod.lessons
+        .map((lesson, i) => {
+          const isCompleted = completedSet.has(lesson.id);
+          const isLocked = i > 0 && !completedSet.has(mod.lessons[i - 1].id) && !isCompleted;
+          const tense = lesson.tenseId ? APP_DATA.tensesById[lesson.tenseId] : null;
+          return `<div class="lesson-card ${isLocked ? 'locked' : ''}" onclick="${isLocked ? '' : `openLesson('${lesson.id}', '${lesson.tenseId || ''}')`}">
           <div class="lesson-icon" style="background:${isCompleted ? 'var(--success)20' : isLocked ? 'var(--text-light)10' : mod.color + '20'};color:${isCompleted ? 'var(--success)' : isLocked ? 'var(--text-light)' : mod.color}">
             ${isCompleted ? '✅' : isLocked ? '🔒' : mod.icon}
           </div>
@@ -863,7 +1039,8 @@ function showModule(index, tabEl) {
             </div>
           </div>
         </div>`;
-      }).join('')}
+        })
+        .join('')}
     </div>`;
 }
 
@@ -912,34 +1089,54 @@ function openTenseModal(tense) {
     ${renderTimeline(tense)}
 
     <h4 style="margin:20px 0 12px">📖 Exemples</h4>
-    ${tense.examples.map(e => `<div class="example-sentence">
+    ${tense.examples
+      .map(
+        (e) => `<div class="example-sentence">
       <div class="en">${e.en}</div>
       <div class="fr">${e.fr}</div>
-    </div>`).join('')}
+    </div>`,
+      )
+      .join('')}
 
     <h4 style="margin:20px 0 12px">🎯 Usages</h4>
     <ul style="padding-left:20px;font-size:0.9rem;color:var(--text-light);line-height:2">
-      ${tense.usage.map(u => `<li>${u}</li>`).join('')}
+      ${tense.usage.map((u) => `<li>${u}</li>`).join('')}
     </ul>
 
-    ${tense.signalWords ? `
+    ${
+      tense.signalWords
+        ? `
     <h4 style="margin:20px 0 12px">🔑 Mots indicateurs</h4>
     <div style="display:flex;flex-wrap:wrap;gap:6px">
-      ${tense.signalWords.map(w => `<span class="tag tag-blue">${w}</span>`).join('')}
-    </div>` : ''}
+      ${tense.signalWords.map((w) => `<span class="tag tag-blue">${w}</span>`).join('')}
+    </div>`
+        : ''
+    }
 
-    ${tense.nuances ? `
+    ${
+      tense.nuances
+        ? `
     <div class="explain-block" style="border-left-color:var(--accent);margin-top:16px">
       <h4>💡 Nuances d'usage</h4>
       <p>${tense.nuances}</p>
-    </div>` : ''}
+    </div>`
+        : ''
+    }
 
-    ${tense.commonErrors.length > 0 ? `
+    ${
+      tense.commonErrors.length > 0
+        ? `
     <h4 style="margin:20px 0 12px">⚠️ Erreurs fréquentes</h4>
-    ${tense.commonErrors.map(e => `<div class="error-alert">
+    ${tense.commonErrors
+      .map(
+        (e) => `<div class="error-alert">
       <span class="wrong">${e.wrong}</span> → <span class="right">${e.right}</span>
       <br><small style="color:var(--text-light)">${e.note}</small>
-    </div>`).join('')}` : ''}
+    </div>`,
+      )
+      .join('')}`
+        : ''
+    }
 
     <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="closeModal();startExerciseForTense('${tense.id}')">🎮 Pratiquer ce temps</button>
@@ -969,7 +1166,7 @@ function openPassiveModal() {
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Temps</th><th>Active</th><th>Passive</th></tr>
-        ${info.examples.map(e => `<tr><td>${e.tense}</td><td>${e.active}</td><td><strong>${e.passive}</strong></td></tr>`).join('')}
+        ${info.examples.map((e) => `<tr><td>${e.tense}</td><td>${e.active}</td><td><strong>${e.passive}</strong></td></tr>`).join('')}
       </table>
     </div>
     <div class="explain-block" style="border-left-color:var(--accent);margin-top:16px">
@@ -996,14 +1193,14 @@ function openReportedModal() {
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Discours direct</th><th>Discours indirect</th><th>Exemple</th></tr>
-        ${info.rules.map(r => `<tr><td>${r.direct}</td><td><strong>${r.reported}</strong></td><td><em>${r.example}</em></td></tr>`).join('')}
+        ${info.rules.map((r) => `<tr><td>${r.direct}</td><td><strong>${r.reported}</strong></td><td><em>${r.example}</em></td></tr>`).join('')}
       </table>
     </div>
     <h4 style="margin:16px 0 12px">📅 Changements de temps/mots</h4>
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Direct</th><th>Indirect</th></tr>
-        ${info.timeChanges.map(t => `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`).join('')}
+        ${info.timeChanges.map((t) => `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`).join('')}
       </table>
     </div>
     <div style="margin-top:20px"><button class="btn btn-primary" onclick="closeModal();startExercise('mixed')">🎮 Pratiquer</button></div>`;
@@ -1014,13 +1211,14 @@ function renderTimeline(tense) {
   const tl = tense.timeline;
   if (!tl) return '';
 
-  let html = '<div class="timeline-visual"><div class="timeline-line"></div><div class="timeline-now"></div>';
+  let html =
+    '<div class="timeline-visual"><div class="timeline-line"></div><div class="timeline-now"></div>';
   html += '<div class="timeline-label" style="left:5%">Past</div>';
   html += '<div class="timeline-label" style="left:50%">NOW</div>';
   html += '<div class="timeline-label" style="left:85%">Future</div>';
 
   if (tl.type === 'dots') {
-    tl.positions.forEach(pos => {
+    tl.positions.forEach((pos) => {
       html += `<div class="timeline-event" style="left:${pos}%">•</div>`;
     });
   } else if (tl.type === 'range') {
@@ -1056,8 +1254,8 @@ function resetExerciseUI() {
 
 function startExercise(mode, tenseFilter, difficulty) {
   if (tenseFilter === undefined || tenseFilter === null) {
-  tenseFilter = mode === 'mixed' ? [] : null;
-}
+    tenseFilter = mode === 'mixed' ? [] : null;
+  }
   if (!difficulty) difficulty = 'intermediate';
 
   ExerciseEngine.currentTenseFilter = tenseFilter;
@@ -1129,7 +1327,7 @@ let selectedOptionIndex = -1;
 
 function selectOption(btn, index) {
   if (ExerciseEngine.answered) return;
-  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.option-btn').forEach((b) => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedOptionIndex = index;
 }
@@ -1145,7 +1343,10 @@ function answerMatches(userAnswer, expectedAnswer) {
 
   // Découpe sur "/" pour récupérer toutes les variantes éventuelles
   // tout en restant tolérant aux espaces.
-  const variants = expectedAnswer.split('/').map(v => normalizeAnswer(v.trim())).filter(Boolean);
+  const variants = expectedAnswer
+    .split('/')
+    .map((v) => normalizeAnswer(v.trim()))
+    .filter(Boolean);
   if (variants.length > 0 && variants.includes(userNorm)) return true;
 
   // Fallback : si la réponse contient des mots, on essaie également de remplacer
@@ -1280,8 +1481,8 @@ function finishExercise() {
   if (pct >= 80) {
     launchConfetti();
     if (ExerciseEngine.currentTenseFilter && ExerciseEngine.currentTenseFilter.length === 1) {
-      APP_DATA.modules.forEach(mod => {
-        mod.lessons.forEach(lesson => {
+      APP_DATA.modules.forEach((mod) => {
+        mod.lessons.forEach((lesson) => {
           if (lesson.tenseId === ExerciseEngine.currentTenseFilter[0]) {
             State.completeLesson(lesson.id);
           }
@@ -1308,16 +1509,19 @@ function renderTestSetup() {
   document.getElementById('testResults').style.display = 'none';
 
   const container = document.getElementById('testTenseCheckboxes');
-  container.innerHTML = APP_DATA.tenses.map(t =>
-    `<label style="display:inline-flex;align-items:center;gap:4px;font-size:0.8rem;padding:4px 8px;background:var(--bg);border-radius:var(--radius-xs);cursor:pointer;margin:2px">
+  container.innerHTML = APP_DATA.tenses
+    .map(
+      (t) =>
+        `<label style="display:inline-flex;align-items:center;gap:4px;font-size:0.8rem;padding:4px 8px;background:var(--bg);border-radius:var(--radius-xs);cursor:pointer;margin:2px">
       <input type="checkbox" value="${t.id}" checked style="accent-color:var(--primary)"> ${t.nameFR.split(' ')[0]}
-    </label>`
-  ).join('');
+    </label>`,
+    )
+    .join('');
 }
 
 function startTest() {
   const checked = document.querySelectorAll('#testTenseCheckboxes input:checked');
-  const tenses = Array.from(checked).map(c => c.value);
+  const tenses = Array.from(checked).map((c) => c.value);
 
   if (tenses.length === 0) {
     showToast('Sélectionnez au moins un temps verbal', 'error');
@@ -1337,7 +1541,9 @@ function startTest() {
   clearInterval(testTimer);
   testTimer = setInterval(() => {
     testSeconds++;
-    const mins = Math.floor(testSeconds / 60).toString().padStart(2, '0');
+    const mins = Math.floor(testSeconds / 60)
+      .toString()
+      .padStart(2, '0');
     const secs = (testSeconds % 60).toString().padStart(2, '0');
     document.getElementById('testTimer').textContent = `${mins}:${secs}`;
   }, 1000);
@@ -1352,7 +1558,8 @@ function renderTestQuestion() {
   document.getElementById('testCurrent').textContent = ExerciseEngine.currentIndex + 1;
   document.getElementById('testTotal').textContent = ExerciseEngine.questions.length;
   document.getElementById('testScore').textContent = ExerciseEngine.score;
-  document.getElementById('testProgressBar').style.width = `${(ExerciseEngine.currentIndex / ExerciseEngine.questions.length) * 100}%`;
+  document.getElementById('testProgressBar').style.width =
+    `${(ExerciseEngine.currentIndex / ExerciseEngine.questions.length) * 100}%`;
   document.getElementById('testFeedback').style.display = 'none';
   document.getElementById('testValidateBtn').style.display = 'inline-flex';
   document.getElementById('testNextBtn').style.display = 'none';
@@ -1475,13 +1682,15 @@ function finishTest() {
 
     <div class="card">
       <h3 style="margin-bottom:16px">📋 Détail des réponses</h3>
-      ${ExerciseEngine.questions.map((q, _i) => {
-        return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:0.85rem">
+      ${ExerciseEngine.questions
+        .map((q, _i) => {
+          return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:0.85rem">
           <span style="color:${q.answeredCorrectly ? 'var(--success)' : 'var(--danger)'}">${q.answeredCorrectly ? '✅' : '❌'}</span>
           <strong>${APP_DATA.tensesById[q.tenseId]?.nameFR || ''}</strong>
           <span style="color:var(--text-light);margin-left:8px">${q.sentence.substring(0, 60)}...</span>
         </div>`;
-      }).join('')}
+        })
+        .join('')}
     </div>`;
 
   document.getElementById('testResults').innerHTML = resultsHTML;
@@ -1497,28 +1706,35 @@ function renderTenses() {
     { id: 'past', name: 'Passé' },
     { id: 'perfect', name: 'Perfect' },
     { id: 'future', name: 'Futur' },
-    { id: 'conditionals', name: 'Conditionnels' }
+    { id: 'conditionals', name: 'Conditionnels' },
   ];
 
   const tabsEl = document.getElementById('tenseCategoryTabs');
-  tabsEl.innerHTML = categories.map((cat, i) =>
-    `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showTenseCategory('${cat.id}', this)">${cat.name}</button>`
-  ).join('');
+  tabsEl.innerHTML = categories
+    .map(
+      (cat, i) =>
+        `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showTenseCategory('${cat.id}', this)">${cat.name}</button>`,
+    )
+    .join('');
 
   showTenseCategory('present');
 }
 
 function showTenseCategory(category, tabEl) {
   if (tabEl) {
-    document.querySelectorAll('#tenseCategoryTabs .tab').forEach(t => t.classList.remove('active'));
+    document
+      .querySelectorAll('#tenseCategoryTabs .tab')
+      .forEach((t) => t.classList.remove('active'));
     tabEl.classList.add('active');
   }
 
-  const tenses = APP_DATA.tenses.filter(t => t.category === category);
+  const tenses = APP_DATA.tenses.filter((t) => t.category === category);
   const contentEl = document.getElementById('tenseContent');
 
   contentEl.innerHTML = `<div class="grid" style="gap:16px">
-    ${tenses.map(t => `
+    ${tenses
+      .map(
+        (t) => `
       <div class="lesson-card" onclick="openTenseModal(APP_DATA.tensesById['${t.id}'])">
         <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">${t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
         <div class="lesson-info">
@@ -1529,7 +1745,9 @@ function showTenseCategory(category, tabEl) {
           </div>
         </div>
       </div>
-    `).join('')}
+    `,
+      )
+      .join('')}
   </div>`;
 }
 
@@ -1545,18 +1763,24 @@ function filterVerbs() {
   const search = (document.getElementById('verbSearch')?.value || '').toLowerCase();
   const container = document.getElementById('verbsList');
 
-  const filtered = APP_DATA.irregularVerbs.filter(v =>
-    v.base.includes(search) || v.past.includes(search) || v.pp.includes(search) || v.meaning.includes(search)
+  const filtered = APP_DATA.irregularVerbs.filter(
+    (v) =>
+      v.base.includes(search) ||
+      v.past.includes(search) ||
+      v.pp.includes(search) ||
+      v.meaning.includes(search),
   );
 
   if (filtered.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><h3>Aucun verbe trouvé</h3><p>Essayez un autre terme de recherche.</p></div>';
+    container.innerHTML =
+      '<div class="empty-state"><div class="empty-icon">📭</div><h3>Aucun verbe trouvé</h3><p>Essayez un autre terme de recherche.</p></div>';
     return;
   }
 
-  container.innerHTML = filtered.map((v, i) => {
-    const isFav = State.isFavorite('verb_' + v.base);
-    return `<div class="verb-card" id="verb-card-${i}" onclick="toggleVerbCard(${i})">
+  container.innerHTML = filtered
+    .map((v, i) => {
+      const isFav = State.isFavorite('verb_' + v.base);
+      return `<div class="verb-card" id="verb-card-${i}" onclick="toggleVerbCard(${i})">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <span class="verb-base">${v.base}</span>
@@ -1582,7 +1806,8 @@ function filterVerbs() {
         </div>
       </div>
     </div>`;
-  }).join('');
+    })
+    .join('');
 }
 
 function toggleVerbCard(index) {
@@ -1599,23 +1824,26 @@ function renderComparison() {
     { id: 'present', name: 'Présent' },
     { id: 'past', name: 'Passé' },
     { id: 'future', name: 'Futur' },
-    { id: 'conditionals', name: 'Conditionnels' }
+    { id: 'conditionals', name: 'Conditionnels' },
   ];
 
-  document.getElementById('comparisonTabs').innerHTML = tabs.map((t, i) =>
-    `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showComparison('${t.id}', this)">${t.name}</button>`
-  ).join('');
+  document.getElementById('comparisonTabs').innerHTML = tabs
+    .map(
+      (t, i) =>
+        `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showComparison('${t.id}', this)">${t.name}</button>`,
+    )
+    .join('');
 
   showComparison('present');
 }
 
 function showComparison(category, tabEl) {
   if (tabEl) {
-    document.querySelectorAll('#comparisonTabs .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#comparisonTabs .tab').forEach((t) => t.classList.remove('active'));
     tabEl.classList.add('active');
   }
 
-  const tenses = APP_DATA.tenses.filter(t => t.category === category);
+  const tenses = APP_DATA.tenses.filter((t) => t.category === category);
   const content = document.getElementById('comparisonContent');
 
   content.innerHTML = `
@@ -1628,26 +1856,42 @@ function showComparison(category, tabEl) {
           <th>Exemple</th>
           <th>Mots-clés</th>
         </tr>
-        ${tenses.map(t => `
+        ${tenses
+          .map(
+            (t) => `
           <tr>
             <td><strong>${t.nameFR}</strong></td>
             <td><code style="font-size:0.75rem">${t.structure}</code></td>
             <td>${t.usage[0].split(':')[1]?.trim() || t.usage[0]}</td>
             <td><em>${t.examples[0]?.en}</em></td>
-            <td>${t.signalWords?.slice(0, 4).map(w => `<span class="tag tag-blue" style="margin:2px">${w}</span>`).join('')}</td>
+            <td>${t.signalWords
+              ?.slice(0, 4)
+              .map((w) => `<span class="tag tag-blue" style="margin:2px">${w}</span>`)
+              .join('')}</td>
           </tr>
-        `).join('')}
+        `,
+          )
+          .join('')}
       </table>
     </div>
 
-    ${tenses.length >= 2 ? `
+    ${
+      tenses.length >= 2
+        ? `
     <h3 style="margin:24px 0 12px">🔍 Comparaison détaillée</h3>
-    ${tenses.slice(0, 2).map(t => `
+    ${tenses
+      .slice(0, 2)
+      .map(
+        (t) => `
       <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="openTenseModal(APP_DATA.tensesById['${t.id}'])">
         <h4>${t.nameFR}</h4>
         <p style="font-size:0.9rem;color:var(--text-light);margin-top:8px">${t.nuances || t.explanation.substring(0, 200)}</p>
       </div>
-    `).join('')}` : ''}`;
+    `,
+      )
+      .join('')}`
+        : ''
+    }`;
 }
 
 // ============================================================
@@ -1674,9 +1918,10 @@ function renderRevision() {
       <p style="color:var(--text-light)">${queue.length} point${queue.length > 1 ? 's' : ''} à réviser</p>
       <button class="btn btn-primary" style="margin-top:12px" onclick="startRevisionSession()">🚀 Démarrer la session de révision</button>
     </div>
-    ${queue.map(q => {
-      const tense = APP_DATA.tensesById[q.tenseId];
-      return `<div class="revision-item">
+    ${queue
+      .map((q) => {
+        const tense = APP_DATA.tensesById[q.tenseId];
+        return `<div class="revision-item">
         <span class="ri-icon">📖</span>
         <div class="ri-info">
           <div class="ri-title">${tense ? tense.nameFR : q.tenseId}</div>
@@ -1686,13 +1931,14 @@ function renderRevision() {
           ${q.errors > 3 ? 'Urgent' : q.errors > 1 ? 'Moyen' : 'Faible'}
         </span>
       </div>`;
-    }).join('')}`;
+      })
+      .join('')}`;
 }
 
 function startRevisionSession() {
   const queue = State.getReviewQueue();
   if (queue.length === 0) return;
-  const tenses = queue.map(q => q.tenseId);
+  const tenses = queue.map((q) => q.tenseId);
   navigateTo('exercises');
   setTimeout(() => startExercise('mixed', tenses, 'intermediate'), 100);
 }
@@ -1718,10 +1964,11 @@ function renderWeakpoints() {
   container.innerHTML = `
     <p style="color:var(--text-light);margin-bottom:20px">${weak.length} point${weak.length > 1 ? 's' : ''} faible${weak.length > 1 ? 's' : ''} détecté${weak.length > 1 ? 's' : ''}</p>
     <div class="grid" style="gap:12px">
-      ${weak.map(w => {
-        const tense = APP_DATA.tensesById[w.tenseId];
-        const accuracy = Math.round(w.accuracy * 100);
-        return `<div class="card" style="display:flex;align-items:center;gap:16px">
+      ${weak
+        .map((w) => {
+          const tense = APP_DATA.tensesById[w.tenseId];
+          const accuracy = Math.round(w.accuracy * 100);
+          return `<div class="card" style="display:flex;align-items:center;gap:16px">
           <div style="text-align:center;min-width:80px">
             <div style="font-size:1.5rem;font-weight:800;color:${accuracy < 40 ? 'var(--danger)' : accuracy < 60 ? 'var(--warning)' : 'var(--success)'}">${accuracy}%</div>
             <div style="font-size:0.7rem;color:var(--text-light)">précision</div>
@@ -1735,7 +1982,8 @@ function renderWeakpoints() {
           </div>
           <button class="btn btn-primary btn-sm" onclick="startExerciseForTense('${w.tenseId}')">🎯 Pratiquer</button>
         </div>`;
-      }).join('')}
+        })
+        .join('')}
     </div>`;
 }
 
@@ -1755,45 +2003,69 @@ function performGlobalSearch() {
   const results = [];
 
   // Search tenses
-  APP_DATA.tenses.forEach(t => {
-    if (t.name.toLowerCase().includes(query) || t.nameFR.toLowerCase().includes(query) || t.explanation.toLowerCase().includes(query)) {
-      results.push({ type: 'temps', title: t.nameFR, desc: t.explanation.substring(0, 100), action: `openTenseModal(APP_DATA.tensesById['${t.id}'])` });
+  APP_DATA.tenses.forEach((t) => {
+    if (
+      t.name.toLowerCase().includes(query) ||
+      t.nameFR.toLowerCase().includes(query) ||
+      t.explanation.toLowerCase().includes(query)
+    ) {
+      results.push({
+        type: 'temps',
+        title: t.nameFR,
+        desc: t.explanation.substring(0, 100),
+        action: `openTenseModal(APP_DATA.tensesById['${t.id}'])`,
+      });
     }
   });
 
   // Search verbs
-  APP_DATA.irregularVerbs.forEach(v => {
-    if (v.base.includes(query) || v.past.includes(query) || v.pp.includes(query) || v.meaning.includes(query)) {
-      results.push({ type: 'verbe', title: `${v.base} → ${v.past} → ${v.pp}`, desc: v.meaning, action: `navigateTo('verbs')` });
+  APP_DATA.irregularVerbs.forEach((v) => {
+    if (
+      v.base.includes(query) ||
+      v.past.includes(query) ||
+      v.pp.includes(query) ||
+      v.meaning.includes(query)
+    ) {
+      results.push({
+        type: 'verbe',
+        title: `${v.base} → ${v.past} → ${v.pp}`,
+        desc: v.meaning,
+        action: `navigateTo('verbs')`,
+      });
     }
   });
 
   // Search phrasal verbs
-  APP_DATA.phrasalVerbs.forEach(pv => {
+  APP_DATA.phrasalVerbs.forEach((pv) => {
     if (pv.pv.includes(query) || pv.meaning.includes(query)) {
       results.push({ type: 'phrasal verb', title: pv.pv, desc: pv.meaning, action: '' });
     }
   });
 
   // Search modals
-  APP_DATA.modals.forEach(m => {
+  APP_DATA.modals.forEach((m) => {
     if (m.name.toLowerCase().includes(query) || m.ability.toLowerCase().includes(query)) {
       results.push({ type: 'modal', title: m.name, desc: m.ability, action: '' });
     }
   });
 
   if (results.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>Aucun résultat</h3><p>Essayez un autre terme.</p></div>';
+    container.innerHTML =
+      '<div class="empty-state"><div class="empty-icon">🔍</div><h3>Aucun résultat</h3><p>Essayez un autre terme.</p></div>';
     return;
   }
 
-  container.innerHTML = results.map(r => `
+  container.innerHTML = results
+    .map(
+      (r) => `
     <div class="search-result-item" onclick="${r.action || ''}">
       <div class="sr-type">${escapeHtml(r.type)}</div>
       <div class="sr-title">${escapeHtml(r.title)}</div>
       <div class="sr-desc">${escapeHtml(r.desc)}</div>
     </div>
-  `).join('');
+  `,
+    )
+    .join('');
 }
 
 // ============================================================
@@ -1805,25 +2077,27 @@ function renderFavorites() {
   const favs = State.data.favorites;
 
   if (favs.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">⭐</div><h3>Aucun favori</h3><p>Marquez des leçons ou des verbes comme favoris pour les retrouver ici.</p></div>';
+    container.innerHTML =
+      '<div class="empty-state"><div class="empty-icon">⭐</div><h3>Aucun favori</h3><p>Marquez des leçons ou des verbes comme favoris pour les retrouver ici.</p></div>';
     return;
   }
 
-  container.innerHTML = favs.map(f => {
-    if (f.startsWith('verb_')) {
-      const verbName = f.replace('verb_', '');
-      const verb = APP_DATA.verbsByBase[verbName];
-      if (verb) {
-        return `<div class="verb-card" style="cursor:default">
+  container.innerHTML = favs
+    .map((f) => {
+      if (f.startsWith('verb_')) {
+        const verbName = f.replace('verb_', '');
+        const verb = APP_DATA.verbsByBase[verbName];
+        if (verb) {
+          return `<div class="verb-card" style="cursor:default">
           <span class="verb-base">${verb.base}</span> → <span style="color:var(--accent)">${verb.past}</span> → <span style="color:var(--secondary)">${verb.pp}</span>
           <span style="color:var(--text-light);margin-left:8px">${verb.meaning}</span>
           <button class="fav-btn active" style="margin-left:auto" onclick="toggleFav('${f}', this)">★</button>
         </div>`;
-      }
-    } else {
-      const tense = APP_DATA.tensesById[f];
-      if (tense) {
-        return `<div class="lesson-card" onclick="openTenseModal(APP_DATA.tensesById['${f}'])">
+        }
+      } else {
+        const tense = APP_DATA.tensesById[f];
+        if (tense) {
+          return `<div class="lesson-card" onclick="openTenseModal(APP_DATA.tensesById['${f}'])">
           <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">📖</div>
           <div class="lesson-info">
             <div class="lesson-title">${tense.nameFR}</div>
@@ -1831,10 +2105,12 @@ function renderFavorites() {
           </div>
           <button class="fav-btn active" onclick="event.stopPropagation();toggleFav('${f}', this)">★</button>
         </div>`;
+        }
       }
-    }
-    return '';
-  }).filter(Boolean).join('');
+      return '';
+    })
+    .filter(Boolean)
+    .join('');
 }
 
 function toggleFav(item, btn) {
@@ -1867,56 +2143,68 @@ function renderStats() {
   // Chart
   const chartEl = document.getElementById('statsChart');
   const stats = d.tenseStats;
-  const tenses = APP_DATA.tenses.filter(t => stats[t.id] && stats[t.id].total > 0);
+  const tenses = APP_DATA.tenses.filter((t) => stats[t.id] && stats[t.id].total > 0);
 
   if (tenses.length === 0) {
-    chartEl.innerHTML = '<div class="empty-state" style="padding:20px"><p>Aucune donnée disponible</p></div>';
+    chartEl.innerHTML =
+      '<div class="empty-state" style="padding:20px"><p>Aucune donnée disponible</p></div>';
   } else {
-    chartEl.innerHTML = tenses.map(t => {
-      const s = stats[t.id];
-      const accuracy = Math.round((s.correct / s.total) * 100);
-      const height = Math.max(accuracy, 5);
-      const color = accuracy >= 80 ? 'var(--success)' : accuracy >= 50 ? 'var(--warning)' : 'var(--danger)';
-      return `<div class="bar-item">
+    chartEl.innerHTML = tenses
+      .map((t) => {
+        const s = stats[t.id];
+        const accuracy = Math.round((s.correct / s.total) * 100);
+        const height = Math.max(accuracy, 5);
+        const color =
+          accuracy >= 80 ? 'var(--success)' : accuracy >= 50 ? 'var(--warning)' : 'var(--danger)';
+        return `<div class="bar-item">
         <div class="bar-value">${accuracy}%</div>
         <div class="bar" style="height:${height}%;background:${color}"></div>
         <div class="bar-label">${t.nameFR.split(' ')[0]}</div>
       </div>`;
-    }).join('');
+      })
+      .join('');
   }
 
   // Activity log
   const logEl = document.getElementById('activityLog');
   const recent = d.activityLog.slice(-10).reverse();
   if (recent.length === 0) {
-    logEl.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem;padding:12px">Aucune activité récente</p>';
+    logEl.innerHTML =
+      '<p style="color:var(--text-light);font-size:0.85rem;padding:12px">Aucune activité récente</p>';
   } else {
-    logEl.innerHTML = recent.map(a => {
-      const date = new Date(a.date);
-      return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.8rem">
-        <span>${date.toLocaleDateString('fr-FR')} ${date.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}</span>
+    logEl.innerHTML = recent
+      .map((a) => {
+        const date = new Date(a.date);
+        return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.8rem">
+        <span>${date.toLocaleDateString('fr-FR')} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
         <span style="color:var(--primary);font-weight:600">+${a.xp} XP</span>
       </div>`;
-    }).join('');
+      })
+      .join('');
   }
 
   // Common errors
   const errorsEl = document.getElementById('commonErrors');
   if (d.errorLog.length === 0) {
-    errorsEl.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem">Aucune erreur enregistrée</p>';
+    errorsEl.innerHTML =
+      '<p style="color:var(--text-light);font-size:0.85rem">Aucune erreur enregistrée</p>';
   } else {
     const tenseErrors = {};
-    d.errorLog.forEach(e => {
+    d.errorLog.forEach((e) => {
       tenseErrors[e.tenseId] = (tenseErrors[e.tenseId] || 0) + 1;
     });
-    const sorted = Object.entries(tenseErrors).sort((a, b) => b[1] - a[1]).slice(0, 8);
-    errorsEl.innerHTML = sorted.map(([tenseId, count]) => {
-      const tense = APP_DATA.tensesById[tenseId];
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+    const sorted = Object.entries(tenseErrors)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8);
+    errorsEl.innerHTML = sorted
+      .map(([tenseId, count]) => {
+        const tense = APP_DATA.tensesById[tenseId];
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
         <span style="font-size:0.9rem">${tense ? tense.nameFR : tenseId}</span>
         <span style="background:rgba(225,112,85,0.1);color:var(--danger);padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:700">${count} erreur${count > 1 ? 's' : ''}</span>
       </div>`;
-    }).join('');
+      })
+      .join('');
   }
 }
 
@@ -1960,12 +2248,12 @@ function launchConfetti() {
     const piece = document.createElement('div');
     piece.className = 'confetti-piece';
     piece.style.left = Math.random() * 100 + 'vw';
-    piece.style.top = (80 + Math.random() * 20) + 'vh';
+    piece.style.top = 80 + Math.random() * 20 + 'vh';
     piece.style.background = colors[Math.floor(Math.random() * colors.length)];
     piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-    piece.style.width = (6 + Math.random() * 8) + 'px';
-    piece.style.height = (6 + Math.random() * 8) + 'px';
-    piece.style.animationDuration = (0.8 + Math.random() * 1.2) + 's';
+    piece.style.width = 6 + Math.random() * 8 + 'px';
+    piece.style.height = 6 + Math.random() * 8 + 'px';
+    piece.style.animationDuration = 0.8 + Math.random() * 1.2 + 's';
     document.body.appendChild(piece);
     setTimeout(() => piece.remove(), 2500);
   }
@@ -2002,7 +2290,7 @@ function importData() {
         State.save();
         updateUI();
         showToast('📥 Données importées avec succès', 'success');
-      } catch(_err) {
+      } catch (_err) {
         showToast('❌ Fichier invalide', 'error');
       }
     };
@@ -2012,7 +2300,11 @@ function importData() {
 }
 
 function resetProgress() {
-  if (confirm('⚠️ Êtes-vous sûr de vouloir réinitialiser toute votre progression ? Cette action est irréversible.')) {
+  if (
+    confirm(
+      '⚠️ Êtes-vous sûr de vouloir réinitialiser toute votre progression ? Cette action est irréversible.',
+    )
+  ) {
     State.reset();
     navigateTo('dashboard');
   }
@@ -2028,8 +2320,8 @@ function updateUI() {
   document.getElementById('headerLevel').textContent = d.level;
   document.getElementById('sidebarLevel').textContent = d.level;
   const displayXP = d.xp - (d.level - 1) * 100;
-document.getElementById('sidebarXP').textContent = `${displayXP} / 100 XP`;
-document.getElementById('sidebarXPBar').style.width = `${displayXP}%`;
+  document.getElementById('sidebarXP').textContent = `${displayXP} / 100 XP`;
+  document.getElementById('sidebarXPBar').style.width = `${displayXP}%`;
   document.getElementById('streakCount').textContent = d.daysStreak;
   document.getElementById('streakPlural').textContent = d.daysStreak > 1 ? 's' : '';
 
@@ -2041,7 +2333,11 @@ document.getElementById('sidebarXPBar').style.width = `${displayXP}%`;
   if (lessonsBadge) {
     let incomplete = 0;
     const completedSet = new Set(d.completedLessons);
-    APP_DATA.modules.forEach(mod => mod.lessons.forEach(l => { if (!completedSet.has(l.id)) incomplete++; }));
+    APP_DATA.modules.forEach((mod) =>
+      mod.lessons.forEach((l) => {
+        if (!completedSet.has(l.id)) incomplete++;
+      }),
+    );
     lessonsBadge.textContent = incomplete;
   }
 }
@@ -2087,7 +2383,7 @@ const NotificationManager = {
     if (!('Notification' in window)) return;
 
     if (Notification.permission === 'default') {
-      Notification.requestPermission().then(permission => {
+      Notification.requestPermission().then((permission) => {
         this.updateUI();
         if (permission === 'granted') {
           showToast('✅ Notifications activées', 'success');
@@ -2107,17 +2403,20 @@ const NotificationManager = {
     const queue = State.getReviewQueue();
     if (queue.length > 0) {
       this.sendNotification(
-        "Temps de réviser !",
-        `Vous avez ${queue.length} leçon(s) en attente de révision.`
+        'Temps de réviser !',
+        `Vous avez ${queue.length} leçon(s) en attente de révision.`,
       );
       this.lastNotificationTime = now;
     } else if (State.data.lastActiveDate) {
       // Check if user has practiced today
       const today = new Date().toDateString();
-      if (State.data.lastActiveDate !== today && now - this.lastNotificationTime > this.minInterval * 4) {
-         this.sendNotification(
+      if (
+        State.data.lastActiveDate !== today &&
+        now - this.lastNotificationTime > this.minInterval * 4
+      ) {
+        this.sendNotification(
           "N'oubliez pas l'anglais !",
-          "Gardez votre série d'apprentissage active en faisant un exercice aujourd'hui."
+          "Gardez votre série d'apprentissage active en faisant un exercice aujourd'hui.",
         );
         this.lastNotificationTime = now;
       }
@@ -2127,9 +2426,9 @@ const NotificationManager = {
   sendNotification(title, body) {
     new Notification(title, {
       body: body,
-      icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇬🇧</text></svg>'
+      icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇬🇧</text></svg>',
     });
-  }
+  },
 };
 
 // ============================================================
@@ -2148,7 +2447,15 @@ function init() {
   }
 }
 
-export { APP_DATA, State, ExerciseEngine, NotificationManager, escapeHtml, sanitizeInput, showToast };
+export {
+  APP_DATA,
+  State,
+  ExerciseEngine,
+  NotificationManager,
+  escapeHtml,
+  sanitizeInput,
+  showToast,
+};
 
 Object.assign(window, {
   APP_DATA,
@@ -2191,7 +2498,7 @@ Object.assign(window, {
   importData,
   resetProgress,
   updateUI,
-  init
+  init,
 });
 
 // Start the app
