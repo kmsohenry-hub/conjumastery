@@ -1630,11 +1630,11 @@ function showComparison(category, tabEl) {
         </tr>
         ${tenses.map(t => `
           <tr>
-            <td><strong>${t.nameFR}</strong></td>
-            <td><code style="font-size:0.75rem">${t.structure}</code></td>
-            <td>${t.usage[0].split(':')[1]?.trim() || t.usage[0]}</td>
-            <td><em>${t.examples[0]?.en}</em></td>
-            <td>${t.signalWords?.slice(0, 4).map(w => `<span class="tag tag-blue" style="margin:2px">${w}</span>`).join('')}</td>
+            <td><strong>${escapeHtml(t.nameFR)}</strong></td>
+            <td><code style="font-size:0.75rem">${escapeHtml(t.structure)}</code></td>
+            <td>${escapeHtml(t.usage[0].split(':')[1]?.trim() || t.usage[0])}</td>
+            <td><em>${escapeHtml(t.examples[0]?.en)}</em></td>
+            <td>${t.signalWords?.slice(0, 4).map(w => `<span class="tag tag-blue" style="margin:2px">${escapeHtml(w)}</span>`).join('')}</td>
           </tr>
         `).join('')}
       </table>
@@ -1644,8 +1644,8 @@ function showComparison(category, tabEl) {
     <h3 style="margin:24px 0 12px">🔍 Comparaison détaillée</h3>
     ${tenses.slice(0, 2).map(t => `
       <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="openTenseModal(APP_DATA.tensesById['${t.id}'])">
-        <h4>${t.nameFR}</h4>
-        <p style="font-size:0.9rem;color:var(--text-light);margin-top:8px">${t.nuances || t.explanation.substring(0, 200)}</p>
+        <h4>${escapeHtml(t.nameFR)}</h4>
+        <p style="font-size:0.9rem;color:var(--text-light);margin-top:8px">${escapeHtml(t.nuances || t.explanation.substring(0, 200))}</p>
       </div>
     `).join('')}` : ''}`;
 }
