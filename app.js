@@ -912,20 +912,20 @@ function openTenseModal(tense) {
     ${renderTimeline(tense)}
 
     <h4 style="margin:20px 0 12px">📖 Exemples</h4>
-    ${tense.examples.map(e => `<div class="example-sentence">
+    ${tense.examples.reduce((acc, e) => acc + `<div class="example-sentence">
       <div class="en">${e.en}</div>
       <div class="fr">${e.fr}</div>
-    </div>`).join('')}
+    </div>`, '')}
 
     <h4 style="margin:20px 0 12px">🎯 Usages</h4>
     <ul style="padding-left:20px;font-size:0.9rem;color:var(--text-light);line-height:2">
-      ${tense.usage.map(u => `<li>${u}</li>`).join('')}
+      ${tense.usage.reduce((acc, u) => acc + `<li>${u}</li>`, '')}
     </ul>
 
     ${tense.signalWords ? `
     <h4 style="margin:20px 0 12px">🔑 Mots indicateurs</h4>
     <div style="display:flex;flex-wrap:wrap;gap:6px">
-      ${tense.signalWords.map(w => `<span class="tag tag-blue">${w}</span>`).join('')}
+      ${tense.signalWords.reduce((acc, w) => acc + `<span class="tag tag-blue">${w}</span>`, '')}
     </div>` : ''}
 
     ${tense.nuances ? `
@@ -936,10 +936,10 @@ function openTenseModal(tense) {
 
     ${tense.commonErrors.length > 0 ? `
     <h4 style="margin:20px 0 12px">⚠️ Erreurs fréquentes</h4>
-    ${tense.commonErrors.map(e => `<div class="error-alert">
+    ${tense.commonErrors.reduce((acc, e) => acc + `<div class="error-alert">
       <span class="wrong">${e.wrong}</span> → <span class="right">${e.right}</span>
       <br><small style="color:var(--text-light)">${e.note}</small>
-    </div>`).join('')}` : ''}
+    </div>`, '')}` : ''}
 
     <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="closeModal();startExerciseForTense('${tense.id}')">🎮 Pratiquer ce temps</button>
@@ -969,7 +969,7 @@ function openPassiveModal() {
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Temps</th><th>Active</th><th>Passive</th></tr>
-        ${info.examples.map(e => `<tr><td>${e.tense}</td><td>${e.active}</td><td><strong>${e.passive}</strong></td></tr>`).join('')}
+        ${info.examples.reduce((acc, e) => acc + `<tr><td>${e.tense}</td><td>${e.active}</td><td><strong>${e.passive}</strong></td></tr>`, '')}
       </table>
     </div>
     <div class="explain-block" style="border-left-color:var(--accent);margin-top:16px">
@@ -996,14 +996,14 @@ function openReportedModal() {
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Discours direct</th><th>Discours indirect</th><th>Exemple</th></tr>
-        ${info.rules.map(r => `<tr><td>${r.direct}</td><td><strong>${r.reported}</strong></td><td><em>${r.example}</em></td></tr>`).join('')}
+        ${info.rules.reduce((acc, r) => acc + `<tr><td>${r.direct}</td><td><strong>${r.reported}</strong></td><td><em>${r.example}</em></td></tr>`, '')}
       </table>
     </div>
     <h4 style="margin:16px 0 12px">📅 Changements de temps/mots</h4>
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Direct</th><th>Indirect</th></tr>
-        ${info.timeChanges.map(t => `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`).join('')}
+        ${info.timeChanges.reduce((acc, t) => acc + `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`, '')}
       </table>
     </div>
     <div style="margin-top:20px"><button class="btn btn-primary" onclick="closeModal();startExercise('mixed')">🎮 Pratiquer</button></div>`;
@@ -1628,15 +1628,15 @@ function showComparison(category, tabEl) {
           <th>Exemple</th>
           <th>Mots-clés</th>
         </tr>
-        ${tenses.map(t => `
+        ${tenses.reduce((acc, t) => acc + `
           <tr>
             <td><strong>${t.nameFR}</strong></td>
             <td><code style="font-size:0.75rem">${t.structure}</code></td>
             <td>${t.usage[0].split(':')[1]?.trim() || t.usage[0]}</td>
             <td><em>${t.examples[0]?.en}</em></td>
-            <td>${t.signalWords?.slice(0, 4).map(w => `<span class="tag tag-blue" style="margin:2px">${w}</span>`).join('')}</td>
+            <td>${t.signalWords?.slice(0, 4).reduce((wAcc, w) => wAcc + `<span class="tag tag-blue" style="margin:2px">${w}</span>`, '') || ''}</td>
           </tr>
-        `).join('')}
+        `, '')}
       </table>
     </div>
 
