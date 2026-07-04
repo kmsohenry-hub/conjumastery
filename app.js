@@ -659,11 +659,24 @@ return {
 // 4. UI CONTROLLER
 // ============================================================
 
+let _cachedPages = null;
+let _cachedNavItems = null;
+
 function navigateTo(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(`page-${page}`).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+  if (!_cachedPages) _cachedPages = document.querySelectorAll('.page');
+  if (!_cachedNavItems) _cachedNavItems = document.querySelectorAll('.nav-item');
+
+  _cachedPages.forEach(p => p.classList.remove('active'));
+  const pageEl = document.getElementById(`page-${page}`);
+  if (pageEl) pageEl.classList.add('active');
+
+  _cachedNavItems.forEach(n => {
+    if (n.dataset.page === page) {
+      n.classList.add('active');
+    } else {
+      n.classList.remove('active');
+    }
+  });
 
   const titles = {
     dashboard: 'Tableau de bord',
