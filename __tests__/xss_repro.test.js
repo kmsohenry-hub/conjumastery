@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { showToast } from '../app.js';
+import { showToast } from '../src/ui/utils/toast.js';
 
 // Vitest compatibility for Bun
 if (typeof vi === 'undefined') {
