@@ -1,3 +1,6 @@
+const { APP_DATA, State, ExerciseEngine, answerMatches } = await import('../app.js');
+
+
 /**
  * Tests unitaires pour ConjuMaster UK
  * Testent les fonctionnalités principales de l'application
@@ -126,7 +129,7 @@ global.Notification = {
   requestPermission: vi.fn().mockResolvedValue('granted'),
 };
 
-const { State, ExerciseEngine, APP_DATA, answerMatches } = await import('../app.js');
+
 
 beforeEach(() => {
   // Réinitialiser l'état avant chaque test
