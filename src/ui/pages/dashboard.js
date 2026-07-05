@@ -30,7 +30,7 @@ export function renderDashboardNextLesson(completedLessons) {
   if (incompleteLessons.length > 0) {
     const next = incompleteLessons[0];
     nextLessonEl.innerHTML = `
-      <div class="lesson-card" onclick="('lessons')">
+      <div class="lesson-card" onclick="navigateTo('lessons')">
         <div class="lesson-icon" style="background:${next.module.color}20;color:${next.module.color}">${next.module.icon}</div>
         <div class="lesson-info">
           <div class="lesson-title">${next.title}</div>

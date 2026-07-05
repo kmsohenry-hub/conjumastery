@@ -36,7 +36,7 @@ export function showTenseCategory(category, tabEl) {
     ${tenses
       .map(
         (t) => `
-      <div class="lesson-card" onclick="(APP_DATA.tensesById['${t.id}'])">
+      <div class="lesson-card" onclick="openTenseModal(APP_DATA.tensesById['${t.id}'])">
         <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">${t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
         <div class="lesson-info">
           <div class="lesson-title">${t.nameFR}</div>
@@ -116,7 +116,7 @@ export function showComparison(category, tabEl) {
       .slice(0, 2)
       .map(
         (t) => `
-      <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="(APP_DATA.tensesById['${t.id}'])">
+      <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="openTenseModal(APP_DATA.tensesById['${t.id}'])">
         <h4>${escapeHtml(t.nameFR)}</h4>
         <p style="font-size:0.9rem;color:var(--text-light);margin-top:8px">${escapeHtml(t.nuances || t.explanation.substring(0, 200))}</p>
       </div>

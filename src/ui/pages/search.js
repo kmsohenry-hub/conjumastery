@@ -23,7 +23,7 @@ export function performGlobalSearch() {
         type: 'temps',
         title: t.nameFR,
         desc: t.explanation.substring(0, 100),
-        action: `(APP_DATA.tensesById['${t.id}'])`,
+        action: `openTenseModal(APP_DATA.tensesById['${t.id}'])`,
       });
     }
   });
@@ -40,7 +40,7 @@ export function performGlobalSearch() {
         type: 'verbe',
         title: `${v.base} → ${v.past} → ${v.pp}`,
         desc: v.meaning,
-        action: `('verbs')`,
+        action: `navigateTo('verbs')`,
       });
     }
   });

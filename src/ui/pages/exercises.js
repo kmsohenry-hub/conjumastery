@@ -129,8 +129,7 @@ export function validateExercise() {
     // State.updateSpacedRepetition(q.tenseId, true);
   } else {
     State.recordAnswer(q.tenseId, false);
-    // // State.updateSpacedRepetition(q.tenseId, false);
-  }
+    }
 
   // Show feedback
   const feedbackEl = document.getElementById('exerciseFeedback');
@@ -156,8 +155,6 @@ export function skipExercise() {
   ExerciseEngine.answered = true;
   const q = ExerciseEngine.getCurrent();
   State.recordAnswer(q.tenseId, false);
-  State.updateSpacedRepetition(q.tenseId, false);
-
   const feedbackEl = document.getElementById('exerciseFeedback');
   feedbackEl.style.display = 'block';
   const safeAnswer = escapeHtml(q.answer || q.options[q.correct]);

@@ -189,7 +189,7 @@ export function finishTest() {
       <p style="color:var(--text-light)">⏱️ Temps : ${mins}min ${secs}s • ⭐ +${p.score * 15} XP</p>
       <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="renderTestSetup()">🔄 Nouveau test</button>
-        <button class="btn btn-outline" onclick="('dashboard')">🏠 Tableau de bord</button>
+        <button class="btn btn-outline" onclick="navigateTo('dashboard')">🏠 Tableau de bord</button>
       </div>
     </div>
 

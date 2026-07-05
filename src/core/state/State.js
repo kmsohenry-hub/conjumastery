@@ -44,15 +44,9 @@ const State = {
   },
 
   addXP(amount) {
-    const oldLevel = store.getState().level;
-    const newLevel = store.addXP(amount);
-    if (newLevel > oldLevel) {
-      window.showToast?.(`🎉 Niveau ${newLevel} atteint !`, 'success');
-      window.launchConfetti?.();
-    }
+    store.addXP(amount);
     this.save();
-    window.updateUI?.();
-  },
+    },
 
   recordAnswer(tenseId, correct) {
     // In store.js, recordAnswer also updates spacedRepetition.
@@ -63,15 +57,9 @@ const State = {
   },
 
   completeLesson(lessonId) {
-    const oldLevel = store.getState().level;
-    const newState = store.completeLesson(lessonId);
-    if (newState.level > oldLevel) {
-      window.showToast?.(`🎉 Niveau ${newState.level} atteint !`, 'success');
-      window.launchConfetti?.();
-    }
+    store.completeLesson(lessonId);
     this.save();
-    window.updateUI?.();
-  },
+    },
 
   addFavorite(item) {
     if (!store.getState().favorites.includes(item)) {
@@ -125,9 +113,7 @@ const State = {
   reset() {
     store.reset();
     this.save();
-    window.updateUI?.();
-    window.showToast?.('Progression réinitialisée', 'info');
-  },
+    },
 };
 
 export { store, State };

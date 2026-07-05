@@ -37,7 +37,7 @@ export function filterVerbs() {
           <span style="font-weight:600;color:var(--secondary)">${v.pp}</span>
           <span style="color:var(--text-light);margin-left:8px;font-size:0.85rem">${v.meaning}</span>
         </div>
-        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation();('verb_${v.base}', this)">${isFav ? '★' : '☆'}</button>
+        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation();toggleFav('verb_${v.base}', this)">${isFav ? '★' : '☆'}</button>
       </div>
       <div class="verb-conjugation-table">
         <div class="conj-grid">

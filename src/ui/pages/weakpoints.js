@@ -35,7 +35,7 @@ export function renderWeakpoints() {
               <div class="progress-fill ${accuracy < 50 ? 'warning' : 'success'}" style="width:${accuracy}%"></div>
             </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="('${w.tenseId}')">🎯 Pratiquer</button>
+          <button class="btn btn-primary btn-sm" onclick="startExerciseForTense('${w.tenseId}')">🎯 Pratiquer</button>
         </div>`;
         })
         .join('')}

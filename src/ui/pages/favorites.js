@@ -27,7 +27,7 @@ export function renderFavorites() {
       } else {
         const tense = APP_DATA.tensesById[f];
         if (tense) {
-          return `<div class="lesson-card" onclick="(APP_DATA.tensesById['${f}'])">
+          return `<div class="lesson-card" onclick="openTenseModal(APP_DATA.tensesById['${f}'])">
           <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">📖</div>
           <div class="lesson-info">
             <div class="lesson-title">${tense.nameFR}</div>

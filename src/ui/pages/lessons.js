@@ -86,8 +86,8 @@ export function openTenseModal(tense) {
         <span class="level-badge level-${tense.level}" style="margin-top:6px">${tense.level === 'beginner' ? '🌱 Débutant' : tense.level === 'intermediate' ? '🌿 Intermédiaire' : '🌳 Avancé'}</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="('${tense.id}', this)">${isFav ? '★' : '☆'}</button>
-        <button class="modal-close" onclick="()">✕</button>
+        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav('${tense.id}', this)">${isFav ? '★' : '☆'}</button>
+        <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
     </div>
 
@@ -157,8 +157,8 @@ export function openTenseModal(tense) {
     }
 
     <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-      <button class="btn btn-primary" onclick="();('${tense.id}')">🎮 Pratiquer ce temps</button>
-      <button class="btn btn-outline" onclick="();('comparison')">📊 Voir le comparatif</button>
+      <button class="btn btn-primary" onclick="closeModal();startExerciseForTense('${tense.id}')">🎮 Pratiquer ce temps</button>
+      <button class="btn btn-outline" onclick="closeModal();navigateTo('comparison')">📊 Voir le comparatif</button>
     </div>`;
 
   document.getElementById('modalOverlay').classList.add('active');
@@ -170,7 +170,7 @@ export function openPassiveModal() {
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title">Voix Passive</div>
-      <button class="modal-close" onclick="()">✕</button>
+      <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
@@ -191,7 +191,7 @@ export function openPassiveModal() {
       <h4>💡 Nuances</h4>
       <p>${info.nuances}</p>
     </div>
-    <div style="margin-top:20px"><button class="btn btn-primary" onclick="();('mixed')">🎮 Pratiquer</button></div>`;
+    <div style="margin-top:20px"><button class="btn btn-primary" onclick="closeModal();startExercise('mixed')">🎮 Pratiquer</button></div>`;
   document.getElementById('modalOverlay').classList.add('active');
 }
 
@@ -201,7 +201,7 @@ export function openReportedModal() {
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title">Discours Indirect (Reported Speech)</div>
-      <button class="modal-close" onclick="()">✕</button>
+      <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
@@ -221,7 +221,7 @@ export function openReportedModal() {
         ${info.timeChanges.map((t) => `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`).join('')}
       </table>
     </div>
-    <div style="margin-top:20px"><button class="btn btn-primary" onclick="();('mixed')">🎮 Pratiquer</button></div>`;
+    <div style="margin-top:20px"><button class="btn btn-primary" onclick="closeModal();startExercise('mixed')">🎮 Pratiquer</button></div>`;
   document.getElementById('modalOverlay').classList.add('active');
 }
 
