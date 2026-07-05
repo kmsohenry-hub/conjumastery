@@ -1,4 +1,3 @@
-
 import { renderDashboard } from './pages/dashboard.js';
 import { renderLessons } from './pages/lessons.js';
 import { resetExerciseUI } from './pages/exercises.js';
@@ -89,10 +88,17 @@ export function navigateTo(page) {
     case 'settings':
       break;
   }
+
+  // Close mobile sidebar
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  }
 }
 
 export function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('active');
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
 }
 
 import { State } from '../core/state/State.js';
@@ -110,12 +116,11 @@ export function setTheme(theme) {
   State.save();
 }
 
-export function closeModal() {
+export function closeModal(event) {
+  if (event && event.target !== document.getElementById('modalOverlay')) return;
   document.getElementById('modalOverlay').classList.remove('active');
 }
 
-export function closeModalDirect(event) {
-  if (event.target.id === 'modalOverlay') {
-    closeModal();
-  }
+export function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('active');
 }
