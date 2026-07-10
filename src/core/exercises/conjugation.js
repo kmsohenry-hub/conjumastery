@@ -58,7 +58,19 @@ export function getPresentSimpleForm(verb, is3rdSing) {
 export function getIngForm(verb) {
   if (verb.endsWith('ie')) return `${verb.slice(0, -2)}ying`;
   if (verb.endsWith('e') && verb !== 'be') return `${verb.slice(0, -1)}ing`;
+  if (shouldDoubleFinalConsonant(verb)) return `${verb}${verb[verb.length - 1]}ing`;
   return `${verb}ing`;
+}
+
+function shouldDoubleFinalConsonant(verb) {
+  if (verb.length < 3) return false;
+  if (verb.endsWith('w') || verb.endsWith('x') || verb.endsWith('y')) return false;
+
+  const last = verb[verb.length - 1];
+  const previous = verb[verb.length - 2];
+  const beforePrevious = verb[verb.length - 3];
+
+  return !VOWELS.includes(last) && VOWELS.includes(previous) && !VOWELS.includes(beforePrevious);
 }
 
 export function getConjugation(verbsByBase, verb, tenseId, subject, is3rdSing) {

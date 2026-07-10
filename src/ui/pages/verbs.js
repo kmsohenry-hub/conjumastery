@@ -1,4 +1,5 @@
 import { State } from '../../core/state/State.js';
+import { getIngForm } from '../../core/exercises/conjugation.js';
 import { APP_DATA } from '../../../data.js';
 
 
@@ -42,13 +43,13 @@ export function filterVerbs() {
       <div class="verb-conjugation-table">
         <div class="conj-grid">
           <div class="conj-item"><div class="tense-label">Present Simple</div><div class="tense-form">${v.base}${v.base === 'be' ? ' (am/is/are)' : ''}</div></div>
-          <div class="conj-item"><div class="tense-label">Present Continuous</div><div class="tense-form">${v.base === 'be' ? 'being' : v.base + 'ing'}</div></div>
+          <div class="conj-item"><div class="tense-label">Present Continuous</div><div class="tense-form">${getIngForm(v.base)}</div></div>
           <div class="conj-item"><div class="tense-label">Past Simple</div><div class="tense-form">${v.past}</div></div>
-          <div class="conj-item"><div class="tense-label">Past Continuous</div><div class="tense-form">${v.base}ing</div></div>
+          <div class="conj-item"><div class="tense-label">Past Continuous</div><div class="tense-form">${getIngForm(v.base)}</div></div>
           <div class="conj-item"><div class="tense-label">Present Perfect</div><div class="tense-form">have/has ${v.pp}</div></div>
           <div class="conj-item"><div class="tense-label">Past Perfect</div><div class="tense-form">had ${v.pp}</div></div>
           <div class="conj-item"><div class="tense-label">Future</div><div class="tense-form">will ${v.base}</div></div>
-          <div class="conj-item"><div class="tense-label">Participe présent</div><div class="tense-form">${v.base}ing</div></div>
+          <div class="conj-item"><div class="tense-label">Participe présent</div><div class="tense-form">${getIngForm(v.base)}</div></div>
           <div class="conj-item"><div class="tense-label">Participe passé</div><div class="tense-form">${v.pp}</div></div>
         </div>
       </div>

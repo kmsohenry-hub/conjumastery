@@ -26,4 +26,10 @@ describe('getIngForm', () => {
     expect(getIngForm('go')).toBe('going');
     expect(getIngForm('do')).toBe('doing');
   });
+
+  test('handles consonant doubling for CVC verbs', () => {
+    expect(getIngForm('run')).toBe('running');
+    expect(getIngForm('sit')).toBe('sitting');
+    expect(getIngForm('stop')).toBe('stopping');
+  });
 });

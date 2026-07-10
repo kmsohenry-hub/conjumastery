@@ -291,7 +291,7 @@ function importData() {
         State.save();
         updateUI();
         showToast('📥 Données importées avec succès', 'success');
-      } catch (_err) {
+      } catch {
         showToast('❌ Fichier invalide', 'error');
       }
     };
