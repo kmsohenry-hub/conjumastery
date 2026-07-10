@@ -1,5 +1,5 @@
-const { APP_DATA, State, ExerciseEngine, answerMatches } = await import('../app.js');
-
+const { APP_DATA, State, ExerciseEngine, answerMatches, validateImportedState } =
+  await import('../app.js');
 
 /**
  * Tests unitaires pour ConjuMaster UK
@@ -129,8 +129,6 @@ global.Notification = {
   requestPermission: vi.fn().mockResolvedValue('granted'),
 };
 
-
-
 beforeEach(() => {
   // Réinitialiser l'état avant chaque test
   State.data = {
@@ -152,6 +150,41 @@ beforeEach(() => {
     settings: { theme: 'light' },
   };
   localStorage.clear();
+});
+
+describe('validateImportedState', () => {
+  test('nettoie les sauvegardes importées avant application', () => {
+    const imported = validateImportedState({
+      xp: 120,
+      level: 'bad',
+      completedLessons: ['lesson_1', 42],
+      favorites: ['present_simple', null],
+      tenseStats: {
+        present_simple: { correct: 2, total: 3 },
+        broken: { correct: 5, total: 2 },
+      },
+      spacedRepetition: {
+        past_simple: { interval: 3, nextReview: 1000, ease: 2.4, errors: 1 },
+      },
+      settings: { theme: 'dark' },
+      unknown: 'ignored',
+    });
+
+    expect(imported.xp).toBe(120);
+    expect(imported.level).toBe(1);
+    expect(imported.completedLessons).toEqual(['lesson_1']);
+    expect(imported.favorites).toEqual(['present_simple']);
+    expect(imported.tenseStats.present_simple).toEqual({ correct: 2, total: 3 });
+    expect(imported.tenseStats.broken).toBeUndefined();
+    expect(imported.spacedRepetition.past_simple.interval).toBe(3);
+    expect(imported.settings.theme).toBe('dark');
+    expect(imported.unknown).toBeUndefined();
+  });
+
+  test('rejette les sauvegardes qui ne sont pas des objets', () => {
+    expect(() => validateImportedState(null)).toThrow('Invalid backup format');
+    expect(() => validateImportedState('bad')).toThrow('Invalid backup format');
+  });
 });
 
 describe('State Management', () => {

@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { getIngForm } from '../../../../src/core/exercises/conjugation.js';
+import { getIngForm, getRegularPast } from '../../../../src/core/exercises/conjugation.js';
 
 describe('getIngForm', () => {
   test('handles verbs ending in "ie"', () => {
@@ -31,5 +31,18 @@ describe('getIngForm', () => {
     expect(getIngForm('run')).toBe('running');
     expect(getIngForm('sit')).toBe('sitting');
     expect(getIngForm('stop')).toBe('stopping');
+  });
+});
+
+describe('getRegularPast', () => {
+  test('handles consonant doubling for regular past forms', () => {
+    expect(getRegularPast('stop')).toBe('stopped');
+    expect(getRegularPast('plan')).toBe('planned');
+  });
+
+  test('keeps existing regular past rules', () => {
+    expect(getRegularPast('work')).toBe('worked');
+    expect(getRegularPast('live')).toBe('lived');
+    expect(getRegularPast('study')).toBe('studied');
   });
 });

@@ -1,4 +1,11 @@
-import { navigateTo, toggleSidebar, toggleTheme, setTheme, closeModal, closeModalDirect } from './src/ui/navigation.js';
+import {
+  navigateTo,
+  toggleSidebar,
+  toggleTheme,
+  setTheme,
+  closeModal,
+  closeModalDirect,
+} from './src/ui/navigation.js';
 import { answerMatches, normalizeAnswer } from './src/core/exercises/validation.js';
 import { APP_DATA } from './data.js';
 import ExerciseEngineObj from './src/core/exercises/ExerciseEngine.js';
@@ -8,9 +15,33 @@ import { showToast } from './src/ui/utils/toast.js';
 import { launchConfetti } from './src/ui/utils/confetti.js';
 import { NotificationManager } from './src/ui/utils/notifications.js';
 import { renderDashboard } from './src/ui/pages/dashboard.js';
-import { renderLessons, showModule, openLesson, openTenseModal, openPassiveModal, openReportedModal, renderTimeline } from './src/ui/pages/lessons.js';
-import { resetExerciseUI, startExercise, startExerciseForTense, selectOption, validateExercise, skipExercise, nextExercise, exitExercise, finishExercise, } from './src/ui/pages/exercises.js';
-import { renderTestSetup, startTest, validateTestAnswer, nextTestQuestion, finishTest } from './src/ui/pages/test.js';
+import {
+  renderLessons,
+  showModule,
+  openLesson,
+  openTenseModal,
+  openPassiveModal,
+  openReportedModal,
+  renderTimeline,
+} from './src/ui/pages/lessons.js';
+import {
+  resetExerciseUI,
+  startExercise,
+  startExerciseForTense,
+  selectOption,
+  validateExercise,
+  skipExercise,
+  nextExercise,
+  exitExercise,
+  finishExercise,
+} from './src/ui/pages/exercises.js';
+import {
+  renderTestSetup,
+  startTest,
+  validateTestAnswer,
+  nextTestQuestion,
+  finishTest,
+} from './src/ui/pages/test.js';
 import { renderTenses, showTenseCategory, showComparison } from './src/ui/pages/tenses.js';
 import { renderVerbs, filterVerbs, toggleVerbCard } from './src/ui/pages/verbs.js';
 import { renderRevision, startRevisionSession } from './src/ui/pages/reviews.js';
@@ -35,6 +66,7 @@ APP_DATA.verbsByBase = APP_DATA.irregularVerbs.reduce((acc, v) => {
 }, {});
 
 import { State } from './src/core/state/State.js';
+import { defaultState } from './src/core/state/store.js';
 
 // ============================================================
 // 3. EXERCISE ENGINE
@@ -100,51 +132,13 @@ const ExerciseEngine = {
 // 4. UI CONTROLLER
 // ============================================================
 
-
 // ============================================================
 // 5. PAGE RENDERERS
 // ============================================================
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ============================================================
 // 6. EXERCISE UI
 // ============================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Compare la réponse utilisateur à la réponse attendue.
@@ -152,97 +146,41 @@ const ExerciseEngine = {
  * (utile pour BrE/AmE : "learnt/learned", "dreamt/dreamed", etc.).
  */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ============================================================
 // 7. TEST MODE
 // ============================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ============================================================
 // 8. TENSES REFERENCE PAGE
 // ============================================================
 
-
-
-
-
 // ============================================================
 // 9. VERBS DICTIONARY
 // ============================================================
-
-
-
-
-
-
 
 // ============================================================
 // 10. COMPARISON TABLE
 // ============================================================
 
-
-
-
-
 // ============================================================
 // 11. REVISION PAGE
 // ============================================================
-
-
-
-
 
 // ============================================================
 // 12. WEAKPOINTS PAGE
 // ============================================================
 
-
-
 // ============================================================
 // 13. SEARCH
 // ============================================================
-
-
 
 // ============================================================
 // 14. FAVORITES
 // ============================================================
 
-
-
-
-
 // ============================================================
 // 15. STATS PAGE
 // ============================================================
-
-
 
 // ============================================================
 // 16. MODAL
@@ -252,13 +190,82 @@ const ExerciseEngine = {
 // 17. TOAST NOTIFICATIONS
 // ============================================================
 
-
-
 // ============================================================
 // 18. CONFETTI
 // ============================================================
 
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
 
+function cleanNumber(value, fallback = 0, min = 0) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= min ? value : fallback;
+}
+
+function cleanStringArray(value) {
+  return Array.isArray(value) ? value.filter((item) => typeof item === 'string') : [];
+}
+
+function cleanTenseStats(value) {
+  if (!isPlainObject(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([, stats]) => isPlainObject(stats))
+      .map(([tenseId, stats]) => [
+        tenseId,
+        {
+          correct: cleanNumber(stats.correct),
+          total: cleanNumber(stats.total),
+        },
+      ])
+      .filter(([, stats]) => stats.total >= stats.correct),
+  );
+}
+
+function cleanSpacedRepetition(value) {
+  if (!isPlainObject(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([, data]) => isPlainObject(data))
+      .map(([tenseId, data]) => [
+        tenseId,
+        {
+          interval: cleanNumber(data.interval, 1, 1),
+          nextReview: cleanNumber(data.nextReview, Date.now(), 0),
+          ease: cleanNumber(data.ease, 2.5, 1.3),
+          errors: cleanNumber(data.errors),
+        },
+      ]),
+  );
+}
+
+export function validateImportedState(raw) {
+  if (!isPlainObject(raw)) throw new Error('Invalid backup format');
+  const data = isPlainObject(raw.data) ? raw.data : raw;
+  const settings = isPlainObject(data.settings) ? data.settings : {};
+
+  return {
+    ...defaultState,
+    xp: cleanNumber(data.xp),
+    level: cleanNumber(data.level, defaultState.level, 1),
+    totalExercises: cleanNumber(data.totalExercises),
+    correctAnswers: cleanNumber(data.correctAnswers),
+    incorrectAnswers: cleanNumber(data.incorrectAnswers),
+    bestStreak: cleanNumber(data.bestStreak),
+    currentStreak: cleanNumber(data.currentStreak),
+    daysStreak: cleanNumber(data.daysStreak),
+    lastActiveDate: typeof data.lastActiveDate === 'string' ? data.lastActiveDate : null,
+    completedLessons: cleanStringArray(data.completedLessons),
+    tenseStats: cleanTenseStats(data.tenseStats),
+    errorLog: Array.isArray(data.errorLog) ? data.errorLog.filter(isPlainObject).slice(-500) : [],
+    activityLog: Array.isArray(data.activityLog)
+      ? data.activityLog.filter(isPlainObject).slice(-100)
+      : [],
+    favorites: cleanStringArray(data.favorites),
+    spacedRepetition: cleanSpacedRepetition(data.spacedRepetition),
+    settings: { theme: settings.theme === 'dark' ? 'dark' : 'light' },
+  };
+}
 
 // ============================================================
 // 19. SETTINGS FUNCTIONS
@@ -286,8 +293,8 @@ function importData() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const data = JSON.parse(ev.target.result);
-        State.data = { ...State.data, ...data };
+        const data = validateImportedState(JSON.parse(ev.target.result));
+        State.data = data;
         State.save();
         updateUI();
         showToast('📥 Données importées avec succès', 'success');
@@ -347,8 +354,6 @@ function updateUI() {
 // 21. NOTIFICATIONS
 // ============================================================
 
-
-
 // ============================================================
 // 22. INITIALIZATION
 // ============================================================
@@ -364,9 +369,6 @@ function init() {
     setTheme('dark');
   }
 }
-
-
-
 
 window.APP_DATA = APP_DATA;
 window.State = State;
@@ -424,12 +426,42 @@ window.importData = importData;
 window.exportData = exportData;
 window.closeModalDirect = closeModalDirect;
 
-
 // Start the app
 document.addEventListener('DOMContentLoaded', init);
 
-
-
-export { APP_DATA, State, ExerciseEngine, NotificationManager, showModule, openLesson, openTenseModal, openPassiveModal, openReportedModal, startExercise, startExerciseForTense, selectOption, validateExercise, skipExercise, nextExercise, exitExercise, startTest, validateTestAnswer, nextTestQuestion, showTenseCategory, filterVerbs, toggleVerbCard, showComparison, startRevisionSession, performGlobalSearch, toggleFav, showToast, launchConfetti, navigateTo, closeModal, answerMatches, normalizeAnswer };
+export {
+  APP_DATA,
+  State,
+  ExerciseEngine,
+  NotificationManager,
+  showModule,
+  openLesson,
+  openTenseModal,
+  openPassiveModal,
+  openReportedModal,
+  startExercise,
+  startExerciseForTense,
+  selectOption,
+  validateExercise,
+  skipExercise,
+  nextExercise,
+  exitExercise,
+  startTest,
+  validateTestAnswer,
+  nextTestQuestion,
+  showTenseCategory,
+  filterVerbs,
+  toggleVerbCard,
+  showComparison,
+  startRevisionSession,
+  performGlobalSearch,
+  toggleFav,
+  showToast,
+  launchConfetti,
+  navigateTo,
+  closeModal,
+  answerMatches,
+  normalizeAnswer,
+};
 
 window.closeModalDirect = closeModalDirect;
