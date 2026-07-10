@@ -37,6 +37,7 @@ export function getRegularPast(verb) {
   if (verb.endsWith('e')) return `${verb}d`;
   if (verb.endsWith('y') && !VOWELS.includes(verb[verb.length - 2]))
     return `${verb.slice(0, -1)}ied`;
+  if (shouldDoubleFinalConsonant(verb)) return `${verb}${verb[verb.length - 1]}ed`;
   return `${verb}ed`;
 }
 

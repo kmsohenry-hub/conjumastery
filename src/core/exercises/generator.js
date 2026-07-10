@@ -8,6 +8,60 @@ import {
   getAuxiliary,
 } from './conjugation.js';
 
+function buildSentenceForTense(tenseId, subj, verb, is3rdSing, context = 'practice') {
+  const ing = getIngForm(verb);
+  const { past, pp } = getIrregularForms(APP_DATA.verbsByBase, verb);
+  const present = getPresentSimpleForm(verb, is3rdSing);
+  const beNow = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
+  const bePast = subj === 'I' || is3rdSing ? 'was' : 'were';
+  const hasHave = is3rdSing ? 'has' : 'have';
+
+  const sentences = {
+    present_simple: `${subj} ${present} every day.`,
+    present_continuous: `${subj} ${beNow} ${ing} right now.`,
+    present_perfect: `${subj} ${hasHave} ${pp} already.`,
+    present_perfect_continuous: `${subj} ${hasHave} been ${ing} for two hours.`,
+    past_simple: `${subj} ${past} yesterday.`,
+    past_continuous: `${subj} ${bePast} ${ing} when I arrived.`,
+    past_perfect: `${subj} had ${pp} before I arrived.`,
+    past_perfect_continuous: `${subj} had been ${ing} for two hours before I arrived.`,
+    future_will: `${subj} will ${verb} tomorrow.`,
+    future_going_to: `${subj} ${beNow} going to ${verb} next week.`,
+    future_continuous: `${subj} will be ${ing} tomorrow evening.`,
+    future_perfect: `${subj} will have ${pp} by tomorrow.`,
+    future_perfect_continuous: `${subj} will have been ${ing} for two hours by then.`,
+  };
+
+  return sentences[tenseId] || `${subj} ${present} ${context}.`;
+}
+
+function buildIncorrectSentenceForTense(tenseId, subj, verb, is3rdSing) {
+  const correct = buildSentenceForTense(tenseId, subj, verb, is3rdSing);
+  const ing = getIngForm(verb);
+  const { past, pp } = getIrregularForms(APP_DATA.verbsByBase, verb);
+  const present = getPresentSimpleForm(verb, is3rdSing);
+
+  const incorrect = {
+    present_simple: is3rdSing
+      ? `${subj} ${verb} every day.`
+      : `${subj} ${getPresentSimpleForm(verb, true)} every day.`,
+    present_continuous: `${subj} ${present} right now.`,
+    present_perfect: `${subj} ${past} already.`,
+    present_perfect_continuous: `${subj} has been ${verb} for two hours.`,
+    past_simple: `${subj} ${verb} yesterday.`,
+    past_continuous: `${subj} ${past} when I arrived.`,
+    past_perfect: `${subj} had ${past} before I arrived.`,
+    past_perfect_continuous: `${subj} had ${ing} for two hours before I arrived.`,
+    future_will: `${subj} ${verb} tomorrow.`,
+    future_going_to: `${subj} will going to ${verb} next week.`,
+    future_continuous: `${subj} will ${ing} tomorrow evening.`,
+    future_perfect: `${subj} will ${pp} by tomorrow.`,
+    future_perfect_continuous: `${subj} will have ${ing} for two hours by then.`,
+  };
+
+  return incorrect[tenseId] === correct ? `${subj} ${verb} yesterday.` : incorrect[tenseId];
+}
+
 export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
   let fullSentence, correctAnswer;
   let options;
@@ -279,82 +333,27 @@ export function generateTransform(tense, subj, verb, is3rdSing) {
 }
 
 export function generateCorrection(tense, subj, verb, is3rdSing) {
-  let correctSentence, incorrectSentence, explanation;
-
-  if (tense.id === 'present_simple') {
-    const form = getPresentSimpleForm(verb, is3rdSing);
-    if (is3rdSing) {
-      correctSentence = `${subj} ${form} every day.`;
-      incorrectSentence = `${subj} ${verb} every day.`;
-      explanation = `Avec he/she/it au Present Simple, on ajoute -s/-es au verbe.`;
-    } else {
-      correctSentence = `${subj} ${verb} every day.`;
-      incorrectSentence = `${subj} ${verb}s every day.`;
-      explanation = `Avec I/you/we/they, on utilise la base verbale sans -s.`;
-    }
-  } else if (tense.id === 'past_simple') {
-    const irreg = APP_DATA.verbsByBase[verb];
-    const { past: pastForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
-    correctSentence = `${subj} ${pastForm} yesterday.`;
-    incorrectSentence = irreg ? `${subj} ${verb}ed yesterday.` : `${subj} ${verb} yesterday.`;
-    explanation = irreg
-      ? `"${verb}" est irrégulier : ${verb} → ${pastForm}.`
-      : `Il faut ajouter -ed pour le Past Simple : "${pastForm}".`;
-  } else {
-    correctSentence = `${subj} ${verb}ed yesterday.`;
-    incorrectSentence = `${subj} ${verb} yesterday.`;
-    explanation = `Il faut utiliser le Past Simple pour une action passée datée.`;
-  }
+  const correctSentence = buildSentenceForTense(tense.id, subj, verb, is3rdSing);
+  const incorrectSentence = buildIncorrectSentenceForTense(tense.id, subj, verb, is3rdSing);
 
   return {
     type: 'correction',
     sentence: `Trouvez l'erreur et corrigez-la :\n"${incorrectSentence}"`,
     answer: correctSentence,
     tenseId: tense.id,
-    explanation: explanation,
+    explanation: `La phrase correcte au ${tense.nameFR} est : "${correctSentence}"`,
   };
 }
 
 export function generateTranslation(tense, subj, verb, is3rdSing) {
-  const frSentences = [
-    {
-      fr: `Traduisez : "[sujet] fait l'action (${verb}) tous les jours."`,
-      tense: 'present_simple',
-    },
-    {
-      fr: `Traduisez : "[sujet] est en train de faire l'action (${verb}) en ce moment."`,
-      tense: 'present_continuous',
-    },
-    { fr: `Traduisez : "[sujet] a fait l'action (${verb}) hier."`, tense: 'past_simple' },
-    { fr: `Traduisez : "[sujet] fera l'action (${verb}) demain."`, tense: 'future_will' },
-  ];
-
-  const relevant = frSentences.filter((s) => s.tense === tense.id);
-  const chosen =
-    relevant.length > 0
-      ? relevant[Math.floor(Math.random() * relevant.length)]
-      : frSentences[Math.floor(Math.random() * frSentences.length)];
-
-  let answer;
-  if (chosen.tense === 'present_simple') {
-    const form = getPresentSimpleForm(verb, is3rdSing);
-    answer = `${subj} ${form} every day.`;
-  } else if (chosen.tense === 'present_continuous') {
-    const contAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
-    answer = `${subj} ${contAux} ${getIngForm(verb)} right now.`;
-  } else if (chosen.tense === 'past_simple') {
-    const { past: pastForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
-    answer = `${subj} ${pastForm} yesterday.`;
-  } else {
-    answer = `${subj} will ${verb} tomorrow.`;
-  }
+  const answer = buildSentenceForTense(tense.id, subj, verb, is3rdSing);
 
   return {
     type: 'translation',
-    sentence: `Traduisez en anglais :\n"${chosen.fr}"`,
-    answer: answer,
+    sentence: `Traduisez en anglais en utilisant le temps ${tense.nameFR} :\n"${subj} / ${verb}"`,
+    answer,
     tenseId: tense.id,
-    explanation: `La traduction correcte est : "${answer}"`,
+    explanation: `La traduction correcte au ${tense.nameFR} est : "${answer}"`,
   };
 }
 

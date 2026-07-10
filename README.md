@@ -162,21 +162,26 @@ npm run format:check
 
 ```
 conjumastery/
-├── __tests__/              # Tests unitaires (Vitest)
-│   └── conjumaster.test.js
-├── node_modules/           # Dépendances (généré par npm install)
-├── index.html              # Point d'entrée de l'application
-├── style.css               # Feuilles de style (mode clair/sombre)
-├── app.js                  # Logique métier et moteur de l'application
-├── data.js                 # Base de données (exercices, verbes, leçons)
-├── package.json            # Configuration du projet et dépendances
-├── vite.config.js          # Configuration Vite
-├── vitest.setup.js         # Setup global des tests Vitest
-├── eslint.config.js        # Configuration ESLint
-├── .prettierrc             # Configuration Prettier
-├── .prettierignore         # Fichiers ignorés par Prettier
-└── README.md               # Ce fichier
+├── __tests__/              # Tests unitaires et tests de régression (Vitest)
+├── src/
+│   ├── core/
+│   │   ├── exercises/      # Génération, validation et conjugaison
+│   │   ├── persistence/    # Accès localStorage
+│   │   ├── state/          # Store, sélecteurs et façade State
+│   │   └── security.js     # Échappement HTML et nettoyage d'entrées
+│   └── ui/
+│       ├── pages/          # Rendu des pages de l'application
+│       ├── utils/          # Toasts, notifications, confettis
+│       └── navigation.js   # Navigation interne et thème
+├── index.html              # Squelette HTML et conteneurs de pages
+├── style.css               # Feuilles de style (responsive + mode sombre)
+├── app.js                  # Bootstrap, compatibilité globale et fonctions settings
+├── data.js                 # Données pédagogiques statiques
+├── package.json            # Scripts npm et dépendances
+└── vite.config.js          # Configuration Vite
 ```
+
+> Le projet utilise npm comme gestionnaire de paquets de référence. Utilisez `npm ci` en CI et `npm install` en local.
 
 ---
 
@@ -200,6 +205,13 @@ Utilisateur → Interface (HTML/CSS)
            → Données (data.js)
            → Stockage (localStorage)
 ```
+
+### Points de maintenance importants
+
+- Les exercices doivent toujours conserver une cohérence entre `tenseId`, consigne, réponse attendue et statistiques.
+- Les imports de sauvegarde utilisateur sont validés avant d'être appliqués à l'état local.
+- Toute nouvelle donnée pédagogique doit être couverte par un test de structure ou de génération d'exercice.
+- Les handlers inline historiques sont conservés pour compatibilité, mais les nouveaux développements doivent privilégier `addEventListener`.
 
 ### Modules principaux (`app.js`)
 
