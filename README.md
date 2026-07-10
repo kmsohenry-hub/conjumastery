@@ -47,7 +47,7 @@
 - **QCM intelligents** : Choisissez la bonne réponse parmi plusieurs options
 - **Phrases à compléter** : Complétez les trous avec la forme verbale correcte
 - **Transformations** : Passez de l'affirmatif au négatif/interrogatif
-- **Correction d'erreurs** : Identifiez et corrigez les mistakes
+- **Correction d'erreurs** : Identifiez et corrigez les erreurs
 - **Traductions** : Traduisez depuis le français vers l'anglais
 
 ### 📝 Mode Test & Évaluation
@@ -284,7 +284,7 @@ Ajoutez cette balise dans `<head>` de `index.html` pour renforcer la sécurité 
 ```javascript
 {
   irregularVerbs: [     // 200+ verbes irréguliers
-    { base, pastSimple, pastParticiple, translation }
+    { base, past, pp, meaning }
   ],
 
   tenses: [            // Tous les temps verbaux

@@ -10,7 +10,7 @@ import {
 
 export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
   let fullSentence, correctAnswer;
-  let options = [];
+  let options;
 
   const correctForm = getConjugation(APP_DATA.verbsByBase, verb, tense.id, subj, is3rdSing);
   const aux = getAuxiliary(tense.id, subj, is3rdSing);
@@ -48,6 +48,21 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
     } else if (tense.id === 'past_perfect') {
       fullSentence = `${subj} ${aux} ${correctForm} before I arrived.`;
       correctAnswer = `${aux} ${correctForm}`;
+    } else if (tense.id === 'present_perfect_continuous') {
+      fullSentence = `${subj} ${aux} ${correctForm} for two hours.`;
+      correctAnswer = `${aux} ${correctForm}`;
+    } else if (tense.id === 'past_perfect_continuous') {
+      fullSentence = `${subj} ${aux} ${correctForm} before I arrived.`;
+      correctAnswer = `${aux} ${correctForm}`;
+    } else if (tense.id === 'future_perfect') {
+      fullSentence = `${subj} ${aux} ${correctForm} by tomorrow.`;
+      correctAnswer = `${aux} ${correctForm}`;
+    } else if (tense.id === 'future_perfect_continuous') {
+      fullSentence = `${subj} ${aux} ${correctForm} for two hours by then.`;
+      correctAnswer = `${aux} ${correctForm}`;
+    } else if (tense.id === 'future_continuous') {
+      fullSentence = `${subj} ${aux} ${correctForm} tomorrow evening.`;
+      correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id.includes('continuous')) {
       const contAux = tense.id.startsWith('past')
         ? is3rdSing
@@ -76,7 +91,7 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
       fullSentence = `${subj} ${contAux} ${correctForm} yesterday evening.`;
       correctAnswer = `${contAux} ${correctForm}`;
     } else {
-      // present_simple or past_simple
+      // present_simple, past_simple, or a not-yet-specialised tense fallback
       if (tense.id === 'present_simple') {
         fullSentence = `${subj} ${correctForm} every day.`;
       } else {
