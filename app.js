@@ -1,4 +1,11 @@
-import { navigateTo, toggleSidebar, toggleTheme, setTheme, closeModal, closeModalDirect } from './src/ui/navigation.js';
+import {
+  navigateTo,
+  toggleSidebar,
+  toggleTheme,
+  setTheme,
+  closeModal,
+  closeModalDirect,
+} from './src/ui/navigation.js';
 import { answerMatches, normalizeAnswer } from './src/core/exercises/validation.js';
 import { APP_DATA } from './data.js';
 import ExerciseEngineObj from './src/core/exercises/ExerciseEngine.js';
@@ -8,9 +15,33 @@ import { showToast } from './src/ui/utils/toast.js';
 import { launchConfetti } from './src/ui/utils/confetti.js';
 import { NotificationManager } from './src/ui/utils/notifications.js';
 import { renderDashboard } from './src/ui/pages/dashboard.js';
-import { renderLessons, showModule, openLesson, openTenseModal, openPassiveModal, openReportedModal, renderTimeline } from './src/ui/pages/lessons.js';
-import { resetExerciseUI, startExercise, startExerciseForTense, selectOption, validateExercise, skipExercise, nextExercise, exitExercise, finishExercise, } from './src/ui/pages/exercises.js';
-import { renderTestSetup, startTest, validateTestAnswer, nextTestQuestion, finishTest } from './src/ui/pages/test.js';
+import {
+  renderLessons,
+  showModule,
+  openLesson,
+  openTenseModal,
+  openPassiveModal,
+  openReportedModal,
+  renderTimeline,
+} from './src/ui/pages/lessons.js';
+import {
+  resetExerciseUI,
+  startExercise,
+  startExerciseForTense,
+  selectOption,
+  validateExercise,
+  skipExercise,
+  nextExercise,
+  exitExercise,
+  finishExercise,
+} from './src/ui/pages/exercises.js';
+import {
+  renderTestSetup,
+  startTest,
+  validateTestAnswer,
+  nextTestQuestion,
+  finishTest,
+} from './src/ui/pages/test.js';
 import { renderTenses, showTenseCategory, showComparison } from './src/ui/pages/tenses.js';
 import { renderVerbs, filterVerbs, toggleVerbCard } from './src/ui/pages/verbs.js';
 import { renderRevision, startRevisionSession } from './src/ui/pages/reviews.js';
@@ -35,6 +66,9 @@ APP_DATA.verbsByBase = APP_DATA.irregularVerbs.reduce((acc, v) => {
 }, {});
 
 import { State } from './src/core/state/State.js';
+import { validateImportedState } from './src/core/state/importValidation.js';
+
+export { validateImportedState };
 
 // ============================================================
 // 3. EXERCISE ENGINE
@@ -100,51 +134,13 @@ const ExerciseEngine = {
 // 4. UI CONTROLLER
 // ============================================================
 
-
 // ============================================================
 // 5. PAGE RENDERERS
 // ============================================================
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ============================================================
 // 6. EXERCISE UI
 // ============================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Compare la réponse utilisateur à la réponse attendue.
@@ -152,97 +148,41 @@ const ExerciseEngine = {
  * (utile pour BrE/AmE : "learnt/learned", "dreamt/dreamed", etc.).
  */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ============================================================
 // 7. TEST MODE
 // ============================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ============================================================
 // 8. TENSES REFERENCE PAGE
 // ============================================================
 
-
-
-
-
 // ============================================================
 // 9. VERBS DICTIONARY
 // ============================================================
-
-
-
-
-
-
 
 // ============================================================
 // 10. COMPARISON TABLE
 // ============================================================
 
-
-
-
-
 // ============================================================
 // 11. REVISION PAGE
 // ============================================================
-
-
-
-
 
 // ============================================================
 // 12. WEAKPOINTS PAGE
 // ============================================================
 
-
-
 // ============================================================
 // 13. SEARCH
 // ============================================================
-
-
 
 // ============================================================
 // 14. FAVORITES
 // ============================================================
 
-
-
-
-
 // ============================================================
 // 15. STATS PAGE
 // ============================================================
-
-
 
 // ============================================================
 // 16. MODAL
@@ -252,13 +192,9 @@ const ExerciseEngine = {
 // 17. TOAST NOTIFICATIONS
 // ============================================================
 
-
-
 // ============================================================
 // 18. CONFETTI
 // ============================================================
-
-
 
 // ============================================================
 // 19. SETTINGS FUNCTIONS
@@ -286,8 +222,8 @@ function importData() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const data = JSON.parse(ev.target.result);
-        State.data = { ...State.data, ...data };
+        const data = validateImportedState(JSON.parse(ev.target.result));
+        State.data = data;
         State.save();
         updateUI();
         showToast('📥 Données importées avec succès', 'success');
@@ -347,8 +283,6 @@ function updateUI() {
 // 21. NOTIFICATIONS
 // ============================================================
 
-
-
 // ============================================================
 // 22. INITIALIZATION
 // ============================================================
@@ -364,9 +298,6 @@ function init() {
     setTheme('dark');
   }
 }
-
-
-
 
 window.APP_DATA = APP_DATA;
 window.State = State;
@@ -424,12 +355,42 @@ window.importData = importData;
 window.exportData = exportData;
 window.closeModalDirect = closeModalDirect;
 
-
 // Start the app
 document.addEventListener('DOMContentLoaded', init);
 
-
-
-export { APP_DATA, State, ExerciseEngine, NotificationManager, showModule, openLesson, openTenseModal, openPassiveModal, openReportedModal, startExercise, startExerciseForTense, selectOption, validateExercise, skipExercise, nextExercise, exitExercise, startTest, validateTestAnswer, nextTestQuestion, showTenseCategory, filterVerbs, toggleVerbCard, showComparison, startRevisionSession, performGlobalSearch, toggleFav, showToast, launchConfetti, navigateTo, closeModal, answerMatches, normalizeAnswer };
+export {
+  APP_DATA,
+  State,
+  ExerciseEngine,
+  NotificationManager,
+  showModule,
+  openLesson,
+  openTenseModal,
+  openPassiveModal,
+  openReportedModal,
+  startExercise,
+  startExerciseForTense,
+  selectOption,
+  validateExercise,
+  skipExercise,
+  nextExercise,
+  exitExercise,
+  startTest,
+  validateTestAnswer,
+  nextTestQuestion,
+  showTenseCategory,
+  filterVerbs,
+  toggleVerbCard,
+  showComparison,
+  startRevisionSession,
+  performGlobalSearch,
+  toggleFav,
+  showToast,
+  launchConfetti,
+  navigateTo,
+  closeModal,
+  answerMatches,
+  normalizeAnswer,
+};
 
 window.closeModalDirect = closeModalDirect;

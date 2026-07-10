@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { getIngForm } from '../../../../src/core/exercises/conjugation.js';
+import { getIngForm, getRegularPast } from '../../../../src/core/exercises/conjugation.js';
 
 describe('getIngForm', () => {
   test('handles verbs ending in "ie"', () => {
@@ -25,11 +25,28 @@ describe('getIngForm', () => {
     expect(getIngForm('eat')).toBe('eating');
     expect(getIngForm('go')).toBe('going');
     expect(getIngForm('do')).toBe('doing');
+    expect(getIngForm('open')).toBe('opening');
+    expect(getIngForm('listen')).toBe('listening');
   });
 
   test('handles consonant doubling for CVC verbs', () => {
     expect(getIngForm('run')).toBe('running');
     expect(getIngForm('sit')).toBe('sitting');
     expect(getIngForm('stop')).toBe('stopping');
+  });
+});
+
+describe('getRegularPast', () => {
+  test('handles consonant doubling for regular past forms', () => {
+    expect(getRegularPast('stop')).toBe('stopped');
+    expect(getRegularPast('plan')).toBe('planned');
+  });
+
+  test('keeps existing regular past rules', () => {
+    expect(getRegularPast('work')).toBe('worked');
+    expect(getRegularPast('live')).toBe('lived');
+    expect(getRegularPast('study')).toBe('studied');
+    expect(getRegularPast('open')).toBe('opened');
+    expect(getRegularPast('listen')).toBe('listened');
   });
 });

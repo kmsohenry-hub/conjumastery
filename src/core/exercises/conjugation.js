@@ -3,6 +3,7 @@
 // ============================================================
 
 const VOWELS = 'aeiou';
+const NON_DOUBLING_CVC_VERBS = new Set(['open', 'listen']);
 
 const splitForms = (forms) =>
   forms
@@ -37,6 +38,7 @@ export function getRegularPast(verb) {
   if (verb.endsWith('e')) return `${verb}d`;
   if (verb.endsWith('y') && !VOWELS.includes(verb[verb.length - 2]))
     return `${verb.slice(0, -1)}ied`;
+  if (shouldDoubleFinalConsonant(verb)) return `${verb}${verb[verb.length - 1]}ed`;
   return `${verb}ed`;
 }
 
@@ -64,6 +66,7 @@ export function getIngForm(verb) {
 
 function shouldDoubleFinalConsonant(verb) {
   if (verb.length < 3) return false;
+  if (NON_DOUBLING_CVC_VERBS.has(verb)) return false;
   if (verb.endsWith('w') || verb.endsWith('x') || verb.endsWith('y')) return false;
 
   const last = verb[verb.length - 1];
