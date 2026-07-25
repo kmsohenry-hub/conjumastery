@@ -63,7 +63,35 @@ export function getIngForm(verb) {
   return `${verb}ing`;
 }
 
-function shouldDoubleFinalConsonant(verb) {
+/**
+ * Polysyllabic verbs where the stress falls on the final syllable.
+ * In these cases the final consonant is doubled (BrE + AmE agree).
+ * Sources : Oxford, Cambridge dictionaries.
+ */
+const FINAL_STRESS_DOUBLE = new Set([
+  'begin', 'forget', 'prefer', 'regret', 'compel', 'expel', 'propel',
+  'defer', 'infer', 'occur', 'refer', 'transfer', 'confer',
+  'admit', 'commit', 'permit', 'submit', 'control',
+  'demur', 'distil', 'enrol', 'fulfil', 'instil',
+  'rebel', 'equip',
+]);
+
+/**
+ * Determines whether the final consonant of a verb should be doubled
+ * before -ed / -ing suffixes, following British English rules.
+ *
+ * Rules:
+ *   1. Must be CVC pattern (consonant-vowel-consonant).
+ *   2. Monosyllables → always double (stop → stopped, run → running).
+ *   3. Polysyllables → double only if final-syllable stress
+ *      (begin → beginning, prefer → preferred).
+ *   4. BrE exception: final 'l' after a single vowel always doubles
+ *      regardless of stress (travel → travelled, cancel → cancelled).
+ *
+ * @param {string} verb - base form of the verb (lowercase).
+ * @returns {boolean} true if the final consonant should be doubled.
+ */
+export function shouldDoubleFinalConsonant(verb) {
   if (verb.length < 3) return false;
   if (verb.endsWith('w') || verb.endsWith('x') || verb.endsWith('y')) return false;
 
@@ -71,7 +99,22 @@ function shouldDoubleFinalConsonant(verb) {
   const previous = verb[verb.length - 2];
   const beforePrevious = verb[verb.length - 3];
 
-  return !VOWELS.includes(last) && VOWELS.includes(previous) && !VOWELS.includes(beforePrevious);
+  // Must be CVC: consonant-vowel-consonant
+  if (VOWELS.includes(last) || !VOWELS.includes(previous)) return false;
+  if (VOWELS.includes(beforePrevious)) return false;
+
+  // Estimate syllable count via vowel groups
+  const vowelGroups = verb.match(/[aeiou]+/g);
+  const syllableCount = vowelGroups ? vowelGroups.length : 1;
+
+  // Monosyllable CVC → always double
+  if (syllableCount <= 1) return true;
+
+  // BrE: final 'l' after single vowel always doubles (travel → travelled)
+  if (last === 'l') return true;
+
+  // Polysyllabic: double only if stress falls on the final syllable
+  return FINAL_STRESS_DOUBLE.has(verb);
 }
 
 export function getConjugation(verbsByBase, verb, tenseId, subject, is3rdSing) {

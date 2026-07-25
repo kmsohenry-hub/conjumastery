@@ -445,9 +445,9 @@ describe('Spaced Repetition', () => {
     State.data.spacedRepetition = {};
   });
 
-  describe('updateSpacedRepetition', () => {
+  describe('recordAnswer met à jour la spaced repetition', () => {
     test("devrait augmenter l'intervalle pour une réponse correcte", () => {
-      State.updateSpacedRepetition('present_simple', true);
+      State.recordAnswer('present_simple', true);
 
       const sr = State.data.spacedRepetition['present_simple'];
       expect(sr.interval).toBeGreaterThan(1);
@@ -455,7 +455,7 @@ describe('Spaced Repetition', () => {
     });
 
     test("devrait réinitialiser l'intervalle pour une réponse incorrecte", () => {
-      State.updateSpacedRepetition('past_simple', false);
+      State.recordAnswer('past_simple', false);
 
       const sr = State.data.spacedRepetition['past_simple'];
       expect(sr.interval).toBe(1);
@@ -464,7 +464,7 @@ describe('Spaced Repetition', () => {
 
     test('devrait planifier la prochaine révision', () => {
       const before = Date.now();
-      State.updateSpacedRepetition('present_perfect', true);
+      State.recordAnswer('present_perfect', true);
       const after = Date.now();
 
       const sr = State.data.spacedRepetition['present_perfect'];
@@ -557,5 +557,81 @@ describe('APP_DATA Structure', () => {
       expect(tense.examples).toBeDefined();
       expect(tense.examples.length).toBeGreaterThan(0);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Bloc #2 — Bug de streak dans checkStreak()
+// Vérifie qu'un redoublement de series ne se produit pas au reload et que
+// la notion de jours consécutifs / saut / premier lancement est correcte.
+// ---------------------------------------------------------------------------
+describe('checkStreak', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('premier lancement démarre la série à 1', () => {
+    vi.setSystemTime(new Date('2025-01-10T12:00:00'));
+    State.data = { ...State.data, lastActiveDate: null, daysStreak: 0 };
+    State.checkStreak();
+    expect(State.data.daysStreak).toBe(1);
+    expect(State.data.lastActiveDate).toBe('Fri Jan 10 2025');
+  });
+
+  test('jour consécutif incrémente la série', () => {
+    vi.setSystemTime(new Date('2025-01-10T12:00:00'));
+    State.data = {
+      ...State.data,
+      lastActiveDate: 'Thu Jan 09 2025',
+      daysStreak: 2,
+    };
+    State.checkStreak();
+    expect(State.data.daysStreak).toBe(3);
+    expect(State.data.lastActiveDate).toBe('Fri Jan 10 2025');
+  });
+
+  test('jour même — ne double pas la série au reload', () => {
+    vi.setSystemTime(new Date('2025-01-10T18:00:00'));
+    State.data = {
+      ...State.data,
+      lastActiveDate: 'Fri Jan 10 2025',
+      daysStreak: 4,
+    };
+    // reload 1
+    State.checkStreak();
+    expect(State.data.daysStreak).toBe(4);
+    // reload 2 — plus tard dans la même journée
+    vi.setSystemTime(new Date('2025-01-10T23:30:00'));
+    State.checkStreak();
+    expect(State.data.daysStreak).toBe(4);
+    expect(State.data.lastActiveDate).toBe('Fri Jan 10 2025');
+  });
+
+  test('saut d\u2019un jour ne casse pas la série', () => {
+    vi.setSystemTime(new Date('2025-01-11T08:00:00'));
+    State.data = {
+      ...State.data,
+      lastActiveDate: 'Fri Jan 10 2025',
+      daysStreak: 4,
+    };
+    State.checkStreak();
+    expect(State.data.daysStreak).toBe(5);
+    expect(State.data.lastActiveDate).toBe('Sat Jan 11 2025');
+  });
+
+  test('saut de plusieurs jours remet la série à 0', () => {
+    vi.setSystemTime(new Date('2025-01-13T09:00:00'));
+    State.data = {
+      ...State.data,
+      lastActiveDate: 'Fri Jan 10 2025',
+      daysStreak: 6,
+    };
+    State.checkStreak();
+    expect(State.data.daysStreak).toBe(0);
+    expect(State.data.lastActiveDate).toBe('Mon Jan 13 2025');
   });
 });
