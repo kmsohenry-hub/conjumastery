@@ -7,6 +7,7 @@ import {
   getConjugation,
   getAuxiliary,
 } from './conjugation.js';
+import { shuffle } from './shuffle.js';
 
 function buildSentenceForTense(tenseId, subj, verb, is3rdSing, context = 'practice') {
   const ing = getIngForm(verb);
@@ -78,7 +79,7 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
     const templates = APP_DATA.exerciseTemplates[tense.id].qcm;
     const tpl = templates[Math.floor(Math.random() * templates.length)];
     const originalAnswer = tpl.options[tpl.correct];
-    const shuf = [...tpl.options].sort(() => Math.random() - 0.5);
+    const shuf = shuffle(tpl.options);
     return {
       type: 'qcm',
       sentence: tpl.sentence,
@@ -197,7 +198,7 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
   }
   options = options.slice(0, 4);
 
-  const shuffled = options.sort(() => Math.random() - 0.5);
+  const shuffled = shuffle(options);
   const correctIndex = shuffled.indexOf(correctAnswer);
 
   return {

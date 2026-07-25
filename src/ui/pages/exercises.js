@@ -126,7 +126,6 @@ export function validateExercise() {
     ExerciseEngine.score++;
     State.addXP(10);
     State.recordAnswer(q.tenseId, true);
-    // State.updateSpacedRepetition(q.tenseId, true);
   } else {
     State.recordAnswer(q.tenseId, false);
     }

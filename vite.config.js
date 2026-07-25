@@ -8,7 +8,7 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: true,
-    minify: false, // Désactivé pour le développement initial
+    minify: 'terser', // Minification en production via terser
     rollupOptions: {
       input: {
         main: './index.html',

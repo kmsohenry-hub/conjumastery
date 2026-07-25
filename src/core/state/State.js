@@ -31,15 +31,32 @@ const State = {
 
   checkStreak() {
     const state = store.getState();
-    const today = new Date().toDateString();
+    const todayStr = new Date().toDateString();
+
+    // Déjà comptabilisé aujourd'hui — on ne fait rien (évite la double
+    // incrémentation au reload / re-init).
+    if (state.lastActiveDate === todayStr) return;
+
     if (state.lastActiveDate) {
-      const last = new Date(state.lastActiveDate);
-      const diff = Math.floor((new Date(today) - last) / (1000 * 60 * 60 * 24));
+      // Calcul robuste du nombre de jours : on compare les dates à minuit
+      // (UTC) pour éviter les erreurs de changement d'heure (DST).
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const todayMidnight = new Date(todayStr).getTime();
+      const lastMidnight = new Date(state.lastActiveDate).getTime();
+      const diff = Math.round((todayMidnight - lastMidnight) / msPerDay);
+
       if (diff === 1) {
-        store.setState({ daysStreak: state.daysStreak + 1 });
+        // Jour consécutif — incrémente et marque aujourd'hui.
+        store.setState({ daysStreak: state.daysStreak + 1, lastActiveDate: todayStr });
       } else if (diff > 1) {
-        store.setState({ daysStreak: 0 });
+        // Série brisée — remise à zéro et marque aujourd'hui.
+        store.setState({ daysStreak: 0, lastActiveDate: todayStr });
       }
+      // diff < 0 (horloge incohérente / date future) → on ignore sans
+      // modifier lastActiveDate pour ne pas casser une série valide.
+    } else {
+      // Premier lancement — démarre la série à 1.
+      store.setState({ daysStreak: 1, lastActiveDate: todayStr });
     }
   },
 
@@ -49,9 +66,7 @@ const State = {
     },
 
   recordAnswer(tenseId, correct) {
-    // In store.js, recordAnswer also updates spacedRepetition.
-    // If the old code calls both `State.recordAnswer` AND `State.updateSpacedRepetition`, it might double count.
-    // Let's check how app.js uses it.
+    // store.recordAnswer gère aussi la mise à jour de spacedRepetition.
     store.recordAnswer(tenseId, correct);
     this.save();
   },
@@ -85,29 +100,6 @@ const State = {
 
   getReviewQueue() {
     return getReviewQueueSelector(store.getState());
-  },
-
-  updateSpacedRepetition(tenseId, correct) {
-    // Kept for backward compatibility and tests.
-    // In normal execution, this is handled by store.recordAnswer.
-    const spacedRepetition = { ...store.getState().spacedRepetition };
-    if (!spacedRepetition[tenseId]) {
-      spacedRepetition[tenseId] = { interval: 1, nextReview: Date.now(), ease: 2.5, errors: 0 };
-    }
-    const sr = { ...spacedRepetition[tenseId] };
-    if (correct) {
-      sr.interval = Math.round(sr.interval * sr.ease);
-      sr.ease += 0.1;
-      sr.errors = Math.max(0, sr.errors - 1);
-    } else {
-      sr.interval = 1;
-      sr.ease = Math.max(1.3, sr.ease - 0.2);
-      sr.errors++;
-    }
-    sr.nextReview = Date.now() + sr.interval * 60 * 1000;
-    spacedRepetition[tenseId] = sr;
-    store.setState({ spacedRepetition });
-    this.save();
   },
 
   reset() {
