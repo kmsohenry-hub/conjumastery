@@ -24,7 +24,9 @@ describe('search page', () => {
   it('finds irregular verbs', () => {
     document.getElementById('globalSearch').value = 'arise';
     performGlobalSearch();
-    const item = [...document.querySelectorAll('.search-result-item')].find((el) => el.textContent.includes('arise'));
+    const item = [...document.querySelectorAll('.search-result-item')].find((el) =>
+      el.textContent.includes('arise'),
+    );
     expect(item).toBeTruthy();
     expect(item.getAttribute('onclick')).toBe("navigateTo('verbs')");
   });

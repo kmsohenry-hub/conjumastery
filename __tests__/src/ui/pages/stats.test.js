@@ -26,7 +26,8 @@ beforeEach(() => {
     { date: '2026-08-30T11:00:00.000Z', xp: 15 },
   ];
   state.errorLog = [{ tenseId: 'present_simple', date: '2026-08-30T11:00:00.000Z' }];
-  document.body.innerHTML = '<div id="statTotal"></div><div id="statCorrect"></div><div id="statIncorrect"></div><div id="statStreak"></div><div id="statsChart"></div><div id="activityLog"></div><div id="commonErrors"></div>';
+  document.body.innerHTML =
+    '<div id="statTotal"></div><div id="statCorrect"></div><div id="statIncorrect"></div><div id="statStreak"></div><div id="statsChart"></div><div id="activityLog"></div><div id="commonErrors"></div>';
 });
 
 describe('stats page', () => {
@@ -53,6 +54,8 @@ describe('stats page', () => {
     renderStats();
     expect(document.getElementById('statsChart').textContent).toContain('Aucune donnée disponible');
     expect(document.getElementById('activityLog').textContent).toContain('Aucune activité récente');
-    expect(document.getElementById('commonErrors').textContent).toContain('Aucune erreur enregistrée');
+    expect(document.getElementById('commonErrors').textContent).toContain(
+      'Aucune erreur enregistrée',
+    );
   });
 });
