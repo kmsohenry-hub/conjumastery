@@ -5,11 +5,6 @@ import { APP_DATA } from '../../../data.js';
 import { escapeHtml } from '../../../src/core/security.js';
 import { showToast } from '../utils/toast.js';
 
-
-
-
-
-
 let testTimer = null;
 let testSeconds = 0;
 let selectedOptionIndex = -1;

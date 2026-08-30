@@ -2,7 +2,6 @@ import { State } from '../../core/state/State.js';
 import { getIngForm } from '../../core/exercises/conjugation.js';
 import { APP_DATA } from '../../../data.js';
 
-
 export function renderVerbs() {
   filterVerbs();
 }
