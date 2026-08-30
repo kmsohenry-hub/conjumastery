@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { APP_DATA } from '../../../../data.js';
+import { APP_DATA } from '../../../../src/data/index.js';
 import {
   generateCorrection,
   generateQCM,
