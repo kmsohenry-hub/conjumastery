@@ -1,5 +1,5 @@
 import { State } from '../../core/state/State.js';
-import { APP_DATA } from '../../../data.js';
+import { APP_DATA } from '../../data/index.js';
 
 
 export function renderLessons() {
