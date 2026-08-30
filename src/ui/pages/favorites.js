@@ -1,7 +1,6 @@
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../../data.js';
 
-
 export function renderFavorites() {
   const container = document.getElementById('favoritesContent');
   const favs = State.data.favorites;

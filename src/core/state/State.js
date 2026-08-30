@@ -1,7 +1,9 @@
-
 import { createStore } from './store.js';
 import { loadState, saveState } from '../persistence/storage.js';
-import { getWeakPoints as getWeakPointsSelector, getReviewQueue as getReviewQueueSelector } from './selectors.js';
+import {
+  getWeakPoints as getWeakPointsSelector,
+  getReviewQueue as getReviewQueueSelector,
+} from './selectors.js';
 
 const store = createStore();
 store.subscribe(() => {
@@ -63,7 +65,7 @@ const State = {
   addXP(amount) {
     store.addXP(amount);
     this.save();
-    },
+  },
 
   recordAnswer(tenseId, correct) {
     // store.recordAnswer gère aussi la mise à jour de spacedRepetition.
@@ -74,7 +76,7 @@ const State = {
   completeLesson(lessonId) {
     store.completeLesson(lessonId);
     this.save();
-    },
+  },
 
   addFavorite(item) {
     if (!store.getState().favorites.includes(item)) {
@@ -105,7 +107,7 @@ const State = {
   reset() {
     store.reset();
     this.save();
-    },
+  },
 };
 
 export { store, State };
