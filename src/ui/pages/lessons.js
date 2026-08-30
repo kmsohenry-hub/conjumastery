@@ -1,7 +1,6 @@
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../../data.js';
 
-
 export function renderLessons() {
   const tabsEl = document.getElementById('lessonTabs');
 

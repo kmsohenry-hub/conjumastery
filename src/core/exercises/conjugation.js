@@ -69,11 +69,31 @@ export function getIngForm(verb) {
  * Sources : Oxford, Cambridge dictionaries.
  */
 const FINAL_STRESS_DOUBLE = new Set([
-  'begin', 'forget', 'prefer', 'regret', 'compel', 'expel', 'propel',
-  'defer', 'infer', 'occur', 'refer', 'transfer', 'confer',
-  'admit', 'commit', 'permit', 'submit', 'control',
-  'demur', 'distil', 'enrol', 'fulfil', 'instil',
-  'rebel', 'equip',
+  'begin',
+  'forget',
+  'prefer',
+  'regret',
+  'compel',
+  'expel',
+  'propel',
+  'defer',
+  'infer',
+  'occur',
+  'refer',
+  'transfer',
+  'confer',
+  'admit',
+  'commit',
+  'permit',
+  'submit',
+  'control',
+  'demur',
+  'distil',
+  'enrol',
+  'fulfil',
+  'instil',
+  'rebel',
+  'equip',
 ]);
 
 /**
