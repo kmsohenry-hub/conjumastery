@@ -2041,6 +2041,11 @@ const APP_DATA = {
   ],
 };
 
+// O(1) indexes are part of the data-layer contract so UI/core modules can
+// consume APP_DATA directly without depending on app.js bootstrap side effects.
+APP_DATA.tensesById = Object.fromEntries(APP_DATA.tenses.map((tense) => [tense.id, tense]));
+APP_DATA.verbsByBase = Object.fromEntries(APP_DATA.irregularVerbs.map((verb) => [verb.base, verb]));
+
 // ============================================================
 // 2. STATE MANAGEMENT
 // ============================================================
