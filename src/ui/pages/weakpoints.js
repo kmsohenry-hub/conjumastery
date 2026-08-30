@@ -1,7 +1,6 @@
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../../data.js';
 
-
 export function renderWeakpoints() {
   const weak = State.getWeakPoints();
   const container = document.getElementById('weakpointsContent');

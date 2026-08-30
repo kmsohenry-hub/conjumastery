@@ -6,9 +6,6 @@ import { APP_DATA } from '../../../data.js';
 import { escapeHtml } from '../../../src/core/security.js';
 import { launchConfetti } from '../utils/confetti.js';
 
-
-
-
 let selectedOptionIndex = -1;
 let currentOptionButtons = [];
 
@@ -89,8 +86,6 @@ export function renderExerciseQuestion(q) {
   }
 }
 
-
-
 export function selectOption(btn, index) {
   if (ExerciseEngine.answered) return;
   currentOptionButtons.forEach((b) => b.classList.remove('selected'));
@@ -128,7 +123,7 @@ export function validateExercise() {
     State.recordAnswer(q.tenseId, true);
   } else {
     State.recordAnswer(q.tenseId, false);
-    }
+  }
 
   // Show feedback
   const feedbackEl = document.getElementById('exerciseFeedback');

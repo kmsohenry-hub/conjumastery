@@ -1,7 +1,6 @@
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../../data.js';
 
-
 export function renderStats() {
   const d = State.data;
   document.getElementById('statTotal').textContent = d.totalExercises;
