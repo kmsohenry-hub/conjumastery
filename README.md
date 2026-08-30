@@ -164,6 +164,17 @@ npm run format:check
 conjumastery/
 ├── __tests__/              # Tests unitaires et tests de régression (Vitest)
 ├── src/
+│   ├── data/               # Données pédagogiques modulaires
+│   │   ├── index.js        # Façade APP_DATA stable
+│   │   ├── irregularVerbs.js # Verbes irréguliers et index
+│   │   ├── tenses.js       # Temps verbaux et règles
+│   │   ├── exerciseTemplates.js # Templates d'exercices
+│   │   ├── modules.js      # Modules et leçons
+│   │   ├── modals.js       # Données des modaux
+│   │   ├── phrasalVerbs.js # Phrasal verbs
+│   │   ├── passiveInfo.js  # Voix passive
+│   │   ├── reportedSpeech.js # Discours indirect
+│   │   └── stativeVerbs.js # Verbes d'état
 │   ├── core/
 │   │   ├── exercises/      # Génération, validation et conjugaison
 │   │   ├── persistence/    # Accès localStorage
@@ -175,8 +186,7 @@ conjumastery/
 │       └── navigation.js   # Navigation interne et thème
 ├── index.html              # Squelette HTML et conteneurs de pages
 ├── style.css               # Feuilles de style (responsive + mode sombre)
-├── app.js                  # Bootstrap, compatibilité globale et fonctions settings
-├── data.js                 # Données pédagogiques statiques
+├── app.js                  # Bootstrap et compatibilité globale
 ├── package.json            # Scripts npm et dépendances
 └── vite.config.js          # Configuration Vite
 ```
@@ -189,21 +199,24 @@ conjumastery/
 
 ### Séparation des responsabilités
 
-| Fichier      | Rôle                                            | Taille approximative |
-| ------------ | ----------------------------------------------- | -------------------- |
-| `index.html` | Structure HTML et squelette de l'UI             | ~300 lignes          |
-| `style.css`  | Design responsive + mode sombre                 | ~800 lignes          |
-| `data.js`    | Base de données statique (APP_DATA)             | ~2000+ lignes        |
-| `app.js`     | Moteur logique, gestion d'état, rendu dynamique | ~2500+ lignes        |
+| Zone         | Responsabilité                                                       |
+| ------------ | -------------------------------------------------------------------- |
+| `index.html` | Structure HTML et conteneurs de pages                                |
+| `style.css`  | Design responsive et mode sombre                                     |
+| `src/data/`  | Données pédagogiques séparées par domaine, assemblées par `APP_DATA` |
+| `src/core/`  | Logique métier, état, persistance, exercices et sécurité             |
+| `src/ui/`    | Pages, navigation et utilitaires d'interface                         |
+| `app.js`     | Bootstrap, compatibilité globale et orchestration                    |
 
 ### Flux de données
 
 ```
-Utilisateur → Interface (HTML/CSS)
-           → Événements (app.js)
-           → Logique métier (app.js)
-           → Données (data.js)
-           → Stockage (localStorage)
+Utilisateur → Interface (`src/ui/`)
+           → Événements / bootstrap (`app.js`)
+           → Logique métier (`src/core/`)
+           → Données pédagogiques (`src/data/`)
+           → État et persistance (`src/core/state/`, `src/core/persistence/`)
+           → `localStorage`
 ```
 
 ### Points de maintenance importants
@@ -220,8 +233,6 @@ Utilisateur → Interface (HTML/CSS)
 3. **SpacedRepetition** : Algorithme de révision espacée
 4. **UI Renderer** : Rendu dynamique des composants
 5. **Data Persistence** : Sauvegarde/chargement localStorage
-
-> 💡 Une réflexion de refactorisation est en cours. Voir `PROPOSITION_REFACTORISATION.md` à la racine du dépôt.
 
 ---
 
@@ -291,11 +302,11 @@ Ajoutez cette balise dans `<head>` de `index.html` pour renforcer la sécurité 
 
 ## 📊 Structure des données
 
-### APP_DATA (data.js)
+### APP_DATA (`src/data/index.js`)
 
 ```javascript
 {
-  irregularVerbs: [     // 200+ verbes irréguliers
+  irregularVerbs: [     // Données issues de src/data/verbs.js
     { base, past, pp, meaning }
   ],
 
