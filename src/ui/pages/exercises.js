@@ -2,7 +2,7 @@ import { navigateTo } from '../navigation.js';
 import { answerMatches } from '../../core/exercises/validation.js';
 import ExerciseEngine from '../../core/exercises/ExerciseEngine.js';
 import { State } from '../../core/state/State.js';
-import { APP_DATA } from '../../../data.js';
+import { APP_DATA } from '../../data/index.js';
 import { escapeHtml } from '../../../src/core/security.js';
 import { launchConfetti } from '../utils/confetti.js';
 

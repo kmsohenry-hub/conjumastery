@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { APP_DATA } from '../../../../data.js';
+import { APP_DATA } from '../../../../src/data/index.js';
 import ExerciseEngine from '../../../../src/core/exercises/ExerciseEngine.js';
 
 APP_DATA.verbsByBase = APP_DATA.irregularVerbs.reduce((acc, verb) => {
