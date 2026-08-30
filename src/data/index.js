@@ -20,4 +20,8 @@ const APP_DATA = {
   stativeVerbs,
 };
 
+// O(1) indexes are part of the data-layer contract.
+APP_DATA.tensesById = Object.fromEntries(tenses.map((tense) => [tense.id, tense]));
+APP_DATA.verbsByBase = Object.fromEntries(irregularVerbs.map((verb) => [verb.base, verb]));
+
 export { APP_DATA };
