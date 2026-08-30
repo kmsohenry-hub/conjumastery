@@ -1,0 +1,68 @@
+export const phrasalVerbs = [
+    { pv: 'give up', meaning: 'abandonner', example: "Don't give up!" },
+    { pv: 'look after', meaning: "s'occuper de", example: 'Can you look after my cat?' },
+    { pv: 'put off', meaning: 'remettre à plus tard', example: "Don't put off your homework." },
+    { pv: 'turn down', meaning: 'refuser / baisser le son', example: 'She turned down the offer.' },
+    { pv: 'come across', meaning: 'tomber sur par hasard', example: 'I came across an old photo.' },
+    {
+      pv: 'get along with',
+      meaning: "bien s'entendre avec",
+      example: 'I get along well with my colleagues.',
+    },
+    { pv: 'run out of', meaning: 'ne plus avoir', example: "We've run out of milk." },
+    { pv: 'bring up', meaning: 'élever / mentionner', example: 'She was brought up in Liverpool.' },
+    { pv: 'carry on', meaning: 'continuer', example: 'Carry on with your work.' },
+    { pv: 'find out', meaning: 'découvrir, apprendre', example: 'I found out the truth.' },
+    {
+      pv: 'look forward to',
+      meaning: 'avoir hâte de',
+      example: "I'm looking forward to the holidays.",
+    },
+    { pv: 'take off', meaning: 'décoller / enlever', example: 'The plane took off on time.' },
+    {
+      pv: 'break down',
+      meaning: 'tomber en panne / craquer',
+      example: 'My car broke down on the motorway.',
+    },
+    { pv: 'call off', meaning: 'annuler', example: 'They called off the meeting due to rain.' },
+    { pv: 'catch up', meaning: 'rattraper son retard', example: 'I need to catch up on my sleep.' },
+    {
+      pv: 'figure out',
+      meaning: 'comprendre, résoudre',
+      example: "I can't figure out this math problem.",
+    },
+    {
+      pv: 'get over',
+      meaning: 'se remettre (maladie/rupture)',
+      example: 'It took him months to get over the flu.',
+    },
+    {
+      pv: 'look up',
+      meaning: 'chercher (une information)',
+      example: "If you don't know the word, look it up.",
+    },
+    { pv: 'make up', meaning: 'inventer / se réconcilier', example: 'He made up a crazy story.' },
+    {
+      pv: 'pass away',
+      meaning: 'mourir (euphémisme)',
+      example: 'Her grandfather passed away last night.',
+    },
+    {
+      pv: 'point out',
+      meaning: 'signaler, faire remarquer',
+      example: "I'd like to point out a mistake.",
+    },
+    { pv: 'set up', meaning: 'installer, fonder', example: 'She set up her own business.' },
+    { pv: 'show up', meaning: 'arriver, se pointer', example: 'He showed up two hours late.' },
+    {
+      pv: 'take over',
+      meaning: 'prendre le contrôle',
+      example: 'The new manager will take over tomorrow.',
+    },
+    { pv: 'turn out', meaning: "s'avérer", example: 'The movie turned out to be great.' },
+    {
+      pv: 'work out',
+      meaning: 'faire du sport / résoudre',
+      example: 'I work out three times a week.',
+    },
+  ]

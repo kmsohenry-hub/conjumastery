@@ -7,7 +7,7 @@ import {
   closeModalDirect,
 } from './src/ui/navigation.js';
 import { answerMatches, normalizeAnswer } from './src/core/exercises/validation.js';
-import { APP_DATA } from './data.js';
+import { APP_DATA } from './src/data/index.js';
 import ExerciseEngineObj from './src/core/exercises/ExerciseEngine.js';
 import { escapeHtml, sanitizeInput } from './src/core/security.js';
 
