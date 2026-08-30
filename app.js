@@ -41,6 +41,7 @@ import {
   validateTestAnswer,
   nextTestQuestion,
   finishTest,
+  selectOption as selectTestOption,
 } from './src/ui/pages/test.js';
 import { renderTenses, showTenseCategory, showComparison } from './src/ui/pages/tenses.js';
 import { renderVerbs, filterVerbs, toggleVerbCard } from './src/ui/pages/verbs.js';
@@ -390,6 +391,7 @@ window.skipExercise = skipExercise;
 window.nextExercise = nextExercise;
 window.exitExercise = exitExercise;
 window.startTest = startTest;
+window.selectTestOption = selectTestOption;
 window.validateTestAnswer = validateTestAnswer;
 window.nextTestQuestion = nextTestQuestion;
 window.showTenseCategory = showTenseCategory;

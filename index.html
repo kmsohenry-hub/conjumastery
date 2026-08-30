@@ -18,62 +18,145 @@
   </head>
   <body>
     <!-- SIDEBAR -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-    <aside class="sidebar" id="sidebar">
+    <div
+      class="sidebar-overlay"
+      id="sidebarOverlay"
+      onclick="toggleSidebar()"
+      aria-hidden="true"
+    ></div>
+    <aside class="sidebar" id="sidebar" aria-label="Navigation principale">
       <div class="sidebar-brand">
-        <div class="logo-icon">🇬🇧</div>
+        <div class="logo-icon" aria-hidden="true">🇬🇧</div>
         <div>
           ConjuMaster <span style="font-weight: 400; font-size: 0.8rem; opacity: 0.7">UK</span>
         </div>
       </div>
-      <nav class="sidebar-nav">
+      <nav class="sidebar-nav" aria-label="Menu principal">
         <div class="nav-section-title">Principal</div>
-        <a class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
-          <span class="nav-icon">🏠</span> Tableau de bord
+        <a
+          class="nav-item active"
+          data-page="dashboard"
+          onclick="navigateTo('dashboard')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">🏠</span> Tableau de bord
         </a>
-        <a class="nav-item" data-page="lessons" onclick="navigateTo('lessons')">
-          <span class="nav-icon">📚</span> Leçons
+        <a
+          class="nav-item"
+          data-page="lessons"
+          onclick="navigateTo('lessons')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">📚</span> Leçons
           <span class="badge" id="lessonsBadge">12</span>
         </a>
-        <a class="nav-item" data-page="exercises" onclick="navigateTo('exercises')">
-          <span class="nav-icon">🎮</span> Exercices
+        <a
+          class="nav-item"
+          data-page="exercises"
+          onclick="navigateTo('exercises')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">🎮</span> Exercices
         </a>
-        <a class="nav-item" data-page="test" onclick="navigateTo('test')">
-          <span class="nav-icon">🧪</span> Mode Test
+        <a
+          class="nav-item"
+          data-page="test"
+          onclick="navigateTo('test')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">🧪</span> Mode Test
         </a>
 
         <div class="nav-section-title">Référence</div>
-        <a class="nav-item" data-page="tenses" onclick="navigateTo('tenses')">
-          <span class="nav-icon">⏱️</span> Temps verbaux
+        <a
+          class="nav-item"
+          data-page="tenses"
+          onclick="navigateTo('tenses')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">⏱️</span> Temps verbaux
         </a>
-        <a class="nav-item" data-page="verbs" onclick="navigateTo('verbs')">
-          <span class="nav-icon">📘</span> Verbes irréguliers
+        <a
+          class="nav-item"
+          data-page="verbs"
+          onclick="navigateTo('verbs')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">📘</span> Verbes irréguliers
         </a>
-        <a class="nav-item" data-page="comparison" onclick="navigateTo('comparison')">
-          <span class="nav-icon">📊</span> Comparatif
+        <a
+          class="nav-item"
+          data-page="comparison"
+          onclick="navigateTo('comparison')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">📊</span> Comparatif
         </a>
 
         <div class="nav-section-title">Outils</div>
-        <a class="nav-item" data-page="revision" onclick="navigateTo('revision')">
-          <span class="nav-icon">🔄</span> Révisions
+        <a
+          class="nav-item"
+          data-page="revision"
+          onclick="navigateTo('revision')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">🔄</span> Révisions
           <span class="badge" id="revisionBadge">0</span>
         </a>
-        <a class="nav-item" data-page="weakpoints" onclick="navigateTo('weakpoints')">
-          <span class="nav-icon">🎯</span> Points faibles
+        <a
+          class="nav-item"
+          data-page="weakpoints"
+          onclick="navigateTo('weakpoints')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">🎯</span> Points faibles
         </a>
-        <a class="nav-item" data-page="search" onclick="navigateTo('search')">
-          <span class="nav-icon">🔍</span> Recherche
+        <a
+          class="nav-item"
+          data-page="search"
+          onclick="navigateTo('search')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">🔍</span> Recherche
         </a>
-        <a class="nav-item" data-page="favorites" onclick="navigateTo('favorites')">
-          <span class="nav-icon">⭐</span> Favoris
+        <a
+          class="nav-item"
+          data-page="favorites"
+          onclick="navigateTo('favorites')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">⭐</span> Favoris
         </a>
 
         <div class="nav-section-title">Paramètres</div>
-        <a class="nav-item" data-page="stats" onclick="navigateTo('stats')">
-          <span class="nav-icon">📈</span> Statistiques
+        <a
+          class="nav-item"
+          data-page="stats"
+          onclick="navigateTo('stats')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">📈</span> Statistiques
         </a>
-        <a class="nav-item" data-page="settings" onclick="navigateTo('settings')">
-          <span class="nav-icon">⚙️</span> Paramètres
+        <a
+          class="nav-item"
+          data-page="settings"
+          onclick="navigateTo('settings')"
+          role="button"
+          tabindex="0"
+        >
+          <span class="nav-icon" aria-hidden="true">⚙️</span> Paramètres
         </a>
       </nav>
       <div class="sidebar-footer">
@@ -98,10 +181,16 @@
     </aside>
 
     <!-- MAIN CONTENT -->
-    <div class="main-content">
+    <main class="main-content">
       <header class="app-header">
         <div class="header-left">
-          <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+          <button
+            class="menu-toggle"
+            onclick="toggleSidebar()"
+            aria-label="Ouvrir le menu de navigation"
+          >
+            ☰
+          </button>
           <h1 class="header-title" id="pageTitle">Tableau de bord</h1>
         </div>
         <div class="header-right">
@@ -110,12 +199,19 @@
           </div>
           <div class="header-stat">⭐ <span id="headerXP">0</span> XP</div>
           <div class="header-stat">🏆 <span id="headerLevel">1</span></div>
-          <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+          <button
+            class="theme-toggle"
+            onclick="toggleTheme()"
+            id="themeBtn"
+            aria-label="Changer le thème d'affichage"
+          >
+            🌙
+          </button>
         </div>
       </header>
 
       <!-- ==================== DASHBOARD ==================== -->
-      <div class="page active" id="page-dashboard">
+      <section class="page active" id="page-dashboard">
         <div class="section-title">Bienvenue sur ConjuMaster 🇬🇧</div>
         <div class="section-subtitle">Maîtrisez la conjugaison anglaise, temps par temps.</div>
 
@@ -165,50 +261,60 @@
           </div>
           <div class="bar-chart" id="dashChart"></div>
         </div>
-      </div>
+      </section>
 
       <!-- ==================== LESSONS ==================== -->
-      <div class="page" id="page-lessons">
+      <section class="page" id="page-lessons">
         <div class="section-title">📚 Parcours d'apprentissage</div>
         <div class="section-subtitle">Progressez module par module, du débutant à l'avancé.</div>
 
-        <div class="tabs" id="lessonTabs"></div>
+        <div class="tabs" id="lessonTabs" role="tablist"></div>
         <div id="lessonContent"></div>
-      </div>
+      </section>
 
       <!-- ==================== EXERCISES ==================== -->
-      <div class="page" id="page-exercises">
+      <section class="page" id="page-exercises">
         <div class="section-title">🎮 Exercices interactifs</div>
         <div class="section-subtitle">Pratiquez avec des exercices générés dynamiquement.</div>
 
         <div id="exerciseModeSelector">
           <div class="mode-cards">
-            <div class="mode-card" onclick="startExercise('qcm')">
+            <div class="mode-card" onclick="startExercise('qcm')" role="button" tabindex="0">
               <div class="mode-icon">🅰️</div>
               <h3>QCM intelligent</h3>
               <p>Choisissez la bonne forme verbale parmi 4 options</p>
             </div>
-            <div class="mode-card" onclick="startExercise('fill')">
+            <div class="mode-card" onclick="startExercise('fill')" role="button" tabindex="0">
               <div class="mode-icon">✏️</div>
               <h3>Phrases à compléter</h3>
               <p>Écrivez la forme correcte du verbe</p>
             </div>
-            <div class="mode-card" onclick="startExercise('transform')">
+            <div class="mode-card" onclick="startExercise('transform')" role="button" tabindex="0">
               <div class="mode-icon">🔄</div>
               <h3>Transformation</h3>
               <p>Affirmatif → Négatif → Interrogatif</p>
             </div>
-            <div class="mode-card" onclick="startExercise('correction')">
+            <div
+              class="mode-card"
+              onclick="startExercise('correction')"
+              role="button"
+              tabindex="0"
+            >
               <div class="mode-icon">🔍</div>
               <h3>Correction d'erreurs</h3>
               <p>Trouvez et corrigez l'erreur dans la phrase</p>
             </div>
-            <div class="mode-card" onclick="startExercise('translation')">
+            <div
+              class="mode-card"
+              onclick="startExercise('translation')"
+              role="button"
+              tabindex="0"
+            >
               <div class="mode-icon">🌍</div>
               <h3>Traduction FR → EN</h3>
               <p>Traduisez des phrases en conjuguant correctement</p>
             </div>
-            <div class="mode-card" onclick="startExercise('mixed')">
+            <div class="mode-card" onclick="startExercise('mixed')" role="button" tabindex="0">
               <div class="mode-icon">🎲</div>
               <h3>Mode mixte</h3>
               <p>Tous les types d'exercices mélangés</p>
@@ -255,10 +361,10 @@
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- ==================== TEST MODE ==================== -->
-      <div class="page" id="page-test">
+      <section class="page" id="page-test">
         <div class="section-title">🧪 Mode Test</div>
         <div class="section-subtitle">
           Évaluez votre niveau avec un test complet de 20 questions.
@@ -272,7 +378,7 @@
               <div style="display: flex; flex-wrap: wrap; gap: 8px" id="testTenseCheckboxes"></div>
             </div>
             <div class="input-group">
-              <label>Difficulté</label>
+              <label for="testDifficulty">Difficulté</label>
               <select class="select" id="testDifficulty">
                 <option value="beginner">Débutant</option>
                 <option value="intermediate" selected>Intermédiaire</option>
@@ -330,97 +436,99 @@
         </div>
 
         <div id="testResults" style="display: none"></div>
-      </div>
+      </section>
 
       <!-- ==================== TENSES REFERENCE ==================== -->
-      <div class="page" id="page-tenses">
+      <section class="page" id="page-tenses">
         <div class="section-title">⏱️ Temps verbaux anglais</div>
         <div class="section-subtitle">
           Référence complète avec explications, exemples et nuances d'usage.
         </div>
 
-        <div class="tabs" id="tenseCategoryTabs"></div>
+        <div class="tabs" id="tenseCategoryTabs" role="tablist"></div>
         <div id="tenseContent"></div>
-      </div>
+      </section>
 
       <!-- ==================== VERBS DICTIONARY ==================== -->
-      <div class="page" id="page-verbs">
+      <section class="page" id="page-verbs">
         <div class="section-title">📘 Dictionnaire des verbes irréguliers</div>
         <div class="section-subtitle">
           Plus de 200 verbes irréguliers avec conjugaison complète.
         </div>
 
         <div class="verb-search-container">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon" aria-hidden="true">🔍</span>
           <input
             class="input"
             type="text"
             id="verbSearch"
             placeholder="Rechercher un verbe (ex: go, take, understand...)"
+            aria-label="Rechercher un verbe irrégulier"
             oninput="filterVerbs()"
           />
         </div>
         <div id="verbsList"></div>
-      </div>
+      </section>
 
       <!-- ==================== COMPARISON ==================== -->
-      <div class="page" id="page-comparison">
+      <section class="page" id="page-comparison">
         <div class="section-title">📊 Tableau comparatif des temps</div>
         <div class="section-subtitle">
           Comparez les temps verbaux côte à côte pour mieux les différencier.
         </div>
 
-        <div class="tabs" id="comparisonTabs"></div>
+        <div class="tabs" id="comparisonTabs" role="tablist"></div>
         <div id="comparisonContent"></div>
-      </div>
+      </section>
 
       <!-- ==================== REVISION ==================== -->
-      <div class="page" id="page-revision">
+      <section class="page" id="page-revision">
         <div class="section-title">🔄 Révisions — Répétition espacée</div>
         <div class="section-subtitle">
           Révisez les points qui en ont le plus besoin, au bon moment.
         </div>
 
         <div id="revisionContent"></div>
-      </div>
+      </section>
 
       <!-- ==================== WEAKPOINTS ==================== -->
-      <div class="page" id="page-weakpoints">
+      <section class="page" id="page-weakpoints">
         <div class="section-title">🎯 Entraînement ciblé</div>
         <div class="section-subtitle">Travaillez spécifiquement vos points faibles identifiés.</div>
 
         <div id="weakpointsContent"></div>
-      </div>
+      </section>
 
       <!-- ==================== SEARCH ==================== -->
-      <div class="page" id="page-search">
+      <section class="page" id="page-search">
         <div class="section-title">🔍 Recherche globale</div>
         <div class="section-subtitle">Trouvez rapidement une règle, un temps ou un verbe.</div>
 
         <div class="verb-search-container">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon" aria-hidden="true">🔍</span>
           <input
             class="input"
             type="text"
             id="globalSearch"
             placeholder="Rechercher..."
+            aria-label="Recherche globale"
             oninput="performGlobalSearch()"
           />
         </div>
         <div class="search-results" id="searchResults"></div>
-      </div>
+      </section>
 
       <!-- ==================== FAVORITES ==================== -->
-      <div class="page" id="page-favorites">
+      <section class="page" id="page-favorites">
         <div class="section-title">⭐ Mes favoris</div>
         <div class="section-subtitle">
           Retrouvez ici toutes les leçons et verbes que vous avez marqués.
         </div>
         <div id="favoritesContent"></div>
-      </div>
+      </section>
 
       <!-- ==================== STATS ==================== -->
-      <div class="page" id="page-stats">
+      <section class="page" id="page-stats">
         <div class="section-title">📈 Statistiques détaillées</div>
         <div class="section-subtitle">Visualisez votre progression dans le temps.</div>
 
@@ -464,10 +572,10 @@
           </div>
           <div id="commonErrors"></div>
         </div>
-      </div>
+      </section>
 
       <!-- ==================== SETTINGS ==================== -->
-      <div class="page" id="page-settings">
+      <section class="page" id="page-settings">
         <div class="section-title">⚙️ Paramètres</div>
         <div class="section-subtitle">Personnalisez votre expérience d'apprentissage.</div>
 
@@ -528,7 +636,7 @@
             <strong>ConjuMaster UK</strong> est une application éducative complète pour maîtriser la
             conjugaison anglaise.<br />
             Conçu avec une approche cognitive basée sur la répétition espacée et le rappel actif.<br />
-            Anglais britannique (UK English) • 100% offline • Version 1.0
+            Anglais britannique (UK English) • 100% offline • Version 2.0.0
           </p>
           <div
             style="
@@ -563,17 +671,24 @@
             </a>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
 
     <!-- TOAST CONTAINER -->
     <div class="offline-indicator" id="offlineIndicator" role="status" aria-live="polite" hidden>
       Mode hors-ligne
     </div>
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
     <!-- MODAL -->
-    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div
+      class="modal-overlay"
+      id="modalOverlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Contenu de la leçon"
+      onclick="closeModal(event)"
+    >
       <div class="modal" id="modalContent" onclick="event.stopPropagation()"></div>
     </div>
 

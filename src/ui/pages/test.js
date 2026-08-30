@@ -10,6 +10,13 @@ let testSeconds = 0;
 let selectedOptionIndex = -1;
 let currentOptionButtons = [];
 
+export function selectOption(btn, index) {
+  if (ExerciseEngine.answered) return;
+  currentOptionButtons.forEach((b) => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedOptionIndex = index;
+}
+
 export function renderTestSetup() {
   document.getElementById('testSetup').style.display = 'block';
   document.getElementById('testArea').style.display = 'none';
@@ -83,7 +90,7 @@ export function renderTestQuestion() {
     const letters = ['A', 'B', 'C', 'D'];
     html += `<div class="options-grid">`;
     q.options.forEach((opt, i) => {
-      html += `<button class="option-btn" onclick="selectOption(this, ${i})" data-index="${i}">
+      html += `<button class="option-btn" onclick="selectTestOption(this, ${i})" data-index="${i}">
         <span class="option-letter">${letters[i]}</span>
         <span>${escapeHtml(opt)}</span>
       </button>`;
