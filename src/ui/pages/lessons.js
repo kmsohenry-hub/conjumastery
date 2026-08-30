@@ -1,5 +1,6 @@
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
+import { openModal } from '../navigation.js';
 
 export function renderLessons() {
   const tabsEl = document.getElementById('lessonTabs');
@@ -42,7 +43,7 @@ export function showModule(index, tabEl) {
           const isCompleted = completedSet.has(lesson.id);
           const isLocked = i > 0 && !completedSet.has(mod.lessons[i - 1].id) && !isCompleted;
           const tense = lesson.tenseId ? APP_DATA.tensesById[lesson.tenseId] : null;
-          return `<div class="lesson-card ${isLocked ? 'locked' : ''}" onclick="${isLocked ? '' : `openLesson('${lesson.id}', '${lesson.tenseId || ''}')`}">
+          return `<div class="lesson-card ${isLocked ? 'locked' : ''}" role="button" tabindex="${isLocked ? '-1' : '0'}" onclick="${isLocked ? '' : `openLesson('${lesson.id}', '${lesson.tenseId || ''}')`}">
           <div class="lesson-icon" style="background:${isCompleted ? 'var(--success)20' : isLocked ? 'var(--text-light)10' : mod.color + '20'};color:${isCompleted ? 'var(--success)' : isLocked ? 'var(--text-light)' : mod.color}">
             ${isCompleted ? '✅' : isLocked ? '🔒' : mod.icon}
           </div>
@@ -85,8 +86,8 @@ export function openTenseModal(tense) {
         <span class="level-badge level-${tense.level}" style="margin-top:6px">${tense.level === 'beginner' ? '🌱 Débutant' : tense.level === 'intermediate' ? '🌿 Intermédiaire' : '🌳 Avancé'}</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav('${tense.id}', this)">${isFav ? '★' : '☆'}</button>
-        <button class="modal-close" onclick="closeModal()">✕</button>
+        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav('${tense.id}', this)" aria-label="Ajouter aux favoris">${isFav ? '★' : '☆'}</button>
+        <button class="modal-close" onclick="closeModal()" aria-label="Fermer la modale">✕</button>
       </div>
     </div>
 
@@ -160,7 +161,7 @@ export function openTenseModal(tense) {
       <button class="btn btn-outline" onclick="closeModal();navigateTo('comparison')">📊 Voir le comparatif</button>
     </div>`;
 
-  document.getElementById('modalOverlay').classList.add('active');
+  openModal();
 }
 
 export function openPassiveModal() {
@@ -169,7 +170,7 @@ export function openPassiveModal() {
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title">Voix Passive</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="closeModal()" aria-label="Fermer la modale">✕</button>
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
@@ -191,7 +192,7 @@ export function openPassiveModal() {
       <p>${info.nuances}</p>
     </div>
     <div style="margin-top:20px"><button class="btn btn-primary" onclick="closeModal();startExercise('mixed')">🎮 Pratiquer</button></div>`;
-  document.getElementById('modalOverlay').classList.add('active');
+  openModal();
 }
 
 export function openReportedModal() {
@@ -200,7 +201,7 @@ export function openReportedModal() {
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title">Discours Indirect (Reported Speech)</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="closeModal()" aria-label="Fermer la modale">✕</button>
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
@@ -221,7 +222,7 @@ export function openReportedModal() {
       </table>
     </div>
     <div style="margin-top:20px"><button class="btn btn-primary" onclick="closeModal();startExercise('mixed')">🎮 Pratiquer</button></div>`;
-  document.getElementById('modalOverlay').classList.add('active');
+  openModal();
 }
 
 export function renderTimeline(tense) {

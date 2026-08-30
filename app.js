@@ -3,6 +3,7 @@ import {
   toggleSidebar,
   toggleTheme,
   setTheme,
+  openModal,
   closeModal,
   closeModalDirect,
 } from './src/ui/navigation.js';
@@ -404,6 +405,7 @@ window.toggleFav = toggleFav;
 window.showToast = showToast;
 window.launchConfetti = launchConfetti;
 window.navigateTo = navigateTo;
+window.openModal = openModal;
 window.closeModal = closeModal;
 window.renderTimeline = renderTimeline;
 window.answerMatches = answerMatches;

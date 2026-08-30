@@ -13,6 +13,7 @@ import { State } from '../core/state/State.js';
 
 let _cachedPages = null;
 let _cachedNavItems = null;
+let _previousActiveElement = null;
 
 export function navigateTo(page) {
   if (!_cachedPages) _cachedPages = document.querySelectorAll('.page');
@@ -25,8 +26,10 @@ export function navigateTo(page) {
   _cachedNavItems.forEach((n) => {
     if (n.dataset.page === page) {
       n.classList.add('active');
+      n.setAttribute('aria-selected', 'true');
     } else {
       n.classList.remove('active');
+      n.setAttribute('aria-selected', 'false');
     }
   });
 
@@ -121,13 +124,36 @@ export function setTheme(theme) {
   State.save();
 }
 
+export function openModal() {
+  _previousActiveElement = document.activeElement;
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) {
+    overlay.classList.add('active');
+    setTimeout(() => {
+      const focusable = overlay.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable) {
+        focusable.focus();
+      }
+    }, 50);
+  }
+}
+
 export function closeModal(event) {
   if (event && event.target !== document.getElementById('modalOverlay')) return;
-  document.getElementById('modalOverlay')?.classList.remove('active');
+  closeModalDirect();
 }
 
 export function closeModalDirect() {
-  document.getElementById('modalOverlay')?.classList.remove('active');
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
+  if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
+    _previousActiveElement.focus();
+    _previousActiveElement = null;
+  }
 }
 
 // Global keyboard navigation
@@ -137,6 +163,26 @@ if (typeof window !== 'undefined') {
       const modal = document.getElementById('modalOverlay');
       if (modal && modal.classList.contains('active')) {
         closeModalDirect();
+      }
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      const target = e.target;
+      if (
+        target &&
+        (target.getAttribute('role') === 'button' ||
+          target.classList.contains('nav-item') ||
+          target.classList.contains('mode-card') ||
+          target.classList.contains('lesson-card') ||
+          target.classList.contains('verb-card'))
+      ) {
+        if (
+          target.tagName === 'BUTTON' ||
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA'
+        ) {
+          return;
+        }
+        if (e.key === ' ') e.preventDefault();
+        target.click();
       }
     }
   });
