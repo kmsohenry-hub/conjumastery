@@ -3,6 +3,7 @@ import {
   toggleSidebar,
   toggleTheme,
   setTheme,
+  openModal,
   closeModal,
   closeModalDirect,
 } from './src/ui/navigation.js';
@@ -41,6 +42,7 @@ import {
   validateTestAnswer,
   nextTestQuestion,
   finishTest,
+  selectOption as selectTestOption,
 } from './src/ui/pages/test.js';
 import { renderTenses, showTenseCategory, showComparison } from './src/ui/pages/tenses.js';
 import { renderVerbs, filterVerbs, toggleVerbCard } from './src/ui/pages/verbs.js';
@@ -390,6 +392,7 @@ window.skipExercise = skipExercise;
 window.nextExercise = nextExercise;
 window.exitExercise = exitExercise;
 window.startTest = startTest;
+window.selectTestOption = selectTestOption;
 window.validateTestAnswer = validateTestAnswer;
 window.nextTestQuestion = nextTestQuestion;
 window.showTenseCategory = showTenseCategory;
@@ -402,6 +405,7 @@ window.toggleFav = toggleFav;
 window.showToast = showToast;
 window.launchConfetti = launchConfetti;
 window.navigateTo = navigateTo;
+window.openModal = openModal;
 window.closeModal = closeModal;
 window.renderTimeline = renderTimeline;
 window.answerMatches = answerMatches;

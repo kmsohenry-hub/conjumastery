@@ -2,17 +2,18 @@ import { renderDashboard } from './pages/dashboard.js';
 import { renderLessons } from './pages/lessons.js';
 import { resetExerciseUI } from './pages/exercises.js';
 import { renderTestSetup } from './pages/test.js';
-import { renderTenses } from './pages/tenses.js';
+import { renderTenses, renderComparison } from './pages/tenses.js';
 import { renderVerbs } from './pages/verbs.js';
-import { renderComparison } from './pages/tenses.js';
 import { renderRevision } from './pages/reviews.js';
 import { renderWeakpoints } from './pages/weakpoints.js';
 import { performGlobalSearch } from './pages/search.js';
 import { renderFavorites } from './pages/favorites.js';
 import { renderStats } from './pages/stats.js';
+import { State } from '../core/state/State.js';
 
 let _cachedPages = null;
 let _cachedNavItems = null;
+let _previousActiveElement = null;
 
 export function navigateTo(page) {
   if (!_cachedPages) _cachedPages = document.querySelectorAll('.page');
@@ -25,8 +26,10 @@ export function navigateTo(page) {
   _cachedNavItems.forEach((n) => {
     if (n.dataset.page === page) {
       n.classList.add('active');
+      n.setAttribute('aria-selected', 'true');
     } else {
       n.classList.remove('active');
+      n.setAttribute('aria-selected', 'false');
     }
   });
 
@@ -91,17 +94,15 @@ export function navigateTo(page) {
 
   // Close mobile sidebar
   if (window.innerWidth <= 768) {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').classList.remove('active');
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('sidebarOverlay')?.classList.remove('active');
   }
 }
 
 export function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('active');
+  document.getElementById('sidebar')?.classList.toggle('open');
+  document.getElementById('sidebarOverlay')?.classList.toggle('active');
 }
-
-import { State } from '../core/state/State.js';
 
 export function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme');
@@ -111,16 +112,78 @@ export function toggleTheme() {
 
 export function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+  const themeBtn = document.getElementById('themeBtn');
+  if (themeBtn) {
+    themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    themeBtn.setAttribute(
+      'aria-label',
+      theme === 'dark' ? 'Passer au mode clair' : 'Passer au mode sombre',
+    );
+  }
   State.data.settings.theme = theme;
   State.save();
 }
 
+export function openModal() {
+  _previousActiveElement = document.activeElement;
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) {
+    overlay.classList.add('active');
+    setTimeout(() => {
+      const focusable = overlay.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable) {
+        focusable.focus();
+      }
+    }, 50);
+  }
+}
+
 export function closeModal(event) {
   if (event && event.target !== document.getElementById('modalOverlay')) return;
-  document.getElementById('modalOverlay').classList.remove('active');
+  closeModalDirect();
 }
 
 export function closeModalDirect() {
-  document.getElementById('modalOverlay').classList.remove('active');
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
+  if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
+    _previousActiveElement.focus();
+    _previousActiveElement = null;
+  }
+}
+
+// Global keyboard navigation
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('modalOverlay');
+      if (modal && modal.classList.contains('active')) {
+        closeModalDirect();
+      }
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      const target = e.target;
+      if (
+        target &&
+        (target.getAttribute('role') === 'button' ||
+          target.classList.contains('nav-item') ||
+          target.classList.contains('mode-card') ||
+          target.classList.contains('lesson-card') ||
+          target.classList.contains('verb-card'))
+      ) {
+        if (
+          target.tagName === 'BUTTON' ||
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA'
+        ) {
+          return;
+        }
+        if (e.key === ' ') e.preventDefault();
+        target.click();
+      }
+    }
+  });
 }

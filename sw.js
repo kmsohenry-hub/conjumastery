@@ -1,6 +1,13 @@
 /* global self, caches */
-const CACHE_NAME = 'conjumaster-shell-v1';
-const APP_SHELL = ['./', './index.html', './style.css', './manifest.webmanifest'];
+const CACHE_NAME = 'conjumaster-v2.0.0';
+const APP_SHELL = [
+  './',
+  './index.html',
+  './style.css',
+  './manifest.webmanifest',
+  './app.js',
+  './src/pwa.js',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -32,8 +39,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
+          }
           return response;
         })
         .catch(() => caches.match('./index.html')),
@@ -43,14 +52,21 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        if (response.ok && response.type === 'basic') {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        }
-        return response;
-      });
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            networkResponse.type === 'basic'
+          ) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => cached);
+
+      return cached || fetchPromise;
     }),
   );
 });

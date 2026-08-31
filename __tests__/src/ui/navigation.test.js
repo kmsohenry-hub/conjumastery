@@ -36,7 +36,9 @@ vi.mock('../../../src/ui/pages/stats.js', () => ({ renderStats: renderers.stats 
 
 import {
   closeModal,
+  closeModalDirect,
   navigateTo,
+  openModal,
   setTheme,
   toggleSidebar,
   toggleTheme,
@@ -45,7 +47,12 @@ import {
 function buildShell() {
   document.body.innerHTML = `
     <aside id="sidebar"></aside><div id="sidebarOverlay"></div><button id="themeBtn"></button>
-    <div id="pageTitle"></div><div id="modalOverlay"></div>
+    <div id="pageTitle"></div>
+    <div id="modalOverlay">
+      <div id="modalContent">
+        <button id="modalCloseBtn" class="modal-close">✕</button>
+      </div>
+    </div>
     ${[
       'dashboard',
       'lessons',
@@ -68,6 +75,7 @@ function buildShell() {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
   buildShell();
   Object.values(renderers).forEach((fn) => fn.mockClear());
   document.documentElement.removeAttribute('data-theme');
@@ -119,5 +127,50 @@ describe('navigation', () => {
     expect(overlay.classList.contains('active')).toBe(true);
     closeModal({ target: overlay });
     expect(overlay.classList.contains('active')).toBe(false);
+  });
+
+  it('handles keyboard navigation with Enter and Space on interactive elements', () => {
+    const card = document.createElement('div');
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    const clickSpy = vi.fn();
+    card.addEventListener('click', clickSpy);
+    document.body.appendChild(card);
+
+    card.focus();
+    const { KeyboardEvent } = window;
+    card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+
+    card.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    expect(clickSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('closes modal on Escape keypress', () => {
+    const overlay = document.getElementById('modalOverlay');
+    overlay.classList.add('active');
+
+    const { KeyboardEvent } = window;
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(overlay.classList.contains('active')).toBe(false);
+  });
+
+  it('saves and restores focus when opening and closing modal', () => {
+    const initialButton = document.createElement('button');
+    document.body.appendChild(initialButton);
+    initialButton.focus();
+    expect(document.activeElement).toBe(initialButton);
+
+    openModal();
+    const overlay = document.getElementById('modalOverlay');
+    expect(overlay.classList.contains('active')).toBe(true);
+
+    vi.advanceTimersByTime(100);
+    const closeBtn = document.getElementById('modalCloseBtn');
+    expect(document.activeElement).toBe(closeBtn);
+
+    closeModalDirect();
+    expect(overlay.classList.contains('active')).toBe(false);
+    expect(document.activeElement).toBe(initialButton);
   });
 });
