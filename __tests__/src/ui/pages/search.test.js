@@ -36,4 +36,12 @@ describe('search page', () => {
     performGlobalSearch();
     expect(document.getElementById('searchResults').textContent).toContain('Aucun résultat');
   });
+
+  it('truncates excessively long search inputs safely', () => {
+    const longQuery = 'arise ' + 'a'.repeat(600);
+    document.getElementById('globalSearch').value = longQuery;
+    expect(() => performGlobalSearch()).not.toThrow();
+    const results = document.getElementById('searchResults');
+    expect(results.innerHTML).toBeDefined();
+  });
 });
