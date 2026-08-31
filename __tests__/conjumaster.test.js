@@ -165,7 +165,9 @@ describe('validateImportedState', () => {
       },
       spacedRepetition: {
         past_simple: { interval: 3, nextReview: 1000, ease: 2.4, errors: 1 },
+        '<img src=x onerror=alert(1)>': { interval: 1, nextReview: 0, ease: 2.5, errors: 0 },
       },
+      errorLog: [{ tenseId: '<img src=x onerror=alert(1)>', date: '2026-08-30' }],
       settings: { theme: 'dark' },
       unknown: 'ignored',
     });
@@ -177,6 +179,8 @@ describe('validateImportedState', () => {
     expect(imported.tenseStats.present_simple).toEqual({ correct: 2, total: 3 });
     expect(imported.tenseStats.broken).toBeUndefined();
     expect(imported.spacedRepetition.past_simple.interval).toBe(3);
+    expect(imported.spacedRepetition['<img src=x onerror=alert(1)>']).toBeUndefined();
+    expect(imported.errorLog).toEqual([]);
     expect(imported.settings.theme).toBe('dark');
     expect(imported.unknown).toBeUndefined();
   });
