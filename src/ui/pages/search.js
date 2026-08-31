@@ -1,8 +1,10 @@
 import { APP_DATA } from '../../data/index.js';
-import { escapeHtml } from '../../../src/core/security.js';
+import { escapeHtml, sanitizeInput } from '../../../src/core/security.js';
 
 export function performGlobalSearch() {
-  const query = (document.getElementById('globalSearch')?.value || '').toLowerCase().trim();
+  // Sanitize input to limit length (prevent DoS) and remove unwanted whitespace
+  const rawQuery = document.getElementById('globalSearch')?.value;
+  const query = sanitizeInput(rawQuery).toLowerCase();
   const container = document.getElementById('searchResults');
 
   if (!query) {
