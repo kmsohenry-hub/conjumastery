@@ -212,7 +212,8 @@ function cleanTenseStats(value) {
   if (!isPlainObject(value)) return {};
   return Object.fromEntries(
     Object.entries(value)
-      .filter(([, stats]) => isPlainObject(stats))
+      // Imported backups are untrusted; only data IDs that the UI recognizes may be rendered.
+      .filter(([tenseId, stats]) => APP_DATA.tensesById[tenseId] && isPlainObject(stats))
       .map(([tenseId, stats]) => [
         tenseId,
         {
@@ -228,7 +229,7 @@ function cleanSpacedRepetition(value) {
   if (!isPlainObject(value)) return {};
   return Object.fromEntries(
     Object.entries(value)
-      .filter(([, data]) => isPlainObject(data))
+      .filter(([tenseId, data]) => APP_DATA.tensesById[tenseId] && isPlainObject(data))
       .map(([tenseId, data]) => [
         tenseId,
         {
@@ -239,6 +240,27 @@ function cleanSpacedRepetition(value) {
         },
       ]),
   );
+}
+
+function cleanErrorLog(value) {
+  return Array.isArray(value)
+    ? value
+        .filter((entry) => isPlainObject(entry) && APP_DATA.tensesById[entry.tenseId])
+        .slice(-500)
+    : [];
+}
+
+function cleanActivityLog(value) {
+  return Array.isArray(value)
+    ? value
+        .filter(
+          (entry) =>
+            isPlainObject(entry) &&
+            Number.isFinite(entry.xp) &&
+            Number.isFinite(Date.parse(entry.date)),
+        )
+        .slice(-100)
+    : [];
 }
 
 export function validateImportedState(raw) {
@@ -259,10 +281,8 @@ export function validateImportedState(raw) {
     lastActiveDate: typeof data.lastActiveDate === 'string' ? data.lastActiveDate : null,
     completedLessons: cleanStringArray(data.completedLessons),
     tenseStats: cleanTenseStats(data.tenseStats),
-    errorLog: Array.isArray(data.errorLog) ? data.errorLog.filter(isPlainObject).slice(-500) : [],
-    activityLog: Array.isArray(data.activityLog)
-      ? data.activityLog.filter(isPlainObject).slice(-100)
-      : [],
+    errorLog: cleanErrorLog(data.errorLog),
+    activityLog: cleanActivityLog(data.activityLog),
     favorites: cleanStringArray(data.favorites),
     spacedRepetition: cleanSpacedRepetition(data.spacedRepetition),
     settings: { theme: settings.theme === 'dark' ? 'dark' : 'light' },
