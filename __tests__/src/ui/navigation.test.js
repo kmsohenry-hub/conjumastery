@@ -46,7 +46,17 @@ import {
 
 function buildShell() {
   document.body.innerHTML = `
-    <aside id="sidebar"></aside><div id="sidebarOverlay"></div><button id="themeBtn"></button>
+    <aside id="sidebar">
+      <div
+        class="sidebar-brand"
+        role="button"
+        tabindex="0"
+        aria-label="Retour au tableau de bord"
+      >
+        <div class="logo-icon" aria-hidden="true">🇬🇧</div>
+        <div>ConjuMaster <span>UK</span></div>
+      </div>
+    </aside><div id="sidebarOverlay"></div><button id="themeBtn"></button>
     <div id="pageTitle"></div>
     <div id="modalOverlay">
       <div id="modalContent">
@@ -172,5 +182,28 @@ describe('navigation', () => {
     closeModalDirect();
     expect(overlay.classList.contains('active')).toBe(false);
     expect(document.activeElement).toBe(initialButton);
+  });
+
+  it('navigates to dashboard when clicking sidebar brand or pressing Enter/Space on it', () => {
+    window.navigateTo = navigateTo;
+    const brand = document.querySelector('.sidebar-brand');
+    brand.addEventListener('click', () => navigateTo('dashboard'));
+
+    // Navigate away from dashboard
+    navigateTo('lessons');
+    expect(document.getElementById('page-lessons').classList.contains('active')).toBe(true);
+
+    // Click brand
+    brand.click();
+    expect(document.getElementById('page-dashboard').classList.contains('active')).toBe(true);
+
+    // Navigate to stats and test keyboard activation
+    navigateTo('stats');
+    expect(document.getElementById('page-stats').classList.contains('active')).toBe(true);
+
+    brand.focus();
+    const { KeyboardEvent } = window;
+    brand.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(document.getElementById('page-dashboard').classList.contains('active')).toBe(true);
   });
 });
