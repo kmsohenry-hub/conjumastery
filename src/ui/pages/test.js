@@ -201,8 +201,8 @@ export function finishTest() {
         .map((q, _i) => {
           return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:0.85rem">
           <span style="color:${q.answeredCorrectly ? 'var(--success)' : 'var(--danger)'}">${q.answeredCorrectly ? '✅' : '❌'}</span>
-          <strong>${APP_DATA.tensesById[q.tenseId]?.nameFR || ''}</strong>
-          <span style="color:var(--text-light);margin-left:8px">${q.sentence.substring(0, 60)}...</span>
+          <strong>${escapeHtml(APP_DATA.tensesById[q.tenseId]?.nameFR || '')}</strong>
+          <span style="color:var(--text-light);margin-left:8px">${escapeHtml(q.sentence.substring(0, 60))}...</span>
         </div>`;
         })
         .join('')}

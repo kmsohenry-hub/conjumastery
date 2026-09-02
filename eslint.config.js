@@ -68,6 +68,9 @@ export default [
         Notification: 'readonly',
         Image: 'readonly',
         Audio: 'readonly',
+        Event: 'readonly',
+        KeyboardEvent: 'readonly',
+        structuredClone: 'readonly',
 
         // Test globals (Vitest)
         describe: 'readonly',

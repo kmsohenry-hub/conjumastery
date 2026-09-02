@@ -137,21 +137,8 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
       const goAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
       fullSentence = `${subj} ${goAux} going to ${correctForm} next week.`;
       correctAnswer = `${goAux} going to ${correctForm}`;
-    } else if (tense.id === 'present_continuous') {
-      const contAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
-      fullSentence = `${subj} ${contAux} ${correctForm} right now.`;
-      correctAnswer = `${contAux} ${correctForm}`;
-    } else if (tense.id === 'past_continuous') {
-      const contAux = is3rdSing ? 'was' : 'were';
-      fullSentence = `${subj} ${contAux} ${correctForm} yesterday evening.`;
-      correctAnswer = `${contAux} ${correctForm}`;
     } else {
-      // present_simple, past_simple, or a not-yet-specialised tense fallback
-      if (tense.id === 'present_simple') {
-        fullSentence = `${subj} ${correctForm} every day.`;
-      } else {
-        fullSentence = `${subj} ${correctForm} yesterday.`;
-      }
+      fullSentence = `${subj} ${correctForm} tomorrow.`;
       correctAnswer = correctForm;
     }
   } else {
@@ -188,7 +175,7 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
   options = [correctAnswer];
   for (const d of distractors) {
     if (options.length >= 4) break;
-    if (!options.includes(d)) options.push(d);
+    options.push(d);
   }
   const fillers = [getRegularPast(verb), getIngForm(verb), getPresentSimpleForm(verb, true), verb];
   let fi = 0;
@@ -296,7 +283,16 @@ export function generateTransform(tense, subj, verb, is3rdSing) {
     affirmative = `${subj} ${correctForm}.`;
     const s = ['I', 'John', 'Sarah'].includes(subj) ? subj : subj.toLowerCase();
     if (tense.id === 'present_continuous' || tense.id === 'past_continuous') {
-      const aux = correctForm.split(' ')[0]; // am/is/are/was/were
+      const aux =
+        tense.id === 'past_continuous'
+          ? is3rdSing
+            ? 'was'
+            : 'were'
+          : subj === 'I'
+            ? 'am'
+            : is3rdSing
+              ? 'is'
+              : 'are';
       const ingForm = getIngForm(verb);
       negative = `${subj} ${aux} not ${ingForm}.`;
       question = `${aux.charAt(0).toUpperCase() + aux.slice(1)} ${s} ${ingForm}?`;

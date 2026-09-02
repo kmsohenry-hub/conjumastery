@@ -19,6 +19,7 @@ vi.mock('../../../../src/core/state/State.js', () => ({
   State: mockState,
 }));
 
+import { APP_DATA } from '../../../../src/data/index.js';
 import { renderFavorites, toggleFav } from '../../../../src/ui/pages/favorites.js';
 
 beforeEach(() => {
@@ -38,6 +39,29 @@ describe('favorites page', () => {
     mockState.data.favorites = [];
     renderFavorites();
     expect(document.getElementById('favoritesContent').innerHTML).toContain('Aucun favori');
+  });
+
+  it('escapes verb metadata before injecting it into HTML', () => {
+    const original = APP_DATA.verbsByBase.evil;
+    APP_DATA.verbsByBase.evil = {
+      base: '<img src=x onerror=alert(1)>',
+      past: 'past',
+      pp: 'pp',
+      meaning: '<script>alert(1)</script>',
+    };
+    mockState.data.favorites = ['verb_evil'];
+
+    try {
+      renderFavorites();
+      const container = document.getElementById('favoritesContent');
+      expect(container.querySelector('img')).toBeNull();
+      expect(container.querySelector('script')).toBeNull();
+      expect(container.textContent).toContain('<img src=x onerror=alert(1)>');
+      expect(container.textContent).toContain('<script>alert(1)</script>');
+    } finally {
+      if (original === undefined) delete APP_DATA.verbsByBase.evil;
+      else APP_DATA.verbsByBase.evil = original;
+    }
   });
 
   it('toggles favorite off and on', () => {

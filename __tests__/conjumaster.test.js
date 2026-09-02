@@ -1,5 +1,6 @@
 const { APP_DATA, State, ExerciseEngine, answerMatches, validateImportedState } =
   await import('../app.js');
+const appWindow = global.window;
 
 /**
  * Tests unitaires pour ConjuMaster UK
@@ -157,7 +158,7 @@ describe('validateImportedState', () => {
     const imported = validateImportedState({
       xp: 120,
       level: 'bad',
-      completedLessons: ['lesson_1', 42],
+      completedLessons: ['l_present_simple', 42],
       favorites: ['present_simple', null],
       tenseStats: {
         present_simple: { correct: 2, total: 3 },
@@ -174,7 +175,7 @@ describe('validateImportedState', () => {
 
     expect(imported.xp).toBe(120);
     expect(imported.level).toBe(1);
-    expect(imported.completedLessons).toEqual(['lesson_1']);
+    expect(imported.completedLessons).toEqual(['l_present_simple']);
     expect(imported.favorites).toEqual(['present_simple']);
     expect(imported.tenseStats.present_simple).toEqual({ correct: 2, total: 3 });
     expect(imported.tenseStats.broken).toBeUndefined();
@@ -188,6 +189,30 @@ describe('validateImportedState', () => {
   test('rejette les sauvegardes qui ne sont pas des objets', () => {
     expect(() => validateImportedState(null)).toThrow('Invalid backup format');
     expect(() => validateImportedState('bad')).toThrow('Invalid backup format');
+  });
+
+  test('filtre les leçons et favoris qui ne correspondent pas au référentiel', () => {
+    const imported = validateImportedState({
+      completedLessons: ['l_present_simple', 'lesson_unknown', '<img src=x>'],
+      favorites: ['present_simple', 'missing_tense', 'verb_go', 'verb_missing'],
+    });
+
+    expect(imported.completedLessons).toEqual(['l_present_simple']);
+    expect(imported.favorites).toEqual(['present_simple', 'verb_go']);
+  });
+
+  test('ignore une date d’activité importée invalide', () => {
+    const imported = validateImportedState({
+      lastActiveDate: '<img src=x onerror=alert(1)>',
+    });
+
+    expect(imported.lastActiveDate).toBeNull();
+  });
+
+  test('ignore une date d’activité importée d’un type invalide', () => {
+    const imported = validateImportedState({ lastActiveDate: 12345 });
+
+    expect(imported.lastActiveDate).toBeNull();
   });
 });
 
@@ -372,6 +397,16 @@ describe('ExerciseEngine - getConjugation', () => {
 
     test('devrait conjuguer les verbes irréguliers', () => {
       expect(ExerciseEngine.getConjugation('go', 'past_simple', 'I', false)).toBe('went');
+      const oldQuestions = ExerciseEngine.questions;
+      ExerciseEngine.questions = [
+        { type: 'fill', tenseId: 'present_simple', sentence: 'x', answer: 'x' },
+      ];
+      ExerciseEngine.currentIndex = 0;
+      expect(ExerciseEngine.getCurrent()).toBeDefined();
+      ExerciseEngine.currentIndex = ExerciseEngine.questions.length;
+      expect(ExerciseEngine.isComplete()).toBe(true);
+      expect(ExerciseEngine.getProgress()).toBeDefined();
+      ExerciseEngine.questions = oldQuestions;
       expect(ExerciseEngine.getConjugation('write', 'past_simple', 'She', true)).toBe('wrote');
     });
   });
@@ -638,4 +673,269 @@ describe('checkStreak', () => {
     expect(State.data.daysStreak).toBe(0);
     expect(State.data.lastActiveDate).toBe('Mon Jan 13 2025');
   });
+});
+
+describe('app UI and data management', () => {
+  test('updateUI refreshes XP, level, streak and badges', () => {
+    const elements = new Map();
+    const makeElement = () => ({ textContent: '', style: { width: '' } });
+    [
+      'headerXP',
+      'headerLevel',
+      'sidebarLevel',
+      'sidebarXP',
+      'sidebarXPBar',
+      'streakCount',
+      'streakPlural',
+      'revisionBadge',
+      'lessonsBadge',
+    ].forEach((id) => {
+      elements.set(id, makeElement());
+    });
+    global.document.getElementById = vi.fn((id) => elements.get(id) || null);
+
+    State.data = {
+      ...State.data,
+      xp: 275,
+      level: 3,
+      daysStreak: 2,
+      completedLessons: ['l_present_simple'],
+    };
+    State.getReviewQueue = vi.fn(() => [
+      { tenseId: 'past_simple' },
+      { tenseId: 'present_perfect' },
+    ]);
+
+    appWindow.updateUI();
+
+    expect(elements.get('headerXP').textContent).toBe(275);
+    expect(elements.get('headerLevel').textContent).toBe(3);
+    expect(elements.get('sidebarLevel').textContent).toBe(3);
+    expect(elements.get('sidebarXP').textContent).toBe('75 / 100 XP');
+    expect(elements.get('sidebarXPBar').style.width).toBe('75%');
+    expect(elements.get('streakCount').textContent).toBe(2);
+    expect(elements.get('streakPlural').textContent).toBe('s');
+    expect(elements.get('revisionBadge').textContent).toBe(2);
+    expect(Number(elements.get('lessonsBadge').textContent)).toBeGreaterThan(0);
+  });
+
+  test('updateUI tolerates missing optional badges', () => {
+    const elements = new Map();
+    const makeElement = () => ({ textContent: '', style: { width: '' } });
+    [
+      'headerXP',
+      'headerLevel',
+      'sidebarLevel',
+      'sidebarXP',
+      'sidebarXPBar',
+      'streakCount',
+      'streakPlural',
+    ].forEach((id) => {
+      elements.set(id, makeElement());
+    });
+    global.document.getElementById = vi.fn((id) => elements.get(id) || null);
+
+    State.data = { ...State.data, xp: 100, level: 2, daysStreak: 1, completedLessons: [] };
+    State.getReviewQueue = vi.fn(() => []);
+
+    expect(() => appWindow.updateUI()).not.toThrow();
+    expect(elements.get('headerXP').textContent).toBe(100);
+    expect(elements.get('streakPlural').textContent).toBe('');
+  });
+
+  test('resetProgress resets state after confirmation', () => {
+    const originalDocument = global.document;
+    State.data = { ...State.data, xp: 200 };
+    global.confirm = vi.fn(() => true);
+    appWindow.document.body.innerHTML = `
+      <section class="page" id="page-dashboard"></section>
+      <button class="nav-item" data-page="dashboard"></button>
+      <div id="pageTitle"></div>
+      <div id="dashXP"></div><div id="dashLevel"></div>
+      <div id="dashExercises"></div><div id="dashAccuracy"></div>
+      <div id="dashNextLesson"></div><div id="dashRevisionQueue"></div>
+      <div id="revisionBadge"></div><div id="dashChart"></div>
+    `;
+    global.document = appWindow.document;
+    try {
+      appWindow.resetProgress();
+    } finally {
+      global.document = originalDocument;
+      appWindow.document.body.innerHTML = '';
+    }
+
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(State.data.xp).toBe(0);
+  });
+
+  test('resetProgress leaves state untouched when confirmation is declined', () => {
+    State.data = { ...State.data, xp: 200 };
+    global.confirm = vi.fn(() => false);
+
+    appWindow.resetProgress();
+
+    expect(State.data.xp).toBe(200);
+  });
+
+  test('importData ignores an empty file selection', () => {
+    const input = { type: '', accept: '', onchange: null, click: vi.fn() };
+    const originalCreateElement = global.document.createElement;
+    global.document.createElement = vi.fn((tag) =>
+      tag === 'input' ? input : originalCreateElement(tag),
+    );
+
+    appWindow.importData();
+    input.click.mockImplementationOnce(() => {
+      input.onchange({ target: { files: [] } });
+    });
+
+    expect(input.type).toBe('file');
+    expect(input.accept).toBe('.json');
+    input.click();
+    expect(State.data.xp).toBe(0);
+
+    global.document.createElement = originalCreateElement;
+  });
+
+  test('importData applies a valid JSON backup', () => {
+    const input = { type: '', accept: '', onchange: null, click: vi.fn() };
+    const reader = { onload: null, readAsText: vi.fn() };
+    const toastContainer = { appendChild: vi.fn() };
+    const originalCreateElement = global.document.createElement;
+    const originalGetElementById = global.document.getElementById;
+    const originalFileReader = global.FileReader;
+    global.document.createElement = vi.fn((tag) => {
+      if (tag === 'input') return input;
+      if (tag === 'div') return { className: '', textContent: '', style: {}, remove: vi.fn() };
+      return originalCreateElement(tag);
+    });
+    global.document.getElementById = vi.fn((id) =>
+      id === 'toastContainer' ? toastContainer : originalGetElementById(id),
+    );
+    global.FileReader = class {
+      constructor() {
+        return reader;
+      }
+    };
+    const originalSave = State.save;
+    const originalUpdateUI = appWindow.updateUI;
+    State.save = vi.fn();
+    appWindow.updateUI = vi.fn();
+
+    appWindow.importData();
+    input.click.mockImplementationOnce(() => {
+      input.onchange({ target: { files: [{ name: 'backup.json' }] } });
+    });
+    input.click();
+    reader.onload({
+      target: {
+        result: JSON.stringify({ xp: 150, level: 2, settings: { theme: 'dark' } }),
+      },
+    });
+
+    expect(reader.readAsText).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'backup.json' }),
+    );
+    expect(State.data.xp).toBe(150);
+    expect(State.data.level).toBe(2);
+    expect(State.data.settings.theme).toBe('dark');
+    expect(State.save).toHaveBeenCalledTimes(1);
+
+    State.save = originalSave;
+    appWindow.updateUI = originalUpdateUI;
+    global.FileReader = originalFileReader;
+    global.document.createElement = originalCreateElement;
+    global.document.getElementById = originalGetElementById;
+  });
+
+  test('importData shows an error toast for invalid JSON', () => {
+    const input = { type: '', accept: '', onchange: null, click: vi.fn() };
+    const reader = { onload: null, readAsText: vi.fn() };
+    const toastContainer = { appendChild: vi.fn() };
+    const originalCreateElement = global.document.createElement;
+    const originalGetElementById = global.document.getElementById;
+    const originalFileReader = global.FileReader;
+    global.document.createElement = vi.fn((tag) => {
+      if (tag === 'input') return input;
+      if (tag === 'div') return { className: '', textContent: '', style: {}, remove: vi.fn() };
+      return originalCreateElement(tag);
+    });
+    global.document.getElementById = vi.fn((id) =>
+      id === 'toastContainer' ? toastContainer : originalGetElementById(id),
+    );
+    global.FileReader = class {
+      constructor() {
+        return reader;
+      }
+    };
+
+    appWindow.importData();
+    input.click.mockImplementationOnce(() => {
+      input.onchange({ target: { files: [{ name: 'broken.json' }] } });
+    });
+    input.click();
+    reader.onload({ target: { result: '{invalid json' } });
+
+    expect(toastContainer.appendChild).toHaveBeenCalledTimes(1);
+    expect(toastContainer.appendChild.mock.calls[0][0].textContent).toBe('❌ Fichier invalide');
+
+    global.FileReader = originalFileReader;
+    global.document.createElement = originalCreateElement;
+    global.document.getElementById = originalGetElementById;
+  });
+
+  test('exportData creates a dated JSON download and shows success toast', () => {
+    const click = vi.fn();
+    const anchor = { href: '', download: '', click };
+    const createObjectURL = vi.fn(() => 'blob:test');
+    const revokeObjectURL = vi.fn();
+    global.URL = { createObjectURL, revokeObjectURL };
+    const originalGetElementById = global.document.getElementById;
+    const originalCreateElement = global.document.createElement;
+    global.document.getElementById = vi.fn((id) =>
+      id === 'toastContainer' ? { appendChild: vi.fn() } : originalGetElementById(id),
+    );
+    global.document.createElement = vi.fn((tag) => {
+      if (tag === 'a') return anchor;
+      if (tag === 'div') return { className: '', textContent: '', style: {}, remove: vi.fn() };
+      return originalCreateElement(tag);
+    });
+    try {
+      appWindow.exportData();
+    } finally {
+      global.document.getElementById = originalGetElementById;
+      global.document.createElement = originalCreateElement;
+    }
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(anchor.href).toBe('blob:test');
+    expect(anchor.download).toMatch(/^conjumaster_backup_\d{4}-\d{2}-\d{2}\.json$/);
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test');
+  });
+});
+
+test('covers validateImportedState value branches', () => {
+  const result = validateImportedState({
+    lastActiveDate: new Date('2026-09-01').toISOString(),
+    completedLessons: ['l_present_simple', 4],
+    favorites: ['present_simple', 'verb_go', 2, 'bad'],
+    tenseStats: { present_simple: { correct: 2, total: 3 }, bad: { correct: 1, total: 2 } },
+    errorLog: [{ tenseId: 'present_simple' }, { tenseId: 'bad' }],
+    activityLog: [
+      { xp: 4, date: new Date().toISOString() },
+      { xp: 'bad', date: 'x' },
+    ],
+    spacedRepetition: {
+      present_simple: { interval: 2, nextReview: 10, ease: 2, errors: 1 },
+      bad: {},
+    },
+  });
+  expect(result.completedLessons).toEqual(['l_present_simple']);
+  expect(result.favorites).toContain('present_simple');
+  expect(result.favorites).toContain('verb_go');
+  expect(result.tenseStats.present_simple).toEqual({ correct: 2, total: 3 });
+  expect(result.errorLog).toHaveLength(1);
+  expect(result.activityLog).toHaveLength(1);
+  expect(result.spacedRepetition.present_simple.interval).toBe(2);
 });
