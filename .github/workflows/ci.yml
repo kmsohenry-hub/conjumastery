@@ -1,8 +1,9 @@
 name: CI
 
 on:
+  # La stabilisation reçoit le même signal CI que main avant promotion.
   push:
-    branches: [main]
+    branches: [main, stabilization]
   pull_request:
     branches: [main]
 
@@ -39,9 +40,8 @@ jobs:
       - name: Run unit tests
         run: npm test
 
-      - name: Run coverage
+      - name: Run coverage (blocking quality gate)
         run: npm run test:coverage
-        continue-on-error: true
 
       - name: Build (smoke test)
         run: npm run build
