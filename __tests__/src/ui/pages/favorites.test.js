@@ -1,1 +1,81 @@
-aW1wb3J0IHsgYmVmb3JlRWFjaCwgZGVzY3JpYmUsIGV4cGVjdCwgaXQsIHZpIH0gZnJvbSAndml0ZXN0JzsKCmNvbnN0IHsgbW9ja1N0YXRlIH0gPSB2aS5ob2lzdGVkKCgpID0+ICh7CiAgbW9ja1N0YXRlOiB7CiAgICBkYXRhOiB7CiAgICAgIGZhdm9yaXRlczogWyd2ZXJiX2dvJywgJ3ByZXNlbnRfc2ltcGxlJ10sCiAgICB9LAogICAgaXNGYXZvcml0ZTogdmkuZm4oKGl0ZW0pID0+IG1vY2tTdGF0ZS5kYXRhLmZhdm9yaXRlcy5pbmNsdWRlcyhpdGVtKSksCiAgICBhZGRGYXZvcml0ZTogdmkuZm4oKGl0ZW0pID0+IHsKICAgICAgaWYgKCFtb2NrU3RhdGUuZGF0YS5mYXZvcml0ZXMuaW5jbHVkZXMoaXRlbSkpIG1vY2tTdGF0ZS5kYXRhLmZhdm9yaXRlcy5wdXNoKGl0ZW0pOwogICAgfSksCiAgICByZW1vdmVGYXZvcml0ZTogdmkuZm4oKGl0ZW0pID0+IHsKICAgICAgbW9ja1N0YXRlLmRhdGEuZmF2b3JpdGVzID0gbW9ja1N0YXRlLmRhdGEuZmF2b3JpdGVzLmZpbHRlcigoaSkgPT4gaSAhPT0gaXRlbSk7CiAgICB9KSwKICB9LAp9KSk7Cgp2aS5tb2NrKCcuLi8uLi8uLi8uLi9zcmMvY29yZS9zdGF0ZS9TdGF0ZS5qcycsICgpID0+ICh7CiAgU3RhdGU6IG1vY2tTdGF0ZSwKfSkpOwoKaW1wb3J0IHsgQVBQX0RBVEEgfSBmcm9tICcuLi8uLi8uLi8uLi9zcmMvZGF0YS9pbmRleC5qcyc7CmltcG9ydCB7IHJlbmRlckZhdm9yaXRlcywgdG9nZ2xlRmF2IH0gZnJvbSAnLi4vLi4vLi4vLi4vc3JjL3VpL3BhZ2VzL2Zhdm9yaXRlcy5qcyc7CgpiZWZvcmVFYWNoKCgpID0+IHsKICBtb2NrU3RhdGUuZGF0YS5mYXZvcml0ZXMgPSBbJ3ZlcmJfZ28nLCAncHJlc2VudF9zaW1wbGUnXTsKICBkb2N1bWVudC5ib2R5LmlubmVySFRNTCA9ICc8ZGl2IGlkPSJmYXZvcml0ZXNDb250ZW50Ij48L2Rpdj4nOwp9KTsKCmRlc2NyaWJlKCdmYXZvcml0ZXMgcGFnZScsICgpID0+IHsKICBpdCgncmVuZGVycyBmYXZvcml0ZXMgY29ycmVjdGx5IHdoZW4gZmF2b3JpdGVzIGV4aXN0JywgKCkgPT4gewogICAgcmVuZGVyRmF2b3JpdGVzKCk7CiAgICBjb25zdCBodG1sID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2Zhdm9yaXRlc0NvbnRlbnQnKS5pbm5lckhUTUw7CiAgICBleHBlY3QoaHRtbCkudG9Db250YWluKCd2ZXJiLWNhcmQnKTsKICAgIGV4cGVjdChodG1sKS50b0NvbnRhaW4oJ2dvJyk7CiAgfSk7CgogIGl0KCdyZW5kZXJzIGVtcHR5IHN0YXRlIHdoZW4gbm8gZmF2b3JpdGVzIGV4aXN0JywgKCkgPT4gewogICAgbW9ja1N0YXRlLmRhdGEuZmF2b3JpdGVzID0gW107CiAgICByZW5kZXJGYXZvcml0ZXMoKTsKICAgIGV4cGVjdChkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZmF2b3JpdGVzQ29udGVudCcpLmlubmVySFRNTCkudG9Db250YWluKCdBdWN1biBmYXZvcmknKTsKICB9KTsKCiAgaXQoJ2VzY2FwZXMgdmVyYiBtZXRhZGF0YSBiZWZvcmUgaW5qZWN0aW5nIGl0IGludG8gSFRNTCcsICgpID0+IHsKICAgIGNvbnN0IG9yaWdpbmFsID0gQVBQX0RBVEEudmVyYnNCeUJhc2UuZXZpbDsKICAgIEFQUF9EQVRBLnZlcmJzQnlzZS5ldmlsID0gewogICAgICBiYXNlOiAnPGltZyBzcmM9eCBvbmVycm9yPWFsZXJ0KDEpPicsCiAgICAgIHBhc3Q6ICdwYXN0JywKICAgICAgcHA6ICdwcCcsCiAgICAgIG1lYW5pbmc6ICc8c2NyaXB0PmFsZXJ0KDEpPC9zY3JpcHQ+JywKICAgIH07CiAgICBtb2NrU3RhdGUuZGF0YS5mYXZvcml0ZXMgPSBbJ3ZlcmJfZXZpbCddOwoKICAgIHRyeSB7CiAgICAgIHJlbmRlckZhdm9yaXRlcygpOwogICAgICBjb25zdCBjb250YWluZXIgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZmF2b3JpdGVzQ29udGVudCcpOwogICAgICBleHBlY3QoY29udGFpbmVyLnF1ZXJ5U2VsZWN0b3IoJ2ltZycpKS50b0JlTnVsbCgpOwogICAgICBleHBlY3QoY29udGFpbmVyLnF1ZXJ5U2VsZWN0b3IoJ3NjcmlwdCcpKS50b0JlTnVsbCgpOwogICAgICBleHBlY3QoY29udGFpbmVyLnRleHRDb250ZW50KS50b0NvbnRhaW4oJzxpbWcgc3JjPXggb25lcnJvcj1hbGVydCgxKT4nKTsKICAgICAgZXhwZWN0KGNvbnRhaW5lci50ZXh0Q29udGVudCkudG9Db250YWluKCd<deleted>'), $4.21
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { mockState } = vi.hoisted(() => ({
+  mockState: {
+    data: {
+      favorites: ['verb_go', 'present_simple'],
+    },
+    isFavorite: vi.fn((item) => mockState.data.favorites.includes(item)),
+    addFavorite: vi.fn((item) => {
+      if (!mockState.data.favorites.includes(item)) mockState.data.favorites.push(item);
+    }),
+    removeFavorite: vi.fn((item) => {
+      mockState.data.favorites = mockState.data.favorites.filter((i) => i !== item);
+    }),
+  },
+}));
+
+vi.mock('../../../../src/core/state/State.js', () => ({
+  State: mockState,
+}));
+
+import { APP_DATA } from '../../../../src/data/index.js';
+import { renderFavorites, toggleFav } from '../../../../src/ui/pages/favorites.js';
+
+beforeEach(() => {
+  mockState.data.favorites = ['verb_go', 'present_simple'];
+  document.body.innerHTML = '<div id="favoritesContent"></div>';
+});
+
+describe('favorites page', () => {
+  it('renders favorites correctly when favorites exist', () => {
+    renderFavorites();
+    const html = document.getElementById('favoritesContent').innerHTML;
+    expect(html).toContain('verb-card');
+    expect(html).toContain('go');
+  });
+
+  it('renders empty state when no favorites exist', () => {
+    mockState.data.favorites = [];
+    renderFavorites();
+    expect(document.getElementById('favoritesContent').innerHTML).toContain('Aucun favori');
+  });
+
+  it('escapes verb metadata before injecting it into HTML', () => {
+    const original = APP_DATA.verbsByBase.evil;
+    APP_DATA.verbsByBase.evil = {
+      base: '<img src=x onerror=alert(1)>',
+      past: 'past',
+      pp: 'pp',
+      meaning: '<script>alert(1)</script>',
+    };
+    mockState.data.favorites = ['verb_evil'];
+
+    try {
+      renderFavorites();
+      const container = document.getElementById('favoritesContent');
+      expect(container.querySelector('img')).toBeNull();
+      expect(container.querySelector('script')).toBeNull();
+      expect(container.textContent).toContain('<img src=x onerror=alert(1)>');
+      expect(container.textContent).toContain('<script>alert(1)</script>');
+    } finally {
+      if (original === undefined) delete APP_DATA.verbsByBase.evil;
+      else APP_DATA.verbsByBase.evil = original;
+    }
+  });
+
+  it('toggles favorite off and on', () => {
+    const btn = document.createElement('button');
+    btn.classList.add('active');
+
+    // Currently 'verb_go' is in favorites
+    toggleFav('verb_go', btn);
+    expect(mockState.removeFavorite).toHaveBeenCalledWith('verb_go');
+    expect(btn.classList.contains('active')).toBe(false);
+
+    // Toggle on
+    toggleFav('verb_go', btn);
+    expect(mockState.addFavorite).toHaveBeenCalledWith('verb_go');
+    expect(btn.classList.contains('active')).toBe(true);
+  });
+});
