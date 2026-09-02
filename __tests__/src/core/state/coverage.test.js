@@ -98,7 +98,7 @@ it('sorts multiple weak points by ascending accuracy', () => {
   ]);
 });
 
-it('covers streak reset after a gap and favorite no-op guards', () => {
+it('covers new streak after a gap and favorite no-op guards', () => {
   const yesterday = new Date('2026-08-31T12:00:00').toDateString();
   localStorage.setItem(
     'conjumaster_data',
@@ -106,7 +106,7 @@ it('covers streak reset after a gap and favorite no-op guards', () => {
   );
   vi.setSystemTime(new Date('2026-09-03T12:00:00'));
   State.init();
-  expect(State.data.daysStreak).toBe(0);
+  expect(State.data.daysStreak).toBe(1);
   expect(State.data.lastActiveDate).toBe(new Date('2026-09-03T12:00:00').toDateString());
   State.addFavorite('x');
   State.addFavorite('x');

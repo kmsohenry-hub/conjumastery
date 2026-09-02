@@ -51,8 +51,8 @@ const State = {
         // Jour consécutif — incrémente et marque aujourd'hui.
         store.setState({ daysStreak: state.daysStreak + 1, lastActiveDate: todayStr });
       } else if (diff > 1) {
-        // Série brisée — remise à zéro et marque aujourd'hui.
-        store.setState({ daysStreak: 0, lastActiveDate: todayStr });
+        // Série brisée — la nouvelle activité démarre une nouvelle série.
+        store.setState({ daysStreak: 1, lastActiveDate: todayStr });
       }
       // diff < 0 (horloge incohérente / date future) → on ignore sans
       // modifier lastActiveDate pour ne pas casser une série valide.
@@ -63,6 +63,9 @@ const State = {
   },
 
   addXP(amount) {
+    // Toute activité qui accorde des XP doit d'abord synchroniser la série
+    // quotidienne, y compris lorsqu'un onglet est resté ouvert après minuit.
+    this.checkStreak();
     store.addXP(amount);
     this.save();
   },

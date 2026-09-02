@@ -662,7 +662,7 @@ describe('checkStreak', () => {
     expect(State.data.lastActiveDate).toBe('Sat Jan 11 2025');
   });
 
-  test('saut de plusieurs jours remet la série à 0', () => {
+  test('saut de plusieurs jours démarre une nouvelle série à 1', () => {
     vi.setSystemTime(new Date('2025-01-13T09:00:00'));
     State.data = {
       ...State.data,
@@ -670,8 +670,26 @@ describe('checkStreak', () => {
       daysStreak: 6,
     };
     State.checkStreak();
-    expect(State.data.daysStreak).toBe(0);
+    expect(State.data.daysStreak).toBe(1);
     expect(State.data.lastActiveDate).toBe('Mon Jan 13 2025');
+  });
+
+  test("activité du jour suivant sans reload incrémente le streak avant d'enregistrer les XP", () => {
+    vi.setSystemTime(new Date('2025-01-10T23:59:00'));
+    State.data = {
+      ...State.data,
+      lastActiveDate: 'Fri Jan 10 2025',
+      daysStreak: 4,
+      xp: 100,
+      activityLog: [],
+    };
+
+    vi.setSystemTime(new Date('2025-01-11T00:01:00'));
+    State.addXP(10);
+
+    expect(State.data.daysStreak).toBe(5);
+    expect(State.data.lastActiveDate).toBe('Sat Jan 11 2025');
+    expect(State.data.xp).toBe(110);
   });
 });
 
