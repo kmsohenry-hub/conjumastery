@@ -401,6 +401,10 @@ function updateUI() {
 
 export function init() {
   State.init();
+  const irregularVerbCount = document.getElementById('irregularVerbCount');
+  if (irregularVerbCount) {
+    irregularVerbCount.textContent = String(APP_DATA.irregularVerbs.length);
+  }
   NotificationManager.init();
   updateUI();
   navigateTo('dashboard');
