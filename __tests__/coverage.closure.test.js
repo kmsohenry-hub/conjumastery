@@ -41,6 +41,11 @@ describe('coverage closure integration', () => {
       JSON.stringify({ ...snapshot, settings: { ...snapshot.settings, theme: 'dark' } }),
     );
     expect(() => init()).not.toThrow();
+    const irregularVerbCount = document.getElementById('irregularVerbCount');
+    expect(irregularVerbCount?.textContent).toBe(String(APP_DATA.irregularVerbs.length));
+    expect(document.body.textContent).not.toContain('Plus de 200');
+    document.getElementById('irregularVerbCount')?.remove();
+    expect(() => init()).not.toThrow();
     localStorage.removeItem('conjumaster_data');
     State.data.settings.theme = 'light';
     expect(() => init()).not.toThrow();

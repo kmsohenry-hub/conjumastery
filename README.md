@@ -58,7 +58,7 @@
 
 ### 📖 Références complètes
 
-- **Dictionnaire de verbes** : Plus de 200 verbes irréguliers consultables
+- **Dictionnaire de verbes** : 143 verbes irréguliers consultables
 - **Tableau comparatif** : Tous les temps verbaux côte à côte
 - **Mode sombre intégré** : Confort de lecture optimal
 
@@ -238,7 +238,7 @@ Utilisateur → Interface (`src/ui/`)
 
 ## ✅ Tests unitaires
 
-Le projet inclut une suite de tests avec **Vitest** pour garantir la fiabilité du code.
+Le projet inclut une suite de tests avec **Vitest** pour garantir la fiabilité du code. La suite actuellement exécutée compte **27 fichiers de test et 294 tests**, tous passés lors de l’audit fonctionnel du 2 septembre 2026.
 
 ### Couverture des tests
 
@@ -246,9 +246,12 @@ Le projet inclut une suite de tests avec **Vitest** pour garantir la fiabilité 
 - ✅ **Système de favoris** : Ajout, suppression, vérification
 - ✅ **Points faibles** : Identification des temps à réviser
 - ✅ **Moteur de conjugaison** : Tous les temps verbaux
-- ✅ **Générateur de questions** : QCM, fill-in-the-blank, transformations
+- ✅ **Générateur de questions** : QCM, phrases à compléter, transformations, correction d'erreurs et traductions
+- ✅ **Validation des réponses** : casse, espaces, apostrophes et variantes exactes (ex. BrE/AmE)
+- ✅ **Navigation et accessibilité** : routage des pages, thème, barre latérale, modales, clavier et focus
 - ✅ **Répétition espacée** : Algorithmes de révision
 - ✅ **Structure des données** : Validation de APP_DATA
+- ✅ **Sécurité** : validation des imports, nettoyage des entrées et régressions XSS
 
 ### Exécuter les tests
 
@@ -272,7 +275,7 @@ npm run test:coverage
 
 ### Analyse de sécurité
 
-✅ **Aucune vulnérabilité critique détectée**
+✅ **Contrôles de sécurité applicatifs validés** : 11 tests dédiés à la sécurité et aux régressions XSS passent actuellement.
 
 #### Points forts
 
@@ -285,18 +288,23 @@ npm run test:coverage
 
 - Validation des entrées utilisateur
 - Échappement du contenu HTML dynamique
-- Politique de sécurité CSP recommandée
+- Politique de sécurité CSP active dans `index.html`
 
-#### Recommandation CSP
+#### CSP actuellement déployée
 
-Ajoutez cette balise dans `<head>` de `index.html` pour renforcer la sécurité :
+La page principale applique déjà une Content Security Policy via une balise `<meta>` dans `index.html`. Elle couvre notamment :
 
-```html
-<meta
-  http-equiv="Content-Security-Policy"
-  content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
-/>
-```
+- `default-src 'self'` : ressources limitées par défaut à l’origine de l’application
+- `script-src 'self' 'unsafe-inline'` : scripts locaux et inline nécessaires au fonctionnement actuel
+- `style-src 'self' 'unsafe-inline'` : styles locaux et inline utilisés par l’interface
+- `img-src 'self' data:` : images locales et données inline
+- `connect-src 'self'` : connexions limitées à l’origine de l’application
+- `object-src 'none'` : désactivation des plugins/objets embarqués
+- `base-uri 'self'` : base URL limitée à l’origine de l’application
+- `form-action 'self'` : soumissions de formulaires limitées à l’origine de l’application
+- `frame-ancestors 'none'` : interdiction de l’encapsulation de l’application dans une iframe
+
+Aucune étape d’installation supplémentaire n’est nécessaire pour activer cette CSP. Tout durcissement futur doit être traité comme une évolution distincte et vérifié contre les besoins réels de l’application.
 
 ---
 
@@ -386,7 +394,7 @@ npm test
 
 ```bash
 git add .
-git commit -m "feat: ajout de [description]"
+git commit -m \"feat: ajout de [description]\"
 git push origin feature/nouvelle-fonctionnalite
 ```
 
