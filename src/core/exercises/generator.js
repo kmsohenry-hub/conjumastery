@@ -296,7 +296,16 @@ export function generateTransform(tense, subj, verb, is3rdSing) {
     affirmative = `${subj} ${correctForm}.`;
     const s = ['I', 'John', 'Sarah'].includes(subj) ? subj : subj.toLowerCase();
     if (tense.id === 'present_continuous' || tense.id === 'past_continuous') {
-      const aux = correctForm.split(' ')[0]; // am/is/are/was/were
+      const aux =
+        tense.id === 'past_continuous'
+          ? is3rdSing
+            ? 'was'
+            : 'were'
+          : subj === 'I'
+            ? 'am'
+            : is3rdSing
+              ? 'is'
+              : 'are';
       const ingForm = getIngForm(verb);
       negative = `${subj} ${aux} not ${ingForm}.`;
       question = `${aux.charAt(0).toUpperCase() + aux.slice(1)} ${s} ${ingForm}?`;
