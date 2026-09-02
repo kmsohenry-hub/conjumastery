@@ -333,10 +333,9 @@ describe('coverage closure integration', () => {
     Stats.renderStats();
     Tenses.renderTenses();
     Tenses.renderComparison();
-    for (const level of ['beginner', 'intermediate', 'advanced'])
-      Tenses.showTenseCategory(APP_DATA.tenses[0].category, {
-        classList: { add() {}, remove() {} },
-      });
+    Tenses.showTenseCategory(APP_DATA.tenses[0].category, {
+      classList: { add() {}, remove() {} },
+    });
     const originalTenses = APP_DATA.tenses.slice();
     const originalMap = { ...APP_DATA.tensesById };
     APP_DATA.tenses = [

@@ -1,4 +1,4 @@
-const { APP_DATA, State, ExerciseEngine, answerMatches, validateImportedState, init } =
+const { APP_DATA, State, ExerciseEngine, answerMatches, validateImportedState } =
   await import('../app.js');
 const appWindow = global.window;
 
@@ -8,7 +8,6 @@ const appWindow = global.window;
  */
 
 import { describe, test, expect, beforeEach, vi } from 'vitest';
-import fs from 'node:fs';
 
 // Vitest compatibility for Bun
 if (typeof vi === 'undefined') {
