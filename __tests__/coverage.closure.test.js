@@ -562,4 +562,3 @@ describe('coverage closure integration', () => {
     launchConfetti(1);
   });
 });
-
