@@ -1,5 +1,6 @@
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
+import { escapeHtml } from '../../core/security.js';
 
 export function renderFavorites() {
   const container = document.getElementById('favoritesContent');
@@ -18,8 +19,8 @@ export function renderFavorites() {
         const verb = APP_DATA.verbsByBase[verbName];
         if (verb) {
           return `<div class="verb-card" style="cursor:default">
-          <span class="verb-base">${verb.base}</span> → <span style="color:var(--accent)">${verb.past}</span> → <span style="color:var(--secondary)">${verb.pp}</span>
-          <span style="color:var(--text-light);margin-left:8px">${verb.meaning}</span>
+          <span class="verb-base">${escapeHtml(verb.base)}</span> → <span style="color:var(--accent)">${escapeHtml(verb.past)}</span> → <span style="color:var(--secondary)">${escapeHtml(verb.pp)}</span>
+          <span style="color:var(--text-light);margin-left:8px">${escapeHtml(verb.meaning)}</span>
           <button class="fav-btn active" style="margin-left:auto" onclick="toggleFav('${f}', this)">★</button>
         </div>`;
         }
@@ -29,8 +30,8 @@ export function renderFavorites() {
           return `<div class="lesson-card" onclick="openTenseModal(APP_DATA.tensesById['${f}'])">
           <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">📖</div>
           <div class="lesson-info">
-            <div class="lesson-title">${tense.nameFR}</div>
-            <div class="lesson-desc">${tense.explanation.substring(0, 80)}...</div>
+            <div class="lesson-title">${escapeHtml(tense.nameFR)}</div>
+            <div class="lesson-desc">${escapeHtml(tense.explanation.substring(0, 80))}...</div>
           </div>
           <button class="fav-btn active" onclick="event.stopPropagation();toggleFav('${f}', this)">★</button>
         </div>`;
