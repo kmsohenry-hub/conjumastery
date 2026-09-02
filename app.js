@@ -399,7 +399,7 @@ function updateUI() {
 // 22. INITIALIZATION
 // ============================================================
 
-function init() {
+export function init() {
   State.init();
   NotificationManager.init();
   updateUI();

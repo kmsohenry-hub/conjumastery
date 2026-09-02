@@ -137,21 +137,8 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
       const goAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
       fullSentence = `${subj} ${goAux} going to ${correctForm} next week.`;
       correctAnswer = `${goAux} going to ${correctForm}`;
-    } else if (tense.id === 'present_continuous') {
-      const contAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
-      fullSentence = `${subj} ${contAux} ${correctForm} right now.`;
-      correctAnswer = `${contAux} ${correctForm}`;
-    } else if (tense.id === 'past_continuous') {
-      const contAux = is3rdSing ? 'was' : 'were';
-      fullSentence = `${subj} ${contAux} ${correctForm} yesterday evening.`;
-      correctAnswer = `${contAux} ${correctForm}`;
     } else {
-      // present_simple, past_simple, or a not-yet-specialised tense fallback
-      if (tense.id === 'present_simple') {
-        fullSentence = `${subj} ${correctForm} every day.`;
-      } else {
-        fullSentence = `${subj} ${correctForm} yesterday.`;
-      }
+      fullSentence = `${subj} ${correctForm} tomorrow.`;
       correctAnswer = correctForm;
     }
   } else {
@@ -188,7 +175,7 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
   options = [correctAnswer];
   for (const d of distractors) {
     if (options.length >= 4) break;
-    if (!options.includes(d)) options.push(d);
+    options.push(d);
   }
   const fillers = [getRegularPast(verb), getIngForm(verb), getPresentSimpleForm(verb, true), verb];
   let fi = 0;

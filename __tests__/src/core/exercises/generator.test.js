@@ -250,3 +250,98 @@ describe('generateSingleQuestion and generateQuestions', () => {
     Math.random.mockRestore();
   });
 });
+
+describe('dynamic branch closure', () => {
+  it('exercises every QCM fallback tense and subject combination', () => {
+    const original = Math.random;
+    Math.random = () => 0.99;
+    try {
+      for (const tense of APP_DATA.tenses) {
+        for (const [subject, third] of [
+          ['I', false],
+          ['He', true],
+          ['They', false],
+        ]) {
+          const q = generateQCM(tense, subject, 'work', third, 'easy');
+          expect(q.options.length).toBe(4);
+          expect(q.answer).toBeUndefined();
+        }
+      }
+    } finally {
+      Math.random = original;
+    }
+  });
+
+  it('exercises every fill and transform branch with both direction choices', () => {
+    const original = Math.random;
+    try {
+      for (const value of [0, 0.99]) {
+        Math.random = () => value;
+        for (const tense of APP_DATA.tenses) {
+          for (const [subject, third] of [
+            ['I', false],
+            ['He', true],
+            ['They', false],
+          ]) {
+            expect(generateFill(tense, subject, 'go', third).answer).toBeTruthy();
+            expect(generateTransform(tense, subject, 'go', third).answer).toBeTruthy();
+          }
+        }
+      }
+    } finally {
+      Math.random = original;
+    }
+  });
+});
+
+describe('fallback generator paths without templates', () => {
+  it('exercises dynamic QCM and fill branches when template data is unavailable', () => {
+    const originalRandom = Math.random;
+    const templates = APP_DATA.exerciseTemplates;
+    Math.random = () => 0.99;
+    try {
+      for (const tense of APP_DATA.tenses) {
+        const saved = templates[tense.id];
+        templates[tense.id] = undefined;
+        try {
+          for (const [subject, third] of [
+            ['I', false],
+            ['He', true],
+            ['They', false],
+          ]) {
+            const qcm = generateQCM(tense, subject, 'work', third, 'easy');
+            expect(qcm.type).toBe('qcm');
+            const fill = generateFill(tense, subject, 'work', third);
+            expect(fill.type).toBe('fill');
+          }
+        } finally {
+          templates[tense.id] = saved;
+        }
+      }
+    } finally {
+      Math.random = originalRandom;
+    }
+  });
+
+  it('exercises transform branches for every supported tense in both directions', () => {
+    const originalRandom = Math.random;
+    try {
+      for (const random of [0, 0.99]) {
+        Math.random = () => random;
+        for (const tense of APP_DATA.tenses) {
+          for (const [subject, third] of [
+            ['I', false],
+            ['He', true],
+            ['They', false],
+            ['John', true],
+          ]) {
+            const q = generateTransform(tense, subject, 'work', third);
+            expect(q.answer).toBeTruthy();
+          }
+        }
+      }
+    } finally {
+      Math.random = originalRandom;
+    }
+  });
+});

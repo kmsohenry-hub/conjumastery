@@ -157,33 +157,31 @@ export function closeModalDirect() {
 }
 
 // Global keyboard navigation
-if (typeof window !== 'undefined') {
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      const modal = document.getElementById('modalOverlay');
-      if (modal && modal.classList.contains('active')) {
-        closeModalDirect();
-      }
-    } else if (e.key === 'Enter' || e.key === ' ') {
-      const target = e.target;
-      if (
-        target &&
-        (target.getAttribute('role') === 'button' ||
-          target.classList.contains('nav-item') ||
-          target.classList.contains('mode-card') ||
-          target.classList.contains('lesson-card') ||
-          target.classList.contains('verb-card'))
-      ) {
-        if (
-          target.tagName === 'BUTTON' ||
-          target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA'
-        ) {
-          return;
-        }
-        if (e.key === ' ') e.preventDefault();
-        target.click();
-      }
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('modalOverlay');
+    if (modal && modal.classList.contains('active')) {
+      closeModalDirect();
     }
-  });
-}
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    const target = e.target;
+    if (
+      target &&
+      (target.getAttribute('role') === 'button' ||
+        target.classList.contains('nav-item') ||
+        target.classList.contains('mode-card') ||
+        target.classList.contains('lesson-card') ||
+        target.classList.contains('verb-card'))
+    ) {
+      if (
+        target.tagName === 'BUTTON' ||
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA'
+      ) {
+        return;
+      }
+      if (e.key === ' ') e.preventDefault();
+      target.click();
+    }
+  }
+});

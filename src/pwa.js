@@ -4,11 +4,8 @@ export function updateOnlineStatus() {
   indicator.hidden = navigator.onLine;
 }
 
-window.addEventListener('online', updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-updateOnlineStatus();
-
-if ('serviceWorker' in navigator && typeof window !== 'undefined' && !window.__VITEST__) {
+export function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('./sw.js')
@@ -27,3 +24,8 @@ if ('serviceWorker' in navigator && typeof window !== 'undefined' && !window.__V
       .catch(() => {});
   });
 }
+
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+registerServiceWorker();

@@ -222,3 +222,22 @@ describe('NotificationManager.sendNotification', () => {
     );
   });
 });
+
+it('covers the empty review queue with no last active date', () => {
+  if (!('Notification' in window)) return;
+  const originalPermission = Notification.permission;
+  Object.defineProperty(Notification, 'permission', { configurable: true, value: 'granted' });
+  const oldQueue = State.getReviewQueue;
+  State.getReviewQueue = vi.fn().mockReturnValue([]);
+  const oldDate = State.data.lastActiveDate;
+  State.data.lastActiveDate = null;
+  NotificationManager.lastNotificationTime = 0;
+  NotificationManager.minInterval = 1;
+  expect(() => NotificationManager.checkAndNotify()).not.toThrow();
+  State.getReviewQueue = oldQueue;
+  State.data.lastActiveDate = oldDate;
+  Object.defineProperty(Notification, 'permission', {
+    configurable: true,
+    value: originalPermission,
+  });
+});

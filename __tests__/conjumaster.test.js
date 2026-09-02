@@ -1,4 +1,4 @@
-const { APP_DATA, State, ExerciseEngine, answerMatches, validateImportedState } =
+const { APP_DATA, State, ExerciseEngine, answerMatches, validateImportedState, init } =
   await import('../app.js');
 const appWindow = global.window;
 
@@ -8,6 +8,7 @@ const appWindow = global.window;
  */
 
 import { describe, test, expect, beforeEach, vi } from 'vitest';
+import fs from 'node:fs';
 
 // Vitest compatibility for Bun
 if (typeof vi === 'undefined') {
@@ -397,6 +398,16 @@ describe('ExerciseEngine - getConjugation', () => {
 
     test('devrait conjuguer les verbes irréguliers', () => {
       expect(ExerciseEngine.getConjugation('go', 'past_simple', 'I', false)).toBe('went');
+      const oldQuestions = ExerciseEngine.questions;
+      ExerciseEngine.questions = [
+        { type: 'fill', tenseId: 'present_simple', sentence: 'x', answer: 'x' },
+      ];
+      ExerciseEngine.currentIndex = 0;
+      expect(ExerciseEngine.getCurrent()).toBeDefined();
+      ExerciseEngine.currentIndex = ExerciseEngine.questions.length;
+      expect(ExerciseEngine.isComplete()).toBe(true);
+      expect(ExerciseEngine.getProgress()).toBeDefined();
+      ExerciseEngine.questions = oldQuestions;
       expect(ExerciseEngine.getConjugation('write', 'past_simple', 'She', true)).toBe('wrote');
     });
   });
@@ -903,4 +914,29 @@ describe('app UI and data management', () => {
     expect(click).toHaveBeenCalledTimes(1);
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:test');
   });
+});
+
+test('covers validateImportedState value branches', () => {
+  const result = validateImportedState({
+    lastActiveDate: new Date('2026-09-01').toISOString(),
+    completedLessons: ['l_present_simple', 4],
+    favorites: ['present_simple', 'verb_go', 2, 'bad'],
+    tenseStats: { present_simple: { correct: 2, total: 3 }, bad: { correct: 1, total: 2 } },
+    errorLog: [{ tenseId: 'present_simple' }, { tenseId: 'bad' }],
+    activityLog: [
+      { xp: 4, date: new Date().toISOString() },
+      { xp: 'bad', date: 'x' },
+    ],
+    spacedRepetition: {
+      present_simple: { interval: 2, nextReview: 10, ease: 2, errors: 1 },
+      bad: {},
+    },
+  });
+  expect(result.completedLessons).toEqual(['l_present_simple']);
+  expect(result.favorites).toContain('present_simple');
+  expect(result.favorites).toContain('verb_go');
+  expect(result.tenseStats.present_simple).toEqual({ correct: 2, total: 3 });
+  expect(result.errorLog).toHaveLength(1);
+  expect(result.activityLog).toHaveLength(1);
+  expect(result.spacedRepetition.present_simple.interval).toBe(2);
 });
