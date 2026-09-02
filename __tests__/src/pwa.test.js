@@ -6,9 +6,26 @@ beforeEach(() => {
 });
 
 describe('pwa module', () => {
-  it('updates offline indicator based on navigator.onLine', () => {
-    const indicator = document.getElementById('offlineIndicator');
+  it('shows the offline indicator when the browser is offline', () => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
+
     updateOnlineStatus();
-    expect(indicator.hidden).toBe(navigator.onLine);
+
+    expect(document.getElementById('offlineIndicator').hidden).toBe(false);
+  });
+
+  it('hides the offline indicator when the browser is online', () => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+
+    updateOnlineStatus();
+
+    expect(document.getElementById('offlineIndicator').hidden).toBe(true);
+  });
+
+  it('does nothing when the offline indicator is absent', () => {
+    document.body.innerHTML = '';
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
+
+    expect(() => updateOnlineStatus()).not.toThrow();
   });
 });
