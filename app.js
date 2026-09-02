@@ -204,8 +204,27 @@ function cleanNumber(value, fallback = 0, min = 0) {
   return typeof value === 'number' && Number.isFinite(value) && value >= min ? value : fallback;
 }
 
-function cleanStringArray(value) {
-  return Array.isArray(value) ? value.filter((item) => typeof item === 'string') : [];
+function cleanCompletedLessons(value) {
+  if (!Array.isArray(value)) return [];
+  const validLessonIds = new Set(
+    APP_DATA.modules.flatMap((mod) => mod.lessons.map((lesson) => lesson.id)),
+  );
+  return value.filter((item) => typeof item === 'string' && validLessonIds.has(item));
+}
+
+function cleanFavorites(value) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => {
+    if (typeof item !== 'string') return false;
+    if (APP_DATA.tensesById[item]) return true;
+    if (!item.startsWith('verb_')) return false;
+    return Boolean(APP_DATA.verbsByBase[item.slice('verb_'.length)]);
+  });
+}
+
+function cleanLastActiveDate(value) {
+  if (typeof value !== 'string' || !Number.isFinite(Date.parse(value))) return null;
+  return new Date(value).toDateString();
 }
 
 function cleanTenseStats(value) {
@@ -278,12 +297,12 @@ export function validateImportedState(raw) {
     bestStreak: cleanNumber(data.bestStreak),
     currentStreak: cleanNumber(data.currentStreak),
     daysStreak: cleanNumber(data.daysStreak),
-    lastActiveDate: typeof data.lastActiveDate === 'string' ? data.lastActiveDate : null,
-    completedLessons: cleanStringArray(data.completedLessons),
+    lastActiveDate: cleanLastActiveDate(data.lastActiveDate),
+    completedLessons: cleanCompletedLessons(data.completedLessons),
     tenseStats: cleanTenseStats(data.tenseStats),
     errorLog: cleanErrorLog(data.errorLog),
     activityLog: cleanActivityLog(data.activityLog),
-    favorites: cleanStringArray(data.favorites),
+    favorites: cleanFavorites(data.favorites),
     spacedRepetition: cleanSpacedRepetition(data.spacedRepetition),
     settings: { theme: settings.theme === 'dark' ? 'dark' : 'light' },
   };

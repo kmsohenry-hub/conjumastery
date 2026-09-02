@@ -157,7 +157,7 @@ describe('validateImportedState', () => {
     const imported = validateImportedState({
       xp: 120,
       level: 'bad',
-      completedLessons: ['lesson_1', 42],
+      completedLessons: ['l_present_simple', 42],
       favorites: ['present_simple', null],
       tenseStats: {
         present_simple: { correct: 2, total: 3 },
@@ -174,7 +174,7 @@ describe('validateImportedState', () => {
 
     expect(imported.xp).toBe(120);
     expect(imported.level).toBe(1);
-    expect(imported.completedLessons).toEqual(['lesson_1']);
+    expect(imported.completedLessons).toEqual(['l_present_simple']);
     expect(imported.favorites).toEqual(['present_simple']);
     expect(imported.tenseStats.present_simple).toEqual({ correct: 2, total: 3 });
     expect(imported.tenseStats.broken).toBeUndefined();
@@ -188,6 +188,24 @@ describe('validateImportedState', () => {
   test('rejette les sauvegardes qui ne sont pas des objets', () => {
     expect(() => validateImportedState(null)).toThrow('Invalid backup format');
     expect(() => validateImportedState('bad')).toThrow('Invalid backup format');
+  });
+
+  test('filtre les leçons et favoris qui ne correspondent pas au référentiel', () => {
+    const imported = validateImportedState({
+      completedLessons: ['l_present_simple', 'lesson_unknown', '<img src=x>'],
+      favorites: ['present_simple', 'missing_tense', 'verb_go', 'verb_missing'],
+    });
+
+    expect(imported.completedLessons).toEqual(['l_present_simple']);
+    expect(imported.favorites).toEqual(['present_simple', 'verb_go']);
+  });
+
+  test('ignore une date d’activité importée invalide', () => {
+    const imported = validateImportedState({
+      lastActiveDate: '<img src=x onerror=alert(1)>',
+    });
+
+    expect(imported.lastActiveDate).toBeNull();
   });
 });
 
