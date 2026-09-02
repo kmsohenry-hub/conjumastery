@@ -166,6 +166,15 @@ export function getConjugation(verbsByBase, verb, tenseId, subject, is3rdSing) {
       return pp;
     case 'future_perfect_continuous':
       return getIngForm(verb);
+    case 'conditional_0':
+      return getPresentSimpleForm(verb, is3rdSing);
+    case 'conditional_1':
+    case 'mixed_conditional':
+      return verb;
+    case 'conditional_2':
+      return past;
+    case 'conditional_3':
+      return pp;
     default:
       return verb;
   }

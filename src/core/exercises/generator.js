@@ -31,6 +31,11 @@ function buildSentenceForTense(tenseId, subj, verb, is3rdSing, context = 'practi
     future_continuous: `${subj} will be ${ing} tomorrow evening.`,
     future_perfect: `${subj} will have ${pp} by tomorrow.`,
     future_perfect_continuous: `${subj} will have been ${ing} for two hours by then.`,
+    conditional_0: `If ${subj} ${present}, ${subj} ${present}.`,
+    conditional_1: `If ${subj} ${present}, ${subj} will ${verb}.`,
+    conditional_2: `If ${subj} ${past}, ${subj} would ${verb}.`,
+    conditional_3: `If ${subj} had ${pp}, ${subj} would have ${pp}.`,
+    mixed_conditional: `If ${subj} had ${pp}, ${subj} would ${verb}.`,
   };
 
   return sentences[tenseId] || `${subj} ${present} ${context}.`;
@@ -58,6 +63,11 @@ function buildIncorrectSentenceForTense(tenseId, subj, verb, is3rdSing) {
     future_continuous: `${subj} will ${ing} tomorrow evening.`,
     future_perfect: `${subj} will ${pp} by tomorrow.`,
     future_perfect_continuous: `${subj} will have ${ing} for two hours by then.`,
+    conditional_0: `If ${subj} ${verb}, ${subj} ${present}.`,
+    conditional_1: `If ${subj} ${past}, ${subj} will ${verb}.`,
+    conditional_2: `If ${subj} ${present}, ${subj} would ${verb}.`,
+    conditional_3: `If ${subj} ${past}, ${subj} would have ${pp}.`,
+    mixed_conditional: `If ${subj} ${present}, ${subj} would ${verb}.`,
   };
 
   return incorrect[tenseId] === correct ? `${subj} ${verb} yesterday.` : incorrect[tenseId];
@@ -92,7 +102,25 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
   }
 
   // DYNAMIC GENERATION (Fallback)
-  if (
+  if (tense.id === 'conditional_0') {
+    correctAnswer = getPresentSimpleForm(verb, is3rdSing);
+    fullSentence = `If ${subj} ___, ${subj} ${correctAnswer}.`;
+  } else if (tense.id === 'conditional_1') {
+    correctAnswer = getPresentSimpleForm(verb, is3rdSing);
+    fullSentence = `If ${subj} ___, ${subj} will ${verb}.`;
+  } else if (tense.id === 'conditional_2') {
+    const { past: pastForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
+    correctAnswer = pastForm;
+    fullSentence = `If ${subj} ___, ${subj} would ${verb}.`;
+  } else if (tense.id === 'conditional_3') {
+    const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
+    correctAnswer = ppForm;
+    fullSentence = `If ${subj} had ___, ${subj} would have ${ppForm}.`;
+  } else if (tense.id === 'mixed_conditional') {
+    const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
+    correctAnswer = ppForm;
+    fullSentence = `If ${subj} had ___, ${subj} would ${verb}.`;
+  } else if (
     tense.id.includes('perfect') ||
     tense.id.includes('continuous') ||
     tense.id.includes('future')
@@ -247,6 +275,47 @@ export function generateFill(tense, subj, verb, is3rdSing) {
     const contAux = is3rdSing ? 'was' : 'were';
     fullSentence = `${subj} ___ (${verb}) when I arrived.`;
     answer = `${contAux} ${getIngForm(verb)}`;
+  } else if (tense.id === 'present_perfect_continuous') {
+    const hasAux = is3rdSing ? 'has' : 'have';
+    fullSentence = `${subj} ___ (${verb}) for two hours.`;
+    answer = `${hasAux} been ${getIngForm(verb)}`;
+  } else if (tense.id === 'past_perfect') {
+    const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
+    fullSentence = `${subj} ___ (${verb}) before I arrived.`;
+    answer = `had ${ppForm}`;
+  } else if (tense.id === 'past_perfect_continuous') {
+    fullSentence = `${subj} ___ (${verb}) for two hours before I arrived.`;
+    answer = `had been ${getIngForm(verb)}`;
+  } else if (tense.id === 'future_continuous') {
+    fullSentence = `${subj} ___ (${verb}) tomorrow evening.`;
+    answer = `will be ${getIngForm(verb)}`;
+  } else if (tense.id === 'future_perfect') {
+    const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
+    fullSentence = `${subj} ___ (${verb}) by tomorrow.`;
+    answer = `will have ${ppForm}`;
+  } else if (tense.id === 'future_perfect_continuous') {
+    fullSentence = `${subj} ___ (${verb}) for two hours by then.`;
+    answer = `will have been ${getIngForm(verb)}`;
+  } else if (tense.id === 'conditional_0') {
+    const present = getPresentSimpleForm(verb, is3rdSing);
+    fullSentence = `If ${subj} ___, ${subj} ${present}.`;
+    answer = present;
+  } else if (tense.id === 'conditional_1') {
+    const present = getPresentSimpleForm(verb, is3rdSing);
+    fullSentence = `If ${subj} ___, ${subj} will ${verb}.`;
+    answer = present;
+  } else if (tense.id === 'conditional_2') {
+    const { past: pastForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
+    fullSentence = `If ${subj} ___, ${subj} would ${verb}.`;
+    answer = pastForm;
+  } else if (tense.id === 'conditional_3') {
+    const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
+    fullSentence = `If ${subj} had ___, ${subj} would have ${ppForm}.`;
+    answer = ppForm;
+  } else if (tense.id === 'mixed_conditional') {
+    const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
+    fullSentence = `If ${subj} had ___, ${subj} would ${verb}.`;
+    answer = ppForm;
   } else {
     const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
     const hasAux = is3rdSing ? 'has' : 'have';
@@ -264,7 +333,6 @@ export function generateFill(tense, subj, verb, is3rdSing) {
 }
 
 export function generateTransform(tense, subj, verb, is3rdSing) {
-  const correctForm = getConjugation(APP_DATA.verbsByBase, verb, tense.id, subj, is3rdSing);
   let affirmative, negative, question;
 
   if (tense.id === 'present_simple') {
@@ -280,9 +348,30 @@ export function generateTransform(tense, subj, verb, is3rdSing) {
     const s = ['I', 'John', 'Sarah'].includes(subj) ? subj : subj.toLowerCase();
     question = `Did ${s} ${verb} yesterday?`;
   } else {
-    affirmative = `${subj} ${correctForm}.`;
+    affirmative = buildSentenceForTense(tense.id, subj, verb, is3rdSing);
     const s = ['I', 'John', 'Sarah'].includes(subj) ? subj : subj.toLowerCase();
-    if (tense.id === 'present_continuous' || tense.id === 'past_continuous') {
+    if (tense.id === 'conditional_0') {
+      const present = getPresentSimpleForm(verb, is3rdSing);
+      negative = `If ${subj} ${is3rdSing ? "doesn't" : "don't"} ${verb}, ${subj} ${is3rdSing ? "doesn't" : "don't"} ${verb}.`;
+      question = `If ${subj} ${present}, ${is3rdSing ? 'Does' : 'Do'} ${s} ${verb}?`;
+    } else if (tense.id === 'conditional_1') {
+      negative = `If ${subj} ${is3rdSing ? "doesn't" : "don't"} ${verb}, ${subj} won't ${verb}.`;
+      question = `If ${subj} ${getPresentSimpleForm(verb, is3rdSing)}, will ${s} ${verb}?`;
+    } else if (tense.id === 'conditional_2') {
+      negative = `If ${subj} didn't ${verb}, ${subj} wouldn't ${verb}.`;
+      question = `If ${subj} went, would ${s} ${verb}?`.replace(
+        'went',
+        getRegularPast(verb) === 'goed' ? 'went' : getRegularPast(verb),
+      );
+    } else if (tense.id === 'conditional_3') {
+      const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
+      negative = `If ${subj} hadn't ${ppForm}, ${subj} wouldn't have ${ppForm}.`;
+      question = `If ${subj} had ${ppForm}, would ${s} have ${ppForm}?`;
+    } else if (tense.id === 'mixed_conditional') {
+      const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
+      negative = `If ${subj} hadn't ${ppForm}, ${subj} wouldn't ${verb}.`;
+      question = `If ${subj} had ${ppForm}, would ${s} ${verb}?`;
+    } else if (tense.id === 'present_continuous' || tense.id === 'past_continuous') {
       const aux =
         tense.id === 'past_continuous'
           ? is3rdSing
