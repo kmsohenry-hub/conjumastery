@@ -149,6 +149,39 @@ describe('semantic generation invariants', () => {
   });
 
   test.each([
+    ['conditional_0', /If John goes, John goes\./i],
+    ['conditional_1', /If John goes, John will go\./i],
+    ['conditional_2', /If John went, John would go\./i],
+    ['conditional_3', /If John had gone, John would have gone\./i],
+    ['mixed_conditional', /If John had gone, John would go\./i],
+  ])('correction answer is exactly aligned with conditional %s: %s', (tenseId, expected) => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    const correction = generateCorrection(tense(tenseId), 'John', 'go', true);
+
+    assertMeaningfulQuestion(correction, tenseId);
+    expect(correction.answer).toMatch(expected);
+    expect(correction.sentence).not.toMatch(expected);
+    expect(correction.explanation).toContain(correction.answer);
+    Math.random.mockRestore();
+  });
+
+  test.each([
+    ['conditional_0', /If John goes, John goes\./i],
+    ['conditional_1', /If John goes, John will go\./i],
+    ['conditional_2', /If John went, John would go\./i],
+    ['conditional_3', /If John had gone, John would have gone\./i],
+    ['mixed_conditional', /If John had gone, John would go\./i],
+  ])('translation answer is exactly aligned with conditional %s: %s', (tenseId, expected) => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    const translation = generateTranslation(tense(tenseId), 'John', 'go', true);
+
+    assertMeaningfulQuestion(translation, tenseId);
+    expect(translation.answer).toMatch(expected);
+    expect(translation.explanation).toContain(translation.answer);
+    Math.random.mockRestore();
+  });
+
+  test.each([
     'conditional_0',
     'conditional_1',
     'conditional_2',
