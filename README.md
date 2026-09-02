@@ -288,18 +288,23 @@ npm run test:coverage
 
 - Validation des entrées utilisateur
 - Échappement du contenu HTML dynamique
-- Politique de sécurité CSP recommandée
+- Politique de sécurité CSP active dans `index.html`
 
-#### Recommandation CSP
+#### CSP actuellement déployée
 
-Ajoutez cette balise dans `<head>` de `index.html` pour renforcer la sécurité :
+La page principale applique déjà une Content Security Policy via une balise `<meta>` dans `index.html`. Elle couvre notamment :
 
-```html
-<meta
-  http-equiv="Content-Security-Policy"
-  content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
-/>
-```
+- `default-src 'self'` : ressources limitées par défaut à l’origine de l’application
+- `script-src 'self' 'unsafe-inline'` : scripts locaux et inline nécessaires au fonctionnement actuel
+- `style-src 'self' 'unsafe-inline'` : styles locaux et inline utilisés par l’interface
+- `img-src 'self' data:` : images locales et données inline
+- `connect-src 'self'` : connexions limitées à l’origine de l’application
+- `object-src 'none'` : désactivation des plugins/objets embarqués
+- `base-uri 'self'` : base URL limitée à l’origine de l’application
+- `form-action 'self'` : soumissions de formulaires limitées à l’origine de l’application
+- `frame-ancestors 'none'` : interdiction de l’encapsulation de l’application dans une iframe
+
+Aucune étape d’installation supplémentaire n’est nécessaire pour activer cette CSP. Tout durcissement futur doit être traité comme une évolution distincte et vérifié contre les besoins réels de l’application.
 
 ---
 
