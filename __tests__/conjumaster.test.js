@@ -208,6 +208,12 @@ describe('validateImportedState', () => {
 
     expect(imported.lastActiveDate).toBeNull();
   });
+
+  test('ignore une date d’activité importée d’un type invalide', () => {
+    const imported = validateImportedState({ lastActiveDate: 12345 });
+
+    expect(imported.lastActiveDate).toBeNull();
+  });
 });
 
 describe('State Management', () => {
@@ -701,6 +707,30 @@ describe('app UI and data management', () => {
     expect(elements.get('streakPlural').textContent).toBe('s');
     expect(elements.get('revisionBadge').textContent).toBe(2);
     expect(Number(elements.get('lessonsBadge').textContent)).toBeGreaterThan(0);
+  });
+
+  test('updateUI tolerates missing optional badges', () => {
+    const elements = new Map();
+    const makeElement = () => ({ textContent: '', style: { width: '' } });
+    [
+      'headerXP',
+      'headerLevel',
+      'sidebarLevel',
+      'sidebarXP',
+      'sidebarXPBar',
+      'streakCount',
+      'streakPlural',
+    ].forEach((id) => {
+      elements.set(id, makeElement());
+    });
+    global.document.getElementById = vi.fn((id) => elements.get(id) || null);
+
+    State.data = { ...State.data, xp: 100, level: 2, daysStreak: 1, completedLessons: [] };
+    State.getReviewQueue = vi.fn(() => []);
+
+    expect(() => appWindow.updateUI()).not.toThrow();
+    expect(elements.get('headerXP').textContent).toBe(100);
+    expect(elements.get('streakPlural').textContent).toBe('');
   });
 
   test('resetProgress resets state after confirmation', () => {
