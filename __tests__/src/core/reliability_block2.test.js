@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createStore, defaultState, MAX_ERROR_LOG_ENTRIES, mergeStates } from '../../../src/core/state/store.js';
+import {
+  createStore,
+  defaultState,
+  MAX_ERROR_LOG_ENTRIES,
+  mergeStates,
+} from '../../../src/core/state/store.js';
 import { saveState } from '../../../src/core/persistence/storage.js';
 import { State, setupStorageSync } from '../../../src/core/state/State.js';
 import { validateImportedState } from '../../../app.js';
@@ -84,7 +89,9 @@ describe('Reliability, Quotas & Multi-tab Sync (Issues #105, #110, #109)', () =>
       const cleaned = validateImportedState(raw);
       expect(cleaned.correctAnswers).toBeGreaterThanOrEqual(15);
       expect(cleaned.totalExercises).toBeGreaterThanOrEqual(23);
-      expect(cleaned.correctAnswers + cleaned.incorrectAnswers).toBeLessThanOrEqual(cleaned.totalExercises);
+      expect(cleaned.correctAnswers + cleaned.incorrectAnswers).toBeLessThanOrEqual(
+        cleaned.totalExercises,
+      );
     });
 
     it('enforces bestStreak >= currentStreak', () => {

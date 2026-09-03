@@ -11,7 +11,9 @@ describe('Block 2 branch and line coverage completion', () => {
   });
 
   it('covers app.js conjumaster:save-error listener execution', () => {
-    document.body.innerHTML = fs.readFileSync('index.html', 'utf8').match(/<body>([\s\S]*)<\/body>/i)[1];
+    document.body.innerHTML = fs
+      .readFileSync('index.html', 'utf8')
+      .match(/<body>([\s\S]*)<\/body>/i)[1];
     init();
     window.dispatchEvent(new window.CustomEvent('conjumaster:save-error'));
     const toast = document.querySelector('.toast');
@@ -28,10 +30,14 @@ describe('Block 2 branch and line coverage completion', () => {
     window.dispatchEvent(new window.StorageEvent('storage', { key: 'other_key', newValue: '{}' }));
 
     // Empty newValue
-    window.dispatchEvent(new window.StorageEvent('storage', { key: 'conjumaster_data', newValue: null }));
+    window.dispatchEvent(
+      new window.StorageEvent('storage', { key: 'conjumaster_data', newValue: null }),
+    );
 
     // Invalid JSON
-    window.dispatchEvent(new window.StorageEvent('storage', { key: 'conjumaster_data', newValue: '{invalid' }));
+    window.dispatchEvent(
+      new window.StorageEvent('storage', { key: 'conjumaster_data', newValue: '{invalid' }),
+    );
 
     // syncExternalState with non-object
     expect(() => State.syncExternalState(null)).not.toThrow();
@@ -167,33 +173,36 @@ describe('Block 2 branch and line coverage completion', () => {
     expect(res4.lastActiveDate).toBe(olderDate);
 
     // 5. Light theme on both sides
-    const res5 = mergeStates({ ...base, settings: { theme: 'light' } }, { ...base, settings: { theme: 'light' } });
+    const res5 = mergeStates(
+      { ...base, settings: { theme: 'light' } },
+      { ...base, settings: { theme: 'light' } },
+    );
     expect(res5.settings.theme).toBe('light');
   });
 });
 
-  it('covers store.js default fallbacks for level, spacedRepetition falsy nextReview, and non-object remoteSR', () => {
-    // 1. local.level and remote.level are undefined/falsy so `|| 1` is evaluated
-    const s1 = {
-      ...defaultState,
-      level: 0,
-      xp: 0,
-      spacedRepetition: {
-        tense_a: { nextReview: 0 }, // nextReview is 0, so `Number(0) || 0` evaluates `|| 0`
-      },
-    };
-    const s2 = {
-      ...defaultState,
-      level: undefined,
-      xp: 0,
-      spacedRepetition: {
-        tense_a: { nextReview: undefined }, // evaluates `|| 0`
-      },
-    };
-    const res = mergeStates(s1, s2);
-    expect(res.level).toBe(1);
+it('covers store.js default fallbacks for level, spacedRepetition falsy nextReview, and non-object remoteSR', () => {
+  // 1. local.level and remote.level are undefined/falsy so `|| 1` is evaluated
+  const s1 = {
+    ...defaultState,
+    level: 0,
+    xp: 0,
+    spacedRepetition: {
+      tense_a: { nextReview: 0 }, // nextReview is 0, so `Number(0) || 0` evaluates `|| 0`
+    },
+  };
+  const s2 = {
+    ...defaultState,
+    level: undefined,
+    xp: 0,
+    spacedRepetition: {
+      tense_a: { nextReview: undefined }, // evaluates `|| 0`
+    },
+  };
+  const res = mergeStates(s1, s2);
+  expect(res.level).toBe(1);
 
-    // 2. remote.spacedRepetition is not a plain object (e.g. null)
-    const resNonObjSR = mergeStates(s1, { ...defaultState, spacedRepetition: null });
-    expect(resNonObjSR.spacedRepetition.tense_a).toBeDefined();
-  });
+  // 2. remote.spacedRepetition is not a plain object (e.g. null)
+  const resNonObjSR = mergeStates(s1, { ...defaultState, spacedRepetition: null });
+  expect(resNonObjSR.spacedRepetition.tense_a).toBeDefined();
+});

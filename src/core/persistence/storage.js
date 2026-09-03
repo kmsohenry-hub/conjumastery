@@ -62,9 +62,7 @@ export function sanitizeState(candidate) {
       sanitized[key] = Array.isArray(val) ? val : defaultVal;
     } else if (typeof defaultVal === 'object') {
       sanitized[key] =
-        typeof val === 'object' && !Array.isArray(val)
-          ? { ...defaultVal, ...val }
-          : defaultVal;
+        typeof val === 'object' && !Array.isArray(val) ? { ...defaultVal, ...val } : defaultVal;
     } else {
       sanitized[key] = val;
     }

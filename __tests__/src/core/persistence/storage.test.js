@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import {
-  loadState,
-  saveState,
-  STORAGE_VERSION,
-} from '../../../../src/core/persistence/storage.js';
+import { loadState, saveState, STORAGE_VERSION } from '../../../../src/core/persistence/storage.js';
 import { defaultState } from '../../../../src/core/state/store.js';
 
 describe('storage', () => {

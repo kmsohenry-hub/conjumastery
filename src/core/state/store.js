@@ -62,7 +62,10 @@ export function mergeStates(local, remote) {
     Math.floor(xp / 100) + 1,
   );
 
-  let correctAnswers = Math.max(Number(local.correctAnswers) || 0, Number(remote.correctAnswers) || 0);
+  let correctAnswers = Math.max(
+    Number(local.correctAnswers) || 0,
+    Number(remote.correctAnswers) || 0,
+  );
   const incorrectAnswers = Math.max(
     Number(local.incorrectAnswers) || 0,
     Number(remote.incorrectAnswers) || 0,
@@ -73,7 +76,10 @@ export function mergeStates(local, remote) {
     correctAnswers + incorrectAnswers,
   );
 
-  const currentStreak = Math.max(Number(local.currentStreak) || 0, Number(remote.currentStreak) || 0);
+  const currentStreak = Math.max(
+    Number(local.currentStreak) || 0,
+    Number(remote.currentStreak) || 0,
+  );
   const bestStreak = Math.max(
     Number(local.bestStreak) || 0,
     Number(remote.bestStreak) || 0,
@@ -84,7 +90,10 @@ export function mergeStates(local, remote) {
   // Date d'activité la plus récente
   let lastActiveDate = local.lastActiveDate;
   if (remote.lastActiveDate) {
-    if (!lastActiveDate || new Date(remote.lastActiveDate).getTime() > new Date(lastActiveDate).getTime()) {
+    if (
+      !lastActiveDate ||
+      new Date(remote.lastActiveDate).getTime() > new Date(lastActiveDate).getTime()
+    ) {
       lastActiveDate = remote.lastActiveDate;
     }
   }
