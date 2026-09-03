@@ -62,13 +62,21 @@ export function sanitizeState(candidate) {
       sanitized[key] = Array.isArray(val) ? val : defaultVal;
     } else if (typeof defaultVal === 'object') {
       sanitized[key] =
-        typeof val === 'object' && !Array.isArray(val)
-          ? { ...defaultVal, ...val }
-          : defaultVal;
+        typeof val === 'object' && !Array.isArray(val) ? { ...defaultVal, ...val } : defaultVal;
     } else {
       sanitized[key] = val;
     }
   }
+
+  // Invariants mathématiques et d'intégrité
+  sanitized.currentStreak = Math.max(0, Number(sanitized.currentStreak) || 0);
+  sanitized.bestStreak = Math.max(Number(sanitized.bestStreak) || 0, sanitized.currentStreak);
+  sanitized.correctAnswers = Math.max(0, Number(sanitized.correctAnswers) || 0);
+  sanitized.incorrectAnswers = Math.max(0, Number(sanitized.incorrectAnswers) || 0);
+  sanitized.totalExercises = Math.max(
+    Number(sanitized.totalExercises) || 0,
+    sanitized.correctAnswers + sanitized.incorrectAnswers,
+  );
 
   return sanitized;
 }
@@ -96,6 +104,7 @@ export function loadState(key) {
  * @param {string} key
  * @param {Object} state
  * @param {number} [version=STORAGE_VERSION]
+ * @returns {boolean} Indique si la sauvegarde locale a réussi
  */
 export function saveState(key, state, version = STORAGE_VERSION) {
   try {
@@ -104,7 +113,9 @@ export function saveState(key, state, version = STORAGE_VERSION) {
       data: state,
     };
     localStorage.setItem(key, JSON.stringify(payload));
+    return true;
   } catch (e) {
     console.error(`Failed to save state for key: ${key}`, e);
+    return false;
   }
 }

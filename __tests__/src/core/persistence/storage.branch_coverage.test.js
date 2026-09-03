@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { cloneState } from '../../../../src/core/state/store.js';
 import { sanitizeState } from '../../../../src/core/persistence/storage.js';
 

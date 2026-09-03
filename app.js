@@ -265,7 +265,7 @@ function cleanErrorLog(value) {
   return Array.isArray(value)
     ? value
         .filter((entry) => isPlainObject(entry) && APP_DATA.tensesById[entry.tenseId])
-        .slice(-500)
+        .slice(-100)
     : [];
 }
 
@@ -286,20 +286,38 @@ export function validateImportedState(raw) {
   if (!isPlainObject(raw)) throw new Error('Invalid backup format');
   const data = isPlainObject(raw.data) ? raw.data : raw;
   const settings = isPlainObject(data.settings) ? data.settings : {};
+  const tenseStats = cleanTenseStats(data.tenseStats);
+
+  let tenseCorrectSum = 0;
+  let tenseTotalSum = 0;
+  for (const s of Object.values(tenseStats)) {
+    tenseCorrectSum += s.correct;
+    tenseTotalSum += s.total;
+  }
+
+  const rawCorrect = cleanNumber(data.correctAnswers);
+  const rawIncorrect = cleanNumber(data.incorrectAnswers);
+  const rawTotal = cleanNumber(data.totalExercises);
+  const currentStreak = cleanNumber(data.currentStreak);
+  const bestStreak = Math.max(cleanNumber(data.bestStreak), currentStreak);
+
+  const correctAnswers = Math.max(rawCorrect, tenseCorrectSum);
+  const incorrectAnswers = rawIncorrect;
+  const totalExercises = Math.max(rawTotal, tenseTotalSum, correctAnswers + incorrectAnswers);
 
   return {
     ...defaultState,
     xp: cleanNumber(data.xp),
     level: cleanNumber(data.level, defaultState.level, 1),
-    totalExercises: cleanNumber(data.totalExercises),
-    correctAnswers: cleanNumber(data.correctAnswers),
-    incorrectAnswers: cleanNumber(data.incorrectAnswers),
-    bestStreak: cleanNumber(data.bestStreak),
-    currentStreak: cleanNumber(data.currentStreak),
+    totalExercises,
+    correctAnswers,
+    incorrectAnswers,
+    bestStreak,
+    currentStreak,
     daysStreak: cleanNumber(data.daysStreak),
     lastActiveDate: cleanLastActiveDate(data.lastActiveDate),
     completedLessons: cleanCompletedLessons(data.completedLessons),
-    tenseStats: cleanTenseStats(data.tenseStats),
+    tenseStats,
     errorLog: cleanErrorLog(data.errorLog),
     activityLog: cleanActivityLog(data.activityLog),
     favorites: cleanFavorites(data.favorites),
@@ -410,6 +428,9 @@ export function init() {
     irregularVerbCount.textContent = String(APP_DATA.irregularVerbs.length);
   }
   NotificationManager.init();
+  window.addEventListener('conjumaster:save-error', () => {
+    showToast('⚠️ Espace de stockage saturé : échec de sauvegarde locale', 'warning');
+  });
   updateUI();
   navigateTo('dashboard');
 
