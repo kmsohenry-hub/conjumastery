@@ -57,3 +57,13 @@ describe('service worker cache cleanup', () => {
     expect(deleted).toEqual([]);
   });
 });
+
+describe('service worker update lifecycle', () => {
+  it('activates an update only after an explicit SKIP_WAITING message', async () => {
+    const { listeners, self } = loadServiceWorker({ cacheKeys: [] });
+
+    await listeners.message({ data: { type: 'SKIP_WAITING' } });
+
+    expect(self.skipWaiting).toHaveBeenCalledOnce();
+  });
+});
