@@ -20,7 +20,8 @@ export function renderStats() {
     chartEl.innerHTML = tenses
       .map((t) => {
         const s = stats[t.id];
-        const accuracy = Math.round((s.correct / s.total) * 100);
+        const rawAccuracy = Math.round((s.correct / s.total) * 100);
+        const accuracy = Math.min(100, Math.max(0, rawAccuracy));
         const height = Math.max(accuracy, 5);
         const color =
           accuracy >= 80 ? 'var(--success)' : accuracy >= 50 ? 'var(--warning)' : 'var(--danger)';

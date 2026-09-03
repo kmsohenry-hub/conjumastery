@@ -74,8 +74,9 @@ export function renderDashboardStats(d) {
   document.getElementById('dashXP').textContent = d.xp;
   document.getElementById('dashLevel').textContent = d.level;
   document.getElementById('dashExercises').textContent = d.totalExercises;
-  const accuracy =
+  const rawAccuracy =
     d.totalExercises > 0 ? Math.round((d.correctAnswers / d.totalExercises) * 100) : 0;
+  const accuracy = Math.min(100, Math.max(0, rawAccuracy));
   document.getElementById('dashAccuracy').textContent = accuracy + '%';
 }
 
