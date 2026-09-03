@@ -1,7 +1,31 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 
+export function createServiceWorkerPlugin() {
+  const template = readFileSync(new URL('./sw.js', import.meta.url), 'utf8');
+  return {
+    name: 'service-worker-build',
+    generateBundle(_options, bundle) {
+      const precacheFiles = [
+        './',
+        './index.html',
+        ...Object.keys(bundle)
+          .filter((fileName) => fileName !== 'sw.js' && !fileName.endsWith('.map'))
+          .map((fileName) => `./${fileName}`),
+      ];
+
+      const source = template.replace(
+        '/* __PRECACHE_MANIFEST__ */ []',
+        JSON.stringify(precacheFiles),
+      );
+
+      this.emitFile({ type: 'asset', fileName: 'sw.js', source });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [],
+  plugins: [createServiceWorkerPlugin()],
   root: '.',
   base: './',
   build: {

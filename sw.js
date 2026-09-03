@@ -1,13 +1,6 @@
 /* global self, caches */
 const CACHE_NAME = 'conjumaster-v2.0.0';
-const APP_SHELL = [
-  './',
-  './index.html',
-  './style.css',
-  './manifest.webmanifest',
-  './app.js',
-  './src/pwa.js',
-];
+const APP_SHELL = /* __PRECACHE_MANIFEST__ */ [];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
