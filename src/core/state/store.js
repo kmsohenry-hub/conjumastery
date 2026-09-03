@@ -1,9 +1,9 @@
 /**
  * @module state/store
- * @description État applicatif pur + mutations.
+ * @description État applicatif pur + mutations avec isolation par clonage profond.
  */
 
-const defaultState = {
+const defaultState = Object.freeze({
   xp: 0,
   level: 1,
   totalExercises: 0,
@@ -13,18 +13,29 @@ const defaultState = {
   currentStreak: 0,
   daysStreak: 0,
   lastActiveDate: null,
-  completedLessons: [],
-  tenseStats: {},
-  errorLog: [],
-  activityLog: [],
-  favorites: [],
-  spacedRepetition: {},
-  settings: { theme: 'light' },
-};
+  completedLessons: Object.freeze([]),
+  tenseStats: Object.freeze({}),
+  errorLog: Object.freeze([]),
+  activityLog: Object.freeze([]),
+  favorites: Object.freeze([]),
+  spacedRepetition: Object.freeze({}),
+  settings: Object.freeze({ theme: 'light' }),
+});
+
+/**
+ * Crée une copie profonde et découplée d'un état.
+ * @param {Object} obj
+ * @returns {Object}
+ */
+export function cloneState(obj) {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(obj);
+  }
+  return JSON.parse(JSON.stringify(obj));
+}
 
 function createStore(initial = {}) {
-  let state = { ...defaultState, ...initial };
-
+  let state = { ...cloneState(defaultState), ...cloneState(initial) };
   const listeners = new Set();
 
   function subscribe(listener) {
@@ -128,7 +139,7 @@ function createStore(initial = {}) {
   }
 
   function reset() {
-    setState(defaultState);
+    setState(cloneState(defaultState));
   }
 
   return {
