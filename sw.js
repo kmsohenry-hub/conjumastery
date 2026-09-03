@@ -1,20 +1,16 @@
 /* global self, caches */
 const CACHE_NAME = 'conjumaster-v2.0.0';
-const APP_SHELL = [
-  './',
-  './index.html',
-  './style.css',
-  './manifest.webmanifest',
-  './app.js',
-  './src/pwa.js',
-];
+const CACHE_PREFIX = 'conjumaster-';
+const APP_SHELL = /* __PRECACHE_MANIFEST__ */ [];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
       .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting()),
+      .then(() => {
+        if (!self.registration.active) self.skipWaiting();
+      }),
   );
 });
 
@@ -23,10 +19,20 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+            .map((key) => caches.delete(key)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {

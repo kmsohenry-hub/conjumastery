@@ -48,3 +48,33 @@ describe('showToast', () => {
     expect(document.querySelector('.toast')).toBeNull();
   });
 });
+
+describe('showToast resilience', () => {
+  it('returns null when the toast container is absent', () => {
+    document.body.innerHTML = '';
+
+    expect(showToast('Impossible à afficher')).toBeNull();
+  });
+});
+
+describe('showToast actions', () => {
+  it('renders a persistent action button and runs its callback', () => {
+    const onAction = vi.fn();
+
+    showToast('Mise à jour disponible', 'info', {
+      actionLabel: 'Mettre à jour',
+      onAction,
+      duration: 0,
+    });
+
+    const button = document.querySelector('.toast-action');
+    expect(button).not.toBeNull();
+    expect(button.textContent).toBe('Mettre à jour');
+    expect(document.querySelector('.toast')).not.toBeNull();
+
+    button.click();
+
+    expect(onAction).toHaveBeenCalledOnce();
+    expect(document.querySelector('.toast')).toBeNull();
+  });
+});
