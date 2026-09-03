@@ -1,5 +1,6 @@
 /* global self, caches */
 const CACHE_NAME = 'conjumaster-v2.0.0';
+const CACHE_PREFIX = 'conjumaster-';
 const APP_SHELL = /* __PRECACHE_MANIFEST__ */ [];
 
 self.addEventListener('install', (event) => {
@@ -16,7 +17,11 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+            .map((key) => caches.delete(key)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
