@@ -313,7 +313,11 @@ export function validateImportedState(raw) {
 // ============================================================
 
 function exportData() {
-  const data = JSON.stringify(State.data, null, 2);
+  const payload = {
+    version: 1,
+    data: State.data,
+  };
+  const data = JSON.stringify(payload, null, 2);
   const blob = new Blob([data], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
