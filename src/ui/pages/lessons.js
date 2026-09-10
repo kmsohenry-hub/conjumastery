@@ -11,7 +11,7 @@ export function renderLessons() {
     .map(
       (m, i) => `
     <button class="tab ${i === 0 ? 'active' : ''}" data-action="show-module" data-index="${i}">
-      ${m.title}
+      ${m.name}
     </button>`,
     )
     .join('');
@@ -28,10 +28,12 @@ export function showModule(index, btn) {
   const completed = State.data.completedLessons;
   const content = document.getElementById('lessonContent');
 
+  if (!mod || !content) return;
+
   content.innerHTML = `
     <div style="margin-bottom:20px">
-      <h3>${mod.title}</h3>
-      <p style="color:var(--text-light)">${mod.description}</p>
+      <h3>${mod.name}</h3>
+      <p style="color:var(--text-light)">${mod.description || ''}</p>
     </div>
     <div class="card-grid">
       ${mod.lessons
@@ -41,7 +43,7 @@ export function showModule(index, btn) {
           return `
         <div class="card lesson-card ${isDone ? 'completed' : ''}" role="button" tabindex="0" data-action="open-lesson" data-lesson-id="${l.id}" data-tense-id="${l.tenseId || ''}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-            <span class="tag ${isDone ? 'tag-green' : 'tag-blue'}">${isDone ? '✓ Terminé' : l.level}</span>
+            <span class="tag ${isDone ? 'tag-green' : 'tag-blue'}">${isDone ? '✓ Terminé' : l.level || mod.level || ''}</span>
             <span style="font-size:0.8rem;color:var(--text-light)">${l.exercises} exercices</span>
           </div>
           <h3 style="margin-bottom:8px">${l.title}</h3>
@@ -68,28 +70,33 @@ export function openLesson(lessonId, tenseId) {
   else if (lessonId === 'l_reported') openReportedModal(lessonId);
 }
 
+export function openTenseModal(tense, lessonId = null) {
+  renderTenseModal(tense, lessonId);
+}
+
 function renderTenseModal(tense, lessonId) {
   const modal = document.getElementById('modalContent');
+  if (!modal || !tense) return;
   const signalWords = tense.signalWords || [];
   const commonMistakes = tense.commonMistakes || [];
 
   modal.innerHTML = `
     <div class="modal-header">
       <div>
-        <div class="modal-title" id="modalTitle">${tense.nameEN}</div>
-        <div style="color:var(--text-light);font-size:0.9rem">${tense.nameFR} • ${tense.level}</div>
+        <div class="modal-title" id="modalTitle">${tense.nameEN || tense.name || ''}</div>
+        <div style="color:var(--text-light);font-size:0.9rem">${tense.nameFR || ''} • ${tense.level || ''}</div>
       </div>
       <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
     
     <div class="explain-block">
       <h4>📝 Utilisation</h4>
-      <p>${tense.usage}</p>
+      <p>${Array.isArray(tense.usage) ? tense.usage.join(',') : tense.usage || ''}</p>
     </div>
 
     <div class="explain-block">
       <h4>🏗️ Structure</h4>
-      <p><code>${tense.structure}</code></p>
+      <p><code>${tense.structure || ''}</code></p>
     </div>
 
     ${renderTimeline(tense)}
@@ -98,9 +105,9 @@ function renderTenseModal(tense, lessonId) {
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Type</th><th>Exemple</th></tr>
-        <tr><td><strong>Affirmatif</strong></td><td>${tense.examples.affirmative}</td></tr>
-        <tr><td><strong>Négatif</strong></td><td>${tense.examples.negative}</td></tr>
-        <tr><td><strong>Interrogatif</strong></td><td>${tense.examples.interrogative}</td></tr>
+        <tr><td><strong>Affirmatif</strong></td><td>${tense.examples?.affirmative || tense.examples?.[0]?.en || ''}</td></tr>
+        <tr><td><strong>Négatif</strong></td><td>${tense.examples?.negative || ''}</td></tr>
+        <tr><td><strong>Interrogatif</strong></td><td>${tense.examples?.interrogative || ''}</td></tr>
       </table>
     </div>
 
@@ -142,6 +149,7 @@ function renderTenseModal(tense, lessonId) {
 export function openPassiveModal(lessonId = 'l_passive') {
   const modal = document.getElementById('modalContent');
   const info = APP_DATA.passiveInfo;
+  if (!modal || !info) return;
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Voix Passive</div>
@@ -173,6 +181,7 @@ export function openPassiveModal(lessonId = 'l_passive') {
 export function openReportedModal(lessonId = 'l_reported') {
   const modal = document.getElementById('modalContent');
   const info = APP_DATA.reportedSpeech;
+  if (!modal || !info) return;
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Discours Indirect (Reported Speech)</div>
@@ -266,36 +275,63 @@ export function renderTimeline(tense) {
         <div class="timeline-visual">
           <div class="timeline-now-line" style="left:50%"></div>
           <div class="timeline-point" style="left:${tl.first}%">
-            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">1er événement (${tl.firstLabel})</span>
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">1er événement</span>
           </div>
           <div class="timeline-point" style="left:${tl.second}%">
-            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">2e événement (${tl.secondLabel})</span>
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">2e événement</span>
           </div>
+        </div>`;
+      break;
+
+    case 'arrow':
+      visual = `
+        <div class="timeline-axis">
+          <div class="axis-past">Passé</div>
+          <div class="axis-now">Maintenant</div>
+          <div class="axis-future">Futur</div>
+        </div>
+        <div class="timeline-visual">
+          <div class="timeline-now-line" style="left:50%"></div>
+          <div class="timeline-arrow" style="left:${tl.start}%;width:${tl.end - tl.start}%">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">${tl.label || '→'}</span>
+          </div>
+        </div>`;
+      break;
+
+    case 'cycle':
+      visual = `
+        <div class="timeline-axis">
+          <div class="axis-past">Passé</div>
+          <div class="axis-now">Maintenant</div>
+          <div class="axis-future">Futur</div>
+        </div>
+        <div class="timeline-visual">
+          <div class="timeline-now-line" style="left:50%"></div>
+          <div class="timeline-cycle">↻</div>
         </div>`;
       break;
 
     case 'conditional':
       visual = `
         <div class="timeline-axis">
-          <div class="axis-past">Condition</div>
-          <div class="axis-now">→</div>
-          <div class="axis-future">Conséquence</div>
+          <div class="axis-past">Passé</div>
+          <div class="axis-now">Maintenant</div>
+          <div class="axis-future">Futur</div>
         </div>
         <div class="timeline-visual">
+          <div class="timeline-now-line" style="left:50%"></div>
           <div class="timeline-point" style="left:${tl.condition}%">
-            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">Condition (${tl.conditionLabel})</span>
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">Condition</span>
           </div>
           <div class="timeline-point" style="left:${tl.result}%">
-            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">Résultat (${tl.resultLabel})</span>
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">Résultat</span>
           </div>
         </div>`;
       break;
+
+    default:
+      return '';
   }
 
-  return `
-    <h4 style="margin:20px 0 12px">⏱️ Ligne du temps</h4>
-    <div class="timeline-container">
-      ${visual}
-      <div class="timeline-desc">${tl.description}</div>
-    </div>`;
+  return `<div class="timeline-container">${visual}<div class="timeline-desc">${tl.description || ''}</div></div>`;
 }
