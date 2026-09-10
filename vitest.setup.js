@@ -27,18 +27,22 @@ for (const [name, value] of Object.entries(globals)) {
   });
 }
 
-globalThis.localStorage = {
-  store: {},
-  getItem(key) {
-    return this.store[key] || null;
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  writable: true,
+  value: {
+    store: {},
+    getItem(key) {
+      return this.store[key] || null;
+    },
+    setItem(key, value) {
+      this.store[key] = String(value);
+    },
+    removeItem(key) {
+      delete this.store[key];
+    },
+    clear() {
+      this.store = {};
+    },
   },
-  setItem(key, value) {
-    this.store[key] = String(value);
-  },
-  removeItem(key) {
-    delete this.store[key];
-  },
-  clear() {
-    this.store = {};
-  },
-};
+});
