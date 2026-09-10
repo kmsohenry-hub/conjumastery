@@ -11,6 +11,8 @@ const { mockEngine, mockState } = vi.hoisted(() => ({
     currentMode: null,
     currentDifficulty: null,
     currentCount: 10,
+    currentLessonId: null,
+    isRevision: false,
     sessionConfig: null,
     currentIndex: 0,
     score: 0,
@@ -46,12 +48,14 @@ const { mockEngine, mockState } = vi.hoisted(() => ({
         score: this.score,
       };
     }),
-    start: vi.fn(function (mode, tenseFilter, difficulty, count = 10) {
+    start: vi.fn(function (mode, tenseFilter, difficulty, count = 10, lessonId = null, isRevision = false) {
       this.currentMode = mode;
       this.currentTenseFilter = tenseFilter;
       this.currentDifficulty = difficulty;
       this.currentCount = count;
-      this.sessionConfig = Object.freeze({ mode, tenseFilter, difficulty, count });
+      this.currentLessonId = lessonId;
+      this.isRevision = isRevision;
+      this.sessionConfig = Object.freeze({ mode, tenseFilter, difficulty, count, lessonId, isRevision });
       return this.questions;
     }),
   },
@@ -82,6 +86,7 @@ vi.mock('../../../../src/ui/utils/confetti.js', () => ({
 import {
   resetExerciseUI,
   startExercise,
+  startExerciseForLesson,
   restartExercise,
   selectOption,
   validateExercise,
@@ -104,6 +109,8 @@ beforeEach(() => {
   mockEngine.currentTenseFilter = null;
   mockEngine.currentDifficulty = null;
   mockEngine.currentCount = 10;
+  mockEngine.currentLessonId = null;
+  mockEngine.isRevision = false;
   mockEngine.sessionConfig = null;
   document.body.innerHTML = `
     <div id="exerciseModeSelector"></div>
@@ -170,15 +177,15 @@ describe('exercises page', () => {
     startExerciseForTense('past_simple');
     expect(navigateTo).toHaveBeenCalledWith('exercises');
     vi.advanceTimersByTime(100);
-    expect(mockEngine.start).toHaveBeenCalledWith('mixed', ['past_simple'], 'intermediate', 10);
+    expect(mockEngine.start).toHaveBeenCalledWith('mixed', ['past_simple'], 'intermediate', 10, null, false);
   });
 
   it('restarts the exercise preserving exact mode, filter, difficulty, and count (Issue #98)', () => {
     startExercise('transform', ['past_perfect'], 'hard', 5);
-    expect(mockEngine.start).toHaveBeenLastCalledWith('transform', ['past_perfect'], 'hard', 5);
+    expect(mockEngine.start).toHaveBeenLastCalledWith('transform', ['past_perfect'], 'hard', 5, null, false);
 
     restartExercise();
-    expect(mockEngine.start).toHaveBeenLastCalledWith('transform', ['past_perfect'], 'hard', 5);
+    expect(mockEngine.start).toHaveBeenLastCalledWith('transform', ['past_perfect'], 'hard', 5, null, false);
   });
 
   it('renders restart button in finishExercise and triggers restartExercise (Issue #98)', () => {
@@ -309,15 +316,31 @@ describe('exercises page', () => {
     expect(launchConfetti).not.toHaveBeenCalled();
   });
 
-  it('finishes with a high-grade result, launches confetti and completes matching lesson', () => {
-    mockEngine.currentTenseFilter = ['present_simple'];
+  it('finishes with a high-grade result, launches confetti and completes matching lesson (Issue #111)', () => {
+    mockEngine.currentLessonId = 'l_present_simple';
     mockEngine.questions = [mockEngine.questions[0]];
     mockEngine.score = 1;
     mockEngine.getProgress.mockReturnValue({ current: 1, total: 1, score: 1 });
     finishExercise();
     expect(launchConfetti).toHaveBeenCalledTimes(1);
-    expect(mockState.completeLesson).toHaveBeenCalled();
+    expect(mockState.completeLesson).toHaveBeenCalledWith('l_present_simple');
     expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain('Excellent !');
+  });
+
+  it('does not complete lessons in free training mode even with 100% score (Issue #111)', () => {
+    mockEngine.currentLessonId = null;
+    mockEngine.questions = [mockEngine.questions[0]];
+    mockEngine.score = 1;
+    mockEngine.getProgress.mockReturnValue({ current: 1, total: 1, score: 1 });
+    finishExercise();
+    expect(mockState.completeLesson).not.toHaveBeenCalled();
+  });
+
+  it('starts a lesson session with its declared exercise count (Issue #111)', () => {
+    startExerciseForLesson('l_present_simple');
+    expect(navigateTo).toHaveBeenCalledWith('exercises');
+    vi.advanceTimersByTime(100);
+    expect(mockEngine.start).toHaveBeenCalledWith('mixed', ['present_simple'], 'intermediate', 15, 'l_present_simple', false);
   });
 
   it('finishes with a low-grade result', () => {

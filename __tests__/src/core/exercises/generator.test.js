@@ -258,6 +258,13 @@ describe('generateSingleQuestion and generateQuestions', () => {
     expect(questions).toEqual([]);
     Math.random.mockRestore();
   });
+
+  test('generates questions deterministically for all review tenses without omission (Issue #107)', () => {
+    const queueTenses = ['present_simple', 'past_simple', 'future_will'];
+    const questions = generateQuestions('mixed', queueTenses, 'easy', 3, true);
+    expect(questions).toHaveLength(3);
+    expect(questions.map((q) => q.tenseId)).toEqual(queueTenses);
+  });
 });
 
 describe('dynamic branch closure', () => {
