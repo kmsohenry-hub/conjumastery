@@ -41,7 +41,17 @@ export function getRegularPast(verb) {
   return `${verb}ed`;
 }
 
-export function getPresentSimpleForm(verb, is3rdSing) {
+export function getPresentSimpleForm(verb, is3rdSing, subject = null) {
+  if (verb === 'be') {
+    if (subject === 'I') return 'am';
+    if (is3rdSing || (subject && ['he', 'she', 'it'].includes(String(subject).toLowerCase()))) {
+      return 'is';
+    }
+    return 'are';
+  }
+  if (verb === 'have') {
+    return is3rdSing ? 'has' : 'have';
+  }
   if (!is3rdSing) return verb;
   if (
     verb.endsWith('s') ||
@@ -141,7 +151,7 @@ export function getConjugation(verbsByBase, verb, tenseId, subject, is3rdSing) {
 
   switch (tenseId) {
     case 'present_simple':
-      return getPresentSimpleForm(verb, is3rdSing);
+      return getPresentSimpleForm(verb, is3rdSing, subject);
     case 'present_continuous':
       return getIngForm(verb);
     case 'present_perfect':
@@ -149,6 +159,9 @@ export function getConjugation(verbsByBase, verb, tenseId, subject, is3rdSing) {
     case 'present_perfect_continuous':
       return getIngForm(verb);
     case 'past_simple':
+      if (verb === 'be') {
+        return subject === 'I' || is3rdSing ? 'was' : 'were';
+      }
       return past;
     case 'past_continuous':
       return getIngForm(verb);
@@ -167,11 +180,14 @@ export function getConjugation(verbsByBase, verb, tenseId, subject, is3rdSing) {
     case 'future_perfect_continuous':
       return getIngForm(verb);
     case 'conditional_0':
-      return getPresentSimpleForm(verb, is3rdSing);
+      return getPresentSimpleForm(verb, is3rdSing, subject);
     case 'conditional_1':
     case 'mixed_conditional':
       return verb;
     case 'conditional_2':
+      if (verb === 'be') {
+        return subject === 'I' || is3rdSing ? 'was' : 'were';
+      }
       return past;
     case 'conditional_3':
       return pp;

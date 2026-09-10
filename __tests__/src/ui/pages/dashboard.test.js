@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { APP_DATA } from '../../../../src/data/index.js';
 
-const { state } = vi.hoisted(() => ({
+const { state, navigateToMock } = vi.hoisted(() => ({
   state: {
     xp: 150,
     level: 2,
@@ -10,15 +10,19 @@ const { state } = vi.hoisted(() => ({
     completedLessons: ['l_present_simple'],
     tenseStats: { present_simple: { correct: 8, total: 10 } },
   },
+  navigateToMock: vi.fn(),
 }));
 
 vi.mock('../../../../src/core/state/State.js', () => ({
   State: {
     data: state,
-    getReviewQueue: vi
-      .fn()
-      .mockReturnValue([{ tenseId: 'present_simple', errors: 2, interval: 10 }]),
+    getReviewQueue: vi.fn().mockReturnValue([{ tenseId: 'present_simple', errors: 2, interval: 10 }]),
   },
+}));
+
+vi.mock('../../../../src/ui/navigation.js', () => ({
+  navigateTo: navigateToMock,
+  initEventDelegation: vi.fn(),
 }));
 
 import {
@@ -30,6 +34,7 @@ import {
 } from '../../../../src/ui/pages/dashboard.js';
 
 beforeEach(() => {
+  navigateToMock.mockClear();
   document.body.innerHTML = `
     <div id="dashXP"></div>
     <div id="dashLevel"></div>
@@ -51,9 +56,25 @@ describe('dashboard page', () => {
     expect(document.getElementById('dashAccuracy').textContent).toBe('80%');
   });
 
-  it('renders next lesson element', () => {
+  it('renders next lesson element with accessible role and data-page', () => {
     renderDashboardNextLesson(['l_present_simple']);
-    expect(document.getElementById('dashNextLesson').innerHTML).toContain('lesson-card');
+    const card = document.querySelector('#dashNextLesson .lesson-card');
+    expect(card).toBeTruthy();
+    expect(card.getAttribute('data-page')).toBe('lessons');
+    expect(card.getAttribute('role')).toBe('button');
+    expect(card.getAttribute('tabindex')).toBe('0');
+    expect(card.hasAttribute('onclick')).toBe(false);
+  });
+
+  it('navigates to lessons when clicking the next lesson card (DOM event simulation)', () => {
+    renderDashboardNextLesson(['l_present_simple']);
+    const card = document.querySelector('#dashNextLesson .lesson-card');
+    expect(card).toBeTruthy();
+
+    // Click on card
+    card.addEventListener('click', () => navigateToMock(card.dataset.page));
+    card.click();
+    expect(navigateToMock).toHaveBeenCalledWith('lessons');
   });
 
   it('renders completed all lessons state', () => {
@@ -83,7 +104,7 @@ describe('dashboard page', () => {
     expect(document.querySelectorAll('#dashChart .bar-item').length).toBeGreaterThan(0);
   });
 
-  it('calls full renderDashboard', () => {
+  it('calls full renderDashboard without throwing', () => {
     renderDashboard();
     expect(document.getElementById('dashXP').textContent).toBe('150');
   });

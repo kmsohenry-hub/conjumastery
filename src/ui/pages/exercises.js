@@ -14,14 +14,58 @@ export function resetExerciseUI() {
   document.getElementById('exerciseArea').style.display = 'none';
 }
 
-export function startExercise(mode, tenseFilter, difficulty) {
-  if (tenseFilter === undefined || tenseFilter === null) {
-    tenseFilter = mode === 'mixed' ? [] : null;
+export function restartExercise() {
+  const cfg = ExerciseEngine.sessionConfig;
+  if (cfg) {
+    startExercise(cfg.mode, cfg.tenseFilter, cfg.difficulty, cfg.count, cfg.lessonId, cfg.isRevision);
+  } else {
+    startExercise(
+      ExerciseEngine.currentMode || 'mixed',
+      ExerciseEngine.currentTenseFilter,
+      ExerciseEngine.currentDifficulty || 'intermediate',
+      ExerciseEngine.currentCount || 10,
+      ExerciseEngine.currentLessonId || null,
+      ExerciseEngine.isRevision || false,
+    );
   }
-  if (!difficulty) difficulty = 'intermediate';
+}
 
-  ExerciseEngine.currentTenseFilter = tenseFilter;
-  ExerciseEngine.start(mode, tenseFilter, difficulty);
+export function startExercise(mode, tenseFilter, difficulty, count, lessonId = null, isRevision = false) {
+  const cfg = ExerciseEngine.sessionConfig;
+  const resolvedMode = mode ?? cfg?.mode ?? ExerciseEngine.currentMode ?? 'mixed';
+  const resolvedLessonId = lessonId ?? (mode === undefined || mode === cfg?.mode ? cfg?.lessonId : null);
+  const resolvedIsRevision = isRevision ?? (mode === undefined || mode === cfg?.mode ? cfg?.isRevision : false);
+
+  let resolvedTenseFilter = tenseFilter;
+  if (resolvedTenseFilter === undefined || resolvedTenseFilter === null) {
+    if (
+      cfg &&
+      (mode === undefined || mode === cfg.mode) &&
+      cfg.tenseFilter !== undefined
+    ) {
+      resolvedTenseFilter = cfg.tenseFilter;
+    } else if (
+      ExerciseEngine.currentTenseFilter !== undefined &&
+      (mode === undefined || mode === ExerciseEngine.currentMode)
+    ) {
+      resolvedTenseFilter = ExerciseEngine.currentTenseFilter;
+    } else {
+      resolvedTenseFilter = resolvedMode === 'mixed' ? [] : null;
+    }
+  }
+
+  const resolvedDifficulty =
+    difficulty ||
+    (cfg && (mode === undefined || mode === cfg.mode) ? cfg.difficulty : 'intermediate');
+
+  const resolvedCount =
+    count ||
+    (cfg && (mode === undefined || mode === cfg.mode) ? cfg.count : 10);
+
+  ExerciseEngine.currentTenseFilter = resolvedTenseFilter;
+  ExerciseEngine.currentLessonId = resolvedLessonId;
+  ExerciseEngine.isRevision = resolvedIsRevision;
+  ExerciseEngine.start(resolvedMode, resolvedTenseFilter, resolvedDifficulty, resolvedCount, resolvedLessonId, resolvedIsRevision);
 
   document.getElementById('exerciseModeSelector').style.display = 'none';
   document.getElementById('exerciseArea').style.display = 'block';
@@ -35,12 +79,35 @@ export function startExercise(mode, tenseFilter, difficulty) {
   updateExerciseProgress();
 }
 
+export function startExerciseForLesson(lessonId) {
+  let targetLesson = null;
+  for (const mod of APP_DATA.modules) {
+    const l = mod.lessons.find((item) => item.id === lessonId);
+    if (l) {
+      targetLesson = l;
+      break;
+    }
+  }
+
+  if (!targetLesson) {
+    console.error(`Lesson not found: ${lessonId}`);
+    return;
+  }
+
+  const tenseFilter = targetLesson.tenseId ? [targetLesson.tenseId] : [];
+  const count = targetLesson.exercises || 10;
+
+  navigateTo('exercises');
+  setTimeout(() => startExercise('mixed', tenseFilter, 'intermediate', count, lessonId, false), 100);
+}
+
 export function startExerciseForTense(tenseId) {
   navigateTo('exercises');
-  setTimeout(() => startExercise('mixed', [tenseId], 'intermediate'), 100);
+  setTimeout(() => startExercise('mixed', [tenseId], 'intermediate', 10, null, false), 100);
 }
 
 export function renderExerciseQuestion(q) {
+  if (!q) return;
   const container = document.getElementById('exerciseQuestionContainer');
   document.getElementById('exCurrent').textContent = ExerciseEngine.currentIndex + 1;
   document.getElementById('exTotal').textContent = ExerciseEngine.questions.length;
@@ -57,7 +124,7 @@ export function renderExerciseQuestion(q) {
     const letters = ['A', 'B', 'C', 'D'];
     html += `<div class="options-grid">`;
     q.options.forEach((opt, i) => {
-      html += `<button class="option-btn" onclick="selectOption(this, ${i})" data-index="${i}">
+      html += `<button class="option-btn" data-action="select-option" data-index="${i}">
         <span class="option-letter">${letters[i]}</span>
         <span>${escapeHtml(opt)}</span>
       </button>`;
@@ -65,7 +132,7 @@ export function renderExerciseQuestion(q) {
     html += `</div>`;
   } else if (q.type === 'fill' || q.type === 'translation') {
     html += `<div class="input-group" style="margin-top:16px">
-      <input class="input" type="text" id="exerciseInput" placeholder="Votre réponse..." onkeydown="if(event.key==='Enter')validateExercise()">
+      <input class="input" type="text" id="exerciseInput" data-action="submit-exercise" placeholder="Votre réponse...">
     </div>`;
   } else if (q.type === 'transform') {
     html += `<div class="input-group" style="margin-top:16px">
@@ -149,6 +216,7 @@ export function skipExercise() {
   ExerciseEngine.answered = true;
   const q = ExerciseEngine.getCurrent();
   State.recordAnswer(q.tenseId, false);
+
   const feedbackEl = document.getElementById('exerciseFeedback');
   feedbackEl.style.display = 'block';
   const safeAnswer = escapeHtml(q.answer || q.options[q.correct]);
@@ -197,8 +265,8 @@ export function finishExercise() {
       <h2 style="margin-bottom:8px">${pct >= 80 ? 'Excellent !' : pct >= 50 ? 'Bien joué !' : 'Continuez vos efforts !'}</h2>
       <p style="font-size:1.2rem;color:var(--text-light);margin-bottom:20px">${p.score} / ${p.total} bonnes réponses (${pct}%)</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="resetExerciseUI()">🏠 Retour</button>
-        <button class="btn btn-secondary" onclick="startExercise(ExerciseEngine.currentMode)">🔄 Recommencer</button>
+        <button class="btn btn-primary" data-action="reset-exercise-ui">🏠 Retour</button>
+        <button class="btn btn-secondary" data-action="restart-exercise">🔄 Recommencer</button>
       </div>
     </div>`;
 
@@ -209,18 +277,17 @@ export function finishExercise() {
 
   if (pct >= 80) {
     launchConfetti();
-    if (ExerciseEngine.currentTenseFilter && ExerciseEngine.currentTenseFilter.length === 1) {
-      APP_DATA.modules.forEach((mod) => {
-        mod.lessons.forEach((lesson) => {
-          if (lesson.tenseId === ExerciseEngine.currentTenseFilter[0]) {
-            State.completeLesson(lesson.id);
-          }
-        });
-      });
+    if (ExerciseEngine.currentLessonId) {
+      State.completeLesson(ExerciseEngine.currentLessonId);
     }
   }
 }
 
 export function exitExercise() {
   resetExerciseUI();
+}
+
+if (typeof window !== 'undefined') {
+  window.restartExercise = restartExercise;
+  window.startExerciseForLesson = startExerciseForLesson;
 }

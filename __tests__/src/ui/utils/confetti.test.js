@@ -14,7 +14,12 @@ afterEach(() => {
 });
 
 describe('launchConfetti', () => {
-  it('creates 30 animated confetti pieces with expected styling', () => {
+  it('creates 30 animated confetti pieces with expected styling in normal mode', () => {
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+    }));
+
     launchConfetti();
 
     const pieces = [...document.querySelectorAll('.confetti-piece')];
@@ -30,6 +35,11 @@ describe('launchConfetti', () => {
   });
 
   it('removes every confetti piece after 2.5 seconds', () => {
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+    }));
+
     launchConfetti();
     expect(document.querySelectorAll('.confetti-piece')).toHaveLength(30);
 
@@ -37,6 +47,16 @@ describe('launchConfetti', () => {
     expect(document.querySelectorAll('.confetti-piece')).toHaveLength(30);
 
     vi.advanceTimersByTime(1);
+    expect(document.querySelectorAll('.confetti-piece')).toHaveLength(0);
+  });
+
+  it('does not create any confetti pieces when prefers-reduced-motion is active (Issue #117)', () => {
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes('prefers-reduced-motion: reduce'),
+      media: query,
+    }));
+
+    launchConfetti();
     expect(document.querySelectorAll('.confetti-piece')).toHaveLength(0);
   });
 });

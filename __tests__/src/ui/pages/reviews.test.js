@@ -44,13 +44,14 @@ describe('reviews page', () => {
     expect(document.getElementById('revisionContent').innerHTML).toContain('1 point à réviser');
   });
 
-  it('starts revision session', () => {
+  it('starts revision session with queue length count and isRevision flag (Issue #107)', () => {
     mockState.getReviewQueue.mockReturnValue([
       { tenseId: 'present_simple', errors: 2, interval: 10 },
+      { tenseId: 'past_simple', errors: 1, interval: 20 },
     ]);
     startRevisionSession();
     expect(navigateTo).toHaveBeenCalledWith('exercises');
     vi.advanceTimersByTime(150);
-    expect(startExercise).toHaveBeenCalledWith('mixed', ['present_simple'], 'intermediate');
+    expect(startExercise).toHaveBeenCalledWith('mixed', ['present_simple', 'past_simple'], 'intermediate', 2, null, true);
   });
 });

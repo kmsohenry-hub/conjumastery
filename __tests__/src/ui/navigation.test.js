@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const cancelTest = vi.fn();
+
 const { renderers } = vi.hoisted(() => ({
   renderers: Object.fromEntries(
     [
@@ -22,7 +24,10 @@ const { renderers } = vi.hoisted(() => ({
 vi.mock('../../../src/ui/pages/dashboard.js', () => ({ renderDashboard: renderers.dashboard }));
 vi.mock('../../../src/ui/pages/lessons.js', () => ({ renderLessons: renderers.lessons }));
 vi.mock('../../../src/ui/pages/exercises.js', () => ({ resetExerciseUI: renderers.exercises }));
-vi.mock('../../../src/ui/pages/test.js', () => ({ renderTestSetup: renderers.test }));
+vi.mock('../../../src/ui/pages/test.js', () => ({
+  renderTestSetup: renderers.test,
+  cancelTest,
+}));
 vi.mock('../../../src/ui/pages/tenses.js', () => ({
   renderTenses: renderers.tenses,
   renderComparison: renderers.comparison,
@@ -48,9 +53,11 @@ function buildShell() {
   document.body.innerHTML = `
     <aside id="sidebar"></aside><div id="sidebarOverlay"></div><button id="themeBtn"></button>
     <div id="pageTitle"></div>
-    <div id="modalOverlay">
+    <div id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div id="modalContent">
-        <button id="modalCloseBtn" class="modal-close">✕</button>
+        <div id="modalTitle">Titre de la leçon</div>
+        <button id="modalBtnFirst" class="modal-close">✕</button>
+        <button id="modalBtnSecond" class="btn">Valider</button>
       </div>
     </div>
     ${[
@@ -78,6 +85,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   buildShell();
   Object.values(renderers).forEach((fn) => fn.mockClear());
+  cancelTest.mockClear();
   document.documentElement.removeAttribute('data-theme');
   window.innerWidth = 1024;
 });
@@ -95,6 +103,15 @@ describe('navigation', () => {
   it('routes supported pages to their renderers', () => {
     Object.keys(renderers).forEach((page) => navigateTo(page));
     Object.values(renderers).forEach((renderer) => expect(renderer).toHaveBeenCalled());
+  });
+
+  it('cancels active test when navigating away from test page (Issue #104)', () => {
+    navigateTo('test');
+    expect(renderers.test).toHaveBeenCalled();
+    cancelTest.mockClear();
+
+    navigateTo('dashboard');
+    expect(cancelTest).toHaveBeenCalled();
   });
 
   it('closes the mobile sidebar after navigation', () => {
@@ -166,11 +183,72 @@ describe('navigation', () => {
     expect(overlay.classList.contains('active')).toBe(true);
 
     vi.advanceTimersByTime(100);
-    const closeBtn = document.getElementById('modalCloseBtn');
+    const closeBtn = document.getElementById('modalBtnFirst');
     expect(document.activeElement).toBe(closeBtn);
 
     closeModalDirect();
     expect(overlay.classList.contains('active')).toBe(false);
     expect(document.activeElement).toBe(initialButton);
+  });
+
+  describe('modal focus trap and accessibility (Issue #115)', () => {
+    it('declares dialog semantics and modal attributes on overlay', () => {
+      const modal = document.getElementById('modalOverlay');
+      expect(modal.getAttribute('role')).toBe('dialog');
+      expect(modal.getAttribute('aria-modal')).toBe('true');
+      expect(modal.getAttribute('aria-labelledby')).toBe('modalTitle');
+    });
+
+    it('traps focus inside the modal on Tab (cycles from last to first)', () => {
+      openModal();
+      const modal = document.getElementById('modalOverlay');
+      const first = document.getElementById('modalBtnFirst');
+      const last = document.getElementById('modalBtnSecond');
+
+      last.focus();
+      expect(document.activeElement).toBe(last);
+
+      // Tab from last button should wrap to first button
+      const { KeyboardEvent } = window;
+      const tabEvent = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      window.dispatchEvent(tabEvent);
+
+      expect(document.activeElement).toBe(first);
+      closeModalDirect();
+    });
+
+    it('traps focus inside the modal on Shift+Tab (cycles from first to last)', () => {
+      openModal();
+      const modal = document.getElementById('modalOverlay');
+      const first = document.getElementById('modalBtnFirst');
+      const last = document.getElementById('modalBtnSecond');
+
+      first.focus();
+      expect(document.activeElement).toBe(first);
+
+      // Shift+Tab from first button should wrap to last button
+      const { KeyboardEvent } = window;
+      const shiftTabEvent = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
+      window.dispatchEvent(shiftTabEvent);
+
+      expect(document.activeElement).toBe(last);
+      closeModalDirect();
+    });
+
+    it('restores focus to the triggering element when closed via Escape', () => {
+      const trigger = document.createElement('button');
+      document.body.appendChild(trigger);
+      trigger.focus();
+      expect(document.activeElement).toBe(trigger);
+
+      openModal();
+      const modal = document.getElementById('modalOverlay');
+      expect(modal.classList.contains('active')).toBe(true);
+
+      const { KeyboardEvent } = window;
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(modal.classList.contains('active')).toBe(false);
+      expect(document.activeElement).toBe(trigger);
+    });
   });
 });

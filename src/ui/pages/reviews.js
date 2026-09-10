@@ -13,7 +13,7 @@ export function renderRevision() {
         <div class="empty-icon">✅</div>
         <h3>Aucune révision en attente</h3>
         <p>Votre programme de répétition espacée est à jour. Continuez à apprendre de nouvelles leçons !</p>
-        <button class="btn btn-primary" style="margin-top:16px" onclick="navigateTo('lessons')">📚 Voir les leçons</button>
+        <button class="btn btn-primary" style="margin-top:16px" data-page="lessons">📚 Voir les leçons</button>
       </div>`;
     return;
   }
@@ -21,7 +21,7 @@ export function renderRevision() {
   container.innerHTML = `
     <div style="margin-bottom:20px">
       <p style="color:var(--text-light)">${queue.length} point${queue.length > 1 ? 's' : ''} à réviser</p>
-      <button class="btn btn-primary" style="margin-top:12px" onclick="startRevisionSession()">🚀 Démarrer la session de révision</button>
+      <button class="btn btn-primary" style="margin-top:12px" data-action="start-revision">🚀 Démarrer la session de révision</button>
     </div>
     ${queue
       .map((q) => {
@@ -45,5 +45,5 @@ export function startRevisionSession() {
   if (queue.length === 0) return;
   const tenses = queue.map((q) => q.tenseId);
   navigateTo('exercises');
-  setTimeout(() => startExercise('mixed', tenses, 'intermediate'), 100);
+  setTimeout(() => startExercise('mixed', tenses, 'intermediate', tenses.length, null, true), 100);
 }

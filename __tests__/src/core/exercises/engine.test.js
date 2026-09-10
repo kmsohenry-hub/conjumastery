@@ -19,6 +19,10 @@ describe('ExerciseEngine', () => {
     ExerciseEngine.answered = false;
     ExerciseEngine.currentExercise = null;
     ExerciseEngine.currentMode = null;
+    ExerciseEngine.currentTenseFilter = null;
+    ExerciseEngine.currentDifficulty = null;
+    ExerciseEngine.currentCount = 10;
+    ExerciseEngine.sessionConfig = null;
   });
 
   test('starts an exercise session and resets progress', () => {
@@ -29,6 +33,22 @@ describe('ExerciseEngine', () => {
     expect(ExerciseEngine.currentIndex).toBe(0);
     expect(ExerciseEngine.score).toBe(0);
     expect(ExerciseEngine.answered).toBe(false);
+  });
+
+  test('persists session configuration and parameters on start', () => {
+    ExerciseEngine.start('transform', ['past_simple'], 'hard', 5);
+
+    expect(ExerciseEngine.currentMode).toBe('transform');
+    expect(ExerciseEngine.currentTenseFilter).toEqual(['past_simple']);
+    expect(ExerciseEngine.currentDifficulty).toBe('hard');
+    expect(ExerciseEngine.currentCount).toBe(5);
+    expect(ExerciseEngine.sessionConfig).toEqual({
+      mode: 'transform',
+      tenseFilter: ['past_simple'],
+      difficulty: 'hard',
+      count: 5,
+    });
+    expect(Object.isFrozen(ExerciseEngine.sessionConfig)).toBe(true);
   });
 
   test('returns the current question and advances through the session', () => {
@@ -52,6 +72,8 @@ describe('ExerciseEngine', () => {
   test('delegates conjugation helpers to the conjugation module', () => {
     expect(ExerciseEngine.getRegularPast('work')).toBe('worked');
     expect(ExerciseEngine.getPresentSimpleForm('work', true)).toBe('works');
+    expect(ExerciseEngine.getPresentSimpleForm('be', true)).toBe('is');
+    expect(ExerciseEngine.getPresentSimpleForm('have', true)).toBe('has');
     expect(ExerciseEngine.getIngForm('work')).toBe('working');
     expect(ExerciseEngine.getIrregularForms('go')).toEqual({ past: 'went', pp: 'gone' });
     expect(ExerciseEngine.getAllIrregularForms('go')).toEqual({ past: ['went'], pp: ['gone'] });

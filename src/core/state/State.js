@@ -5,11 +5,6 @@ import {
   getReviewQueue as getReviewQueueSelector,
 } from './selectors.js';
 
-const store = createStore();
-store.subscribe(() => {
-  // We need to keep a reference to `data` getter to get state
-});
-
 let storageSyncInitialized = false;
 
 /**
@@ -34,19 +29,33 @@ export function setupStorageSync() {
   });
 }
 
+const store = createStore();
+store.subscribe(() => {
+  if (typeof window !== 'undefined' && typeof window.updateUI === 'function') {
+    window.updateUI();
+  }
+});
+
 const State = {
+  sessionPromotedTenses: new Set(),
+  resetSessionPromotions() {
+    this.sessionPromotedTenses.clear();
+  },
   get data() {
     return store.getState();
   },
   set data(newState) {
     store.setState(newState);
   },
+  subscribe(listener) {
+    return store.subscribe(listener);
+  },
   init() {
     const saved = loadState('conjumaster_data');
     if (saved) {
       store.setState(saved);
     }
-    this.checkStreak();
+    this.syncStreakOnLoad();
     this.save();
     setupStorageSync();
   },
@@ -70,17 +79,29 @@ const State = {
     const merged = mergeStates(store.getState(), incoming);
     store.setState(merged);
   },
+  syncStreakOnLoad() {
+    const state = store.getState();
+    const todayStr = new Date().toDateString();
+
+    if (state.lastActiveDate) {
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const todayMidnight = new Date(todayStr).getTime();
+      const lastMidnight = new Date(state.lastActiveDate).getTime();
+      const diff = Math.round((todayMidnight - lastMidnight) / msPerDay);
+
+      if (diff > 1) {
+        // Série rompue si plus d'un jour s'est écoulé sans activité pédagogique
+        store.setState({ daysStreak: 0 });
+      }
+    }
+  },
   checkStreak() {
     const state = store.getState();
     const todayStr = new Date().toDateString();
 
-    // Déjà comptabilisé aujourd'hui — on ne fait rien (évite la double
-    // incrémentation au reload / re-init).
     if (state.lastActiveDate === todayStr) return;
 
     if (state.lastActiveDate) {
-      // Calcul robuste du nombre de jours : on compare les dates à minuit
-      // (UTC) pour éviter les erreurs de changement d'heure (DST).
       const msPerDay = 24 * 60 * 60 * 1000;
       const todayMidnight = new Date(todayStr).getTime();
       const lastMidnight = new Date(state.lastActiveDate).getTime();
@@ -93,26 +114,41 @@ const State = {
         // Série brisée — la nouvelle activité démarre une nouvelle série.
         store.setState({ daysStreak: 1, lastActiveDate: todayStr });
       }
-      // diff < 0 (horloge incohérente / date future) → on ignore sans
-      // modifier lastActiveDate pour ne pas casser une série valide.
     } else {
-      // Premier lancement — démarre la série à 1.
       store.setState({ daysStreak: 1, lastActiveDate: todayStr });
     }
   },
   addXP(amount) {
-    // Toute activité qui accorde des XP doit d'abord synchroniser la série
-    // quotidienne, y compris lorsqu'un onglet est resté ouvert après minuit.
     this.checkStreak();
     store.addXP(amount);
     this.save();
   },
   recordAnswer(tenseId, correct) {
-    // store.recordAnswer gère aussi la mise à jour de spacedRepetition.
+    this.checkStreak();
+    const previousSR = correct ? store.getState().spacedRepetition?.[tenseId] : null;
+    const alreadyPromoted = correct && this.sessionPromotedTenses.has(tenseId);
+    if (correct && !alreadyPromoted) {
+      this.sessionPromotedTenses.add(tenseId);
+    }
     store.recordAnswer(tenseId, correct);
+    if (alreadyPromoted && previousSR) {
+      const currentSR = store.getState().spacedRepetition;
+      store.setState({
+        spacedRepetition: {
+          ...currentSR,
+          [tenseId]: {
+            ...currentSR[tenseId],
+            interval: previousSR.interval,
+            ease: previousSR.ease,
+            nextReview: previousSR.nextReview,
+          },
+        },
+      });
+    }
     this.save();
   },
   completeLesson(lessonId) {
+    this.checkStreak();
     store.completeLesson(lessonId);
     this.save();
   },
@@ -138,9 +174,10 @@ const State = {
     return getReviewQueueSelector(store.getState());
   },
   reset() {
+    this.sessionPromotedTenses.clear();
     store.reset();
     this.save();
   },
 };
 
-export { store, State };
+export { State };

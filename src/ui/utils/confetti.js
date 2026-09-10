@@ -1,4 +1,11 @@
 export function launchConfetti() {
+  if (
+    typeof window !== 'undefined' &&
+    window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    return;
+  }
   const colors = ['#6C5CE7', '#00CEC9', '#FD79A8', '#FDCB6E', '#00B894', '#E17055'];
   for (let i = 0; i < 30; i++) {
     const piece = document.createElement('div');
