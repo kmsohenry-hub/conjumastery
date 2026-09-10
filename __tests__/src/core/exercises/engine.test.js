@@ -47,6 +47,8 @@ describe('ExerciseEngine', () => {
       tenseFilter: ['past_simple'],
       difficulty: 'hard',
       count: 5,
+      lessonId: null,
+      isRevision: false,
     });
     expect(Object.isFrozen(ExerciseEngine.sessionConfig)).toBe(true);
   });
