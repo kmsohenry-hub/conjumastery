@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { navigateTo } from '../../../src/ui/navigation.js';
 
 describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-02)', () => {
@@ -21,7 +21,7 @@ describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-
     const cspTag = indexHtmlContent.match(
       /<meta\b[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/i,
     )?.[0];
-    const csp = cspTag?.match(/content=["']([^"']+)["']/i)?.[1];
+    const csp = cspTag?.match(/content\s*=\s*"([^"]*)"/i)?.[1];
 
     expect(csp).toBeTruthy();
     expect(csp).toContain("script-src 'self'");
@@ -80,7 +80,8 @@ describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-
     expect(qcmCard).toBeTruthy();
 
     qcmCard.click();
-    expect(document.getElementById('page-exercises')?.classList.contains('active')).toBe(true);
+    expect(document.getElementById('exerciseModeSelector')?.style.display).toBe('none');
+    expect(document.getElementById('exerciseArea')?.style.display).toBe('block');
   });
 
   it('delegates clicks on theme toggle button', () => {
