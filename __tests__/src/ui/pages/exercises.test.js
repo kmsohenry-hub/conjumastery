@@ -236,7 +236,7 @@ describe('exercises page', () => {
       'mixed',
       ['past_simple'],
       'intermediate',
-      10,
+      20,
       'l_past_simple',
       false,
     );
