@@ -16,7 +16,9 @@ const { state, navigateToMock } = vi.hoisted(() => ({
 vi.mock('../../../../src/core/state/State.js', () => ({
   State: {
     data: state,
-    getReviewQueue: vi.fn().mockReturnValue([{ tenseId: 'present_simple', errors: 2, interval: 10 }]),
+    getReviewQueue: vi
+      .fn()
+      .mockReturnValue([{ tenseId: 'present_simple', errors: 2, interval: 10 }]),
   },
 }));
 

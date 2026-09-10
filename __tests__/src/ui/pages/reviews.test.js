@@ -52,6 +52,13 @@ describe('reviews page', () => {
     startRevisionSession();
     expect(navigateTo).toHaveBeenCalledWith('exercises');
     vi.advanceTimersByTime(150);
-    expect(startExercise).toHaveBeenCalledWith('mixed', ['present_simple', 'past_simple'], 'intermediate', 2, null, true);
+    expect(startExercise).toHaveBeenCalledWith(
+      'mixed',
+      ['present_simple', 'past_simple'],
+      'intermediate',
+      2,
+      null,
+      true,
+    );
   });
 });

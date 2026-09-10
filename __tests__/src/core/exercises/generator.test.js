@@ -1,9 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { APP_DATA } from '../../../src/data/index.js';
-import {
-  generateQuestions,
-  generateTransform,
-} from '../../../src/core/exercises/generator.js';
+import { generateQuestions, generateTransform } from '../../../src/core/exercises/generator.js';
 
 describe('generator core distribution', () => {
   test('revision mode cycles deterministically across the requested review queue (Issue #107)', () => {
@@ -38,7 +35,11 @@ describe('P-03 and P-10: Conditionals with be and special lessons', () => {
     const t1 = APP_DATA.tensesById.conditional_1;
     const t2 = APP_DATA.tensesById.conditional_2;
 
-    for (const [subj, third] of [['I', false], ['She', true], ['They', false]]) {
+    for (const [subj, third] of [
+      ['I', false],
+      ['She', true],
+      ['They', false],
+    ]) {
       for (const t of [t0, t1, t2]) {
         for (const random of [0, 0.99]) {
           vi.spyOn(Math, 'random').mockReturnValue(random);
@@ -54,11 +55,13 @@ describe('P-03 and P-10: Conditionals with be and special lessons', () => {
   test("conditional_2 with be produces subjunctive were/weren't (P-03)", () => {
     const t2 = APP_DATA.tensesById.conditional_2;
     vi.spyOn(Math, 'random').mockReturnValue(0);
-    expect(generateTransform(t2, 'She', 'be', true).answer).toBe("If She weren't, She wouldn't be.");
+    expect(generateTransform(t2, 'She', 'be', true).answer).toBe(
+      "If She weren't, She wouldn't be.",
+    );
     expect(generateTransform(t2, 'I', 'be', false).answer).toBe("If I weren't, I wouldn't be.");
 
     vi.spyOn(Math, 'random').mockReturnValue(0.99);
-    expect(generateTransform(t2, 'She', 'be', true).answer).toBe("If She were, would she be?");
+    expect(generateTransform(t2, 'She', 'be', true).answer).toBe('If She were, would she be?');
     Math.random.mockRestore();
   });
 
@@ -67,7 +70,14 @@ describe('P-03 and P-10: Conditionals with be and special lessons', () => {
     expect(passiveQuestions).toHaveLength(5);
     expect(passiveQuestions.every((q) => q.sentence.includes('voix passive'))).toBe(true);
 
-    const reportedQuestions = generateQuestions('mixed', [], 'intermediate', 5, false, 'l_reported');
+    const reportedQuestions = generateQuestions(
+      'mixed',
+      [],
+      'intermediate',
+      5,
+      false,
+      'l_reported',
+    );
     expect(reportedQuestions).toHaveLength(5);
     expect(reportedQuestions.every((q) => q.sentence.includes('discours indirect'))).toBe(true);
   });

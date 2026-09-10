@@ -105,7 +105,9 @@ describe('exercises page', () => {
     );
     expect(document.getElementById('exerciseModeSelector').style.display).toBe('none');
     expect(document.getElementById('exerciseArea').style.display).toBe('block');
-    expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain('She ___ every day.');
+    expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain(
+      'She ___ every day.',
+    );
     expect(document.querySelectorAll('.option-btn')).toHaveLength(4);
     expect(document.getElementById('exProgressBar').style.width).toBe('10%');
   });

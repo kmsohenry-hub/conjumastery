@@ -17,7 +17,14 @@ export function resetExerciseUI() {
 export function restartExercise() {
   const cfg = ExerciseEngine.sessionConfig;
   if (cfg) {
-    startExercise(cfg.mode, cfg.tenseFilter, cfg.difficulty, cfg.count, cfg.lessonId, cfg.isRevision);
+    startExercise(
+      cfg.mode,
+      cfg.tenseFilter,
+      cfg.difficulty,
+      cfg.count,
+      cfg.lessonId,
+      cfg.isRevision,
+    );
   } else {
     startExercise(
       ExerciseEngine.currentMode || 'mixed',
@@ -30,19 +37,24 @@ export function restartExercise() {
   }
 }
 
-export function startExercise(mode, tenseFilter, difficulty, count, lessonId = null, isRevision = false) {
+export function startExercise(
+  mode,
+  tenseFilter,
+  difficulty,
+  count,
+  lessonId = null,
+  isRevision = false,
+) {
   const cfg = ExerciseEngine.sessionConfig;
   const resolvedMode = mode ?? cfg?.mode ?? ExerciseEngine.currentMode ?? 'mixed';
-  const resolvedLessonId = lessonId ?? (mode === undefined || mode === cfg?.mode ? cfg?.lessonId : null);
-  const resolvedIsRevision = isRevision ?? (mode === undefined || mode === cfg?.mode ? cfg?.isRevision : false);
+  const resolvedLessonId =
+    lessonId ?? (mode === undefined || mode === cfg?.mode ? cfg?.lessonId : null);
+  const resolvedIsRevision =
+    isRevision ?? (mode === undefined || mode === cfg?.mode ? cfg?.isRevision : false);
 
   let resolvedTenseFilter = tenseFilter;
   if (resolvedTenseFilter === undefined || resolvedTenseFilter === null) {
-    if (
-      cfg &&
-      (mode === undefined || mode === cfg.mode) &&
-      cfg.tenseFilter !== undefined
-    ) {
+    if (cfg && (mode === undefined || mode === cfg.mode) && cfg.tenseFilter !== undefined) {
       resolvedTenseFilter = cfg.tenseFilter;
     } else if (
       ExerciseEngine.currentTenseFilter !== undefined &&
@@ -59,13 +71,19 @@ export function startExercise(mode, tenseFilter, difficulty, count, lessonId = n
     (cfg && (mode === undefined || mode === cfg.mode) ? cfg.difficulty : 'intermediate');
 
   const resolvedCount =
-    count ||
-    (cfg && (mode === undefined || mode === cfg.mode) ? cfg.count : 10);
+    count || (cfg && (mode === undefined || mode === cfg.mode) ? cfg.count : 10);
 
   ExerciseEngine.currentTenseFilter = resolvedTenseFilter;
   ExerciseEngine.currentLessonId = resolvedLessonId;
   ExerciseEngine.isRevision = resolvedIsRevision;
-  ExerciseEngine.start(resolvedMode, resolvedTenseFilter, resolvedDifficulty, resolvedCount, resolvedLessonId, resolvedIsRevision);
+  ExerciseEngine.start(
+    resolvedMode,
+    resolvedTenseFilter,
+    resolvedDifficulty,
+    resolvedCount,
+    resolvedLessonId,
+    resolvedIsRevision,
+  );
 
   document.getElementById('exerciseModeSelector').style.display = 'none';
   document.getElementById('exerciseArea').style.display = 'block';
@@ -98,7 +116,10 @@ export function startExerciseForLesson(lessonId) {
   const count = targetLesson.exercises || 10;
 
   navigateTo('exercises');
-  setTimeout(() => startExercise('mixed', tenseFilter, 'intermediate', count, lessonId, false), 100);
+  setTimeout(
+    () => startExercise('mixed', tenseFilter, 'intermediate', count, lessonId, false),
+    100,
+  );
 }
 
 export function startExerciseForTense(tenseId) {

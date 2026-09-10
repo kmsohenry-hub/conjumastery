@@ -80,7 +80,8 @@ export function renderTestQuestion() {
   document.getElementById('testCurrent').textContent = ExerciseEngine.currentIndex + 1;
   document.getElementById('testTotal').textContent = ExerciseEngine.questions.length;
   document.getElementById('testScore').textContent = ExerciseEngine.score;
-  document.getElementById('testProgressBar').style.width = `${((ExerciseEngine.currentIndex + 1) / ExerciseEngine.questions.length) * 100}%`;
+  document.getElementById('testProgressBar').style.width =
+    `${((ExerciseEngine.currentIndex + 1) / ExerciseEngine.questions.length) * 100}%`;
 
   const container = document.getElementById('testQuestionContainer');
   let html = `<div class="exercise-card">`;

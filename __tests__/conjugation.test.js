@@ -1,8 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import {
-  getPresentSimpleForm,
-  getConjugation,
-} from '../src/core/exercises/conjugation.js';
+import { getPresentSimpleForm, getConjugation } from '../src/core/exercises/conjugation.js';
 import { APP_DATA } from '../src/data/index.js';
 
 describe('getPresentSimpleForm', () => {

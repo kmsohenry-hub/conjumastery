@@ -210,7 +210,11 @@ describe('navigation', () => {
 
       // Tab from last button should wrap to first button
       const { KeyboardEvent } = window;
-      const tabEvent = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      const tabEvent = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        bubbles: true,
+        cancelable: true,
+      });
       window.dispatchEvent(tabEvent);
 
       expect(document.activeElement).toBe(first);
@@ -228,7 +232,12 @@ describe('navigation', () => {
 
       // Shift+Tab from first button should wrap to last button
       const { KeyboardEvent } = window;
-      const shiftTabEvent = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
+      const shiftTabEvent = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      });
       window.dispatchEvent(shiftTabEvent);
 
       expect(document.activeElement).toBe(last);
