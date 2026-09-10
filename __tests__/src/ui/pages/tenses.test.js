@@ -126,7 +126,7 @@ describe('tenses page DOM and event delegation (AUDIT-01, 02, 03, 04)', () => {
     expect(modal.textContent).toContain('Entraînement libre');
     expect(modal.textContent).toContain('Voir le comparatif');
     expect(modal.querySelector('[data-action="start-tense"]').dataset.tenseId).toBe(tense.id);
-    expect(modal.querySelector('[data-page="comparison']")).not.toBeNull();
+    expect(modal.querySelector('[data-page="comparison"]')).not.toBeNull();
     expect(openModalMock).toHaveBeenCalledOnce();
   });
 
