@@ -1,3 +1,5 @@
+/* global process */
+
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -29,8 +31,8 @@ for (const relative of files) {
 const violations = assets.filter(({ extension, size }) => size > BUDGETS[extension]);
 for (const asset of assets) {
   const budget = BUDGETS[asset.extension];
-  console.log(
-    `${asset.relative}: ${(asset.size / 1024).toFixed(1)} KiB / ${(budget / 1024).toFixed(0)} KiB`,
+  process.stdout.write(
+    `${asset.relative}: ${(asset.size / 1024).toFixed(1)} KiB / ${(budget / 1024).toFixed(0)} KiB\n`,
   );
 }
 
