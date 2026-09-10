@@ -17,7 +17,7 @@ describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-
     document.getElementById('sidebarOverlay')?.classList.remove('active');
   });
 
-  it('verifies that CSP script-src strictly enforces self and prohibits unsafe-inline', () => {
+  it('enforces strict script and scoped style CSP directives', () => {
     const cspTag = indexHtmlContent.match(
       /<meta\b[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/i,
     )?.[0];
@@ -26,6 +26,10 @@ describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-
     expect(csp).toBeTruthy();
     expect(csp).toContain("script-src 'self'");
     expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
+    expect(csp).toContain("style-src 'self'");
+    expect(csp).not.toMatch(/style-src\s+[^;]*'unsafe-inline'/);
+    expect(csp).toContain("style-src-elem 'self'");
+    expect(csp).toContain("style-src-attr 'unsafe-inline'");
   });
 
   it('uses aria-current="page" on active nav item and removes it on inactive items (P-07)', () => {
