@@ -28,7 +28,9 @@ for (const route of routes) {
       .withTags(['wcag2a', 'wcag2aa'])
       .analyze();
 
-    const critical = results.violations.filter((violation) => violation.impact === 'critical');
+    const critical = results.violations.filter(
+      (violation) => violation.impact === 'critical',
+    );
     expect(critical, JSON.stringify(critical, null, 2)).toEqual([]);
   });
 }
