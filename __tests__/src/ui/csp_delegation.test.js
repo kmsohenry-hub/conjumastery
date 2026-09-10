@@ -1,8 +1,9 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { initEventDelegation, navigateTo } from '../../../src/ui/navigation.js';
 
-describe('CSP Hardening and Event Delegation (Issue #116)', () => {
+describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-02)', () => {
   let indexHtmlContent;
 
   beforeEach(() => {
@@ -11,7 +12,7 @@ describe('CSP Hardening and Event Delegation (Issue #116)', () => {
     initEventDelegation();
   });
 
-  it('verifies that CSP script-src does not allow unsafe-inline', () => {
+  it('verifies that CSP script-src strictly enforces self and prohibits unsafe-inline', () => {
     const cspMatch = indexHtmlContent.match(
       /<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*content=["']([^"']+)["']/i,
     );
@@ -22,9 +23,28 @@ describe('CSP Hardening and Event Delegation (Issue #116)', () => {
     expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
   });
 
-  it('verifies that index.html contains zero inline onclick handlers', () => {
-    const inlineOnclicks = indexHtmlContent.match(/onclick=["'][^"']*["']/gi) || [];
-    expect(inlineOnclicks).toHaveLength(0);
+  it('verifies that index.html contains ZERO inline on... handlers', () => {
+    const inlineHandlers = indexHtmlContent.match(/\bon[a-z]+\s*=\s*["'][^"']*["']/gi) || [];
+    expect(inlineHandlers).toHaveLength(0);
+  });
+
+  it('verifies that all modules in src/ui/pages/ contain ZERO inline on... handlers', () => {
+    const pagesDir = 'src/ui/pages';
+    if (!fs.existsSync(pagesDir)) return;
+
+    const files = fs.readdirSync(pagesDir).filter((f) => f.endsWith('.js'));
+    const violatingFiles = [];
+
+    files.forEach((file) => {
+      const content = fs.readFileSync(path.join(pagesDir, file), 'utf8');
+      const matches = content.match(/\bon[a-z]+\s*=\s*["'][^"']*["']/gi);
+      const setAttrMatches = content.match(/setAttribute\s*\(\s*['"]on[a-z]+['"]/gi);
+      if (matches || setAttrMatches) {
+        violatingFiles.push({ file, matches, setAttrMatches });
+      }
+    });
+
+    expect(violatingFiles).toEqual([]);
   });
 
   it('dispatches navigation when clicking a data-page sidebar item', () => {

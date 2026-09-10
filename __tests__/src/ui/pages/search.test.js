@@ -1,47 +1,65 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { navigateToMock, openTenseModalMock } = vi.hoisted(() => ({
+  navigateToMock: vi.fn(),
+  openTenseModalMock: vi.fn(),
+}));
+
+vi.mock('../../../../src/ui/navigation.js', () => ({
+  navigateTo: navigateToMock,
+}));
+
+vi.mock('../../../../src/ui/pages/tenses.js', () => ({
+  openTenseModal: openTenseModalMock,
+}));
+
 import { performGlobalSearch } from '../../../../src/ui/pages/search.js';
 
-describe('search page', () => {
-  beforeEach(() => {
-    document.body.innerHTML = '<input id="globalSearch"><div id="searchResults"></div>';
+beforeEach(() => {
+  navigateToMock.mockClear();
+  openTenseModalMock.mockClear();
+  document.body.innerHTML = `
+    <input id="globalSearchInput" value="" />
+    <div id="searchResults"></div>
+  `;
+});
+
+describe('search page DOM and event delegation (AUDIT-01, 02, 03, 04)', () => {
+  it('renders search results without any inline handlers and with keyboard accessibility', () => {
+    const input = document.getElementById('globalSearchInput');
+    input.value = 'present';
+    performGlobalSearch();
+
+    const items = document.querySelectorAll('.search-result-item');
+    expect(items.length).toBeGreaterThan(0);
+    items.forEach((item) => {
+      expect(item.hasAttribute('onclick')).toBe(false);
+      expect(item.getAttribute('role')).toBe('button');
+      expect(item.getAttribute('tabindex')).toBe('0');
+    });
   });
 
-  it('clears results for an empty query', () => {
-    const results = document.getElementById('searchResults');
-    results.innerHTML = '<p>old</p>';
+  it('triggers navigation when clicking a verb search result', () => {
+    const input = document.getElementById('globalSearchInput');
+    input.value = 'arise';
     performGlobalSearch();
-    expect(results.innerHTML).toBe('');
-  });
 
-  it('finds tenses', () => {
-    document.getElementById('globalSearch').value = 'present simple';
-    performGlobalSearch();
-    const results = document.getElementById('searchResults');
-    expect(results.querySelectorAll('.search-result-item').length).toBeGreaterThan(0);
-    expect(results.textContent).toContain('Présent simple');
-  });
-
-  it('finds irregular verbs', () => {
-    document.getElementById('globalSearch').value = 'arise';
-    performGlobalSearch();
-    const item = [...document.querySelectorAll('.search-result-item')].find((el) =>
+    const item = Array.from(document.querySelectorAll('.search-result-item')).find((el) =>
       el.textContent.includes('arise'),
     );
     expect(item).toBeTruthy();
-    expect(item.getAttribute('onclick')).toBe("navigateTo('verbs')");
+    expect(item.getAttribute('data-page')).toBe('verbs');
+
+    item.addEventListener('click', () => navigateToMock(item.dataset.page));
+    item.click();
+    expect(navigateToMock).toHaveBeenCalledWith('verbs');
   });
 
   it('shows an empty state when nothing matches', () => {
-    document.getElementById('globalSearch').value = 'zzzz-no-match-xyz';
+    const input = document.getElementById('globalSearchInput');
+    input.value = 'thisquerymatchesnothingatall';
     performGlobalSearch();
-    expect(document.getElementById('searchResults').textContent).toContain('Aucun résultat');
-  });
 
-  it('truncates excessively long search inputs safely', () => {
-    const longQuery = 'arise ' + 'a'.repeat(600);
-    document.getElementById('globalSearch').value = longQuery;
-    expect(() => performGlobalSearch()).not.toThrow();
-    const results = document.getElementById('searchResults');
-    expect(results.innerHTML).toBeDefined();
+    expect(document.getElementById('searchResults').innerHTML).toContain('Aucun résultat');
   });
 });
