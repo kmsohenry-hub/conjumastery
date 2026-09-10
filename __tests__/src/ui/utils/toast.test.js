@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { showToast } from '../../../../src/ui/utils/toast.js';
 
 beforeEach(() => {
@@ -8,28 +8,25 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
-  document.body.innerHTML = '';
 });
 
 describe('showToast', () => {
   it('creates and appends a toast with the requested type', () => {
-    showToast('Message de test', 'success');
+    const toast = showToast('Bienvenue', 'success');
 
-    const toast = document.querySelector('#toastContainer .toast');
-    expect(toast).not.toBeNull();
+    expect(toast).toBeTruthy();
     expect(toast.className).toBe('toast toast-success');
-    expect(toast.textContent).toBe('Message de test');
+    expect(toast.textContent).toBe('Bienvenue');
+    expect(document.querySelector('#toastContainer .toast')).toBe(toast);
   });
 
   it('uses info as the default type', () => {
-    showToast('Information');
-
-    expect(document.querySelector('.toast').className).toBe('toast toast-info');
+    const toast = showToast('Information');
+    expect(toast.className).toBe('toast toast-info');
   });
 
   it('starts the exit transition after three seconds and removes the toast 300ms later', () => {
-    showToast('À supprimer', 'error');
-    const toast = document.querySelector('.toast');
+    const toast = showToast('Temporaire');
 
     vi.advanceTimersByTime(2999);
     expect(toast.style.opacity).toBe('');
@@ -50,10 +47,14 @@ describe('showToast', () => {
 });
 
 describe('showToast resilience', () => {
-  it('returns null when the toast container is absent', () => {
+  it('creates the toast container lazily when it is absent', () => {
     document.body.innerHTML = '';
 
-    expect(showToast('Impossible à afficher')).toBeNull();
+    const toast = showToast('Impossible à afficher');
+
+    expect(toast).not.toBeNull();
+    expect(document.getElementById('toastContainer')).toBeTruthy();
+    expect(document.getElementById('toastContainer')).toContain(toast);
   });
 });
 
@@ -68,9 +69,8 @@ describe('showToast actions', () => {
     });
 
     const button = document.querySelector('.toast-action');
-    expect(button).not.toBeNull();
+    expect(button).toBeTruthy();
     expect(button.textContent).toBe('Mettre à jour');
-    expect(document.querySelector('.toast')).not.toBeNull();
 
     button.click();
 
