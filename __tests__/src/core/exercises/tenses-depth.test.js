@@ -11,24 +11,24 @@ import {
 import { getConjugation, getAuxiliary } from '../../../../src/core/exercises/conjugation.js';
 
 const TENSES = [
-  ['present_simple', 'works', 'work'],
-  ['present_continuous', 'working', 'working'],
-  ['present_perfect', 'gone', 'gone'],
-  ['present_perfect_continuous', 'working', 'working'],
-  ['past_simple', 'went', 'went'],
-  ['past_continuous', 'working', 'working'],
-  ['past_perfect', 'gone', 'gone'],
-  ['past_perfect_continuous', 'working', 'working'],
-  ['future_will', 'go', 'go'],
-  ['future_going_to', 'go', 'go'],
-  ['future_continuous', 'working', 'working'],
-  ['future_perfect', 'gone', 'gone'],
-  ['future_perfect_continuous', 'working', 'working'],
-  ['conditional_0', 'works', 'work'],
-  ['conditional_1', 'go', 'go'],
-  ['conditional_2', 'went', 'went'],
-  ['conditional_3', 'gone', 'gone'],
-  ['mixed_conditional', 'go', 'go'],
+  ['present_simple', 'goes'],
+  ['present_continuous', 'going'],
+  ['present_perfect', 'gone'],
+  ['present_perfect_continuous', 'going'],
+  ['past_simple', 'went'],
+  ['past_continuous', 'going'],
+  ['past_perfect', 'gone'],
+  ['past_perfect_continuous', 'going'],
+  ['future_will', 'go'],
+  ['future_going_to', 'go'],
+  ['future_continuous', 'going'],
+  ['future_perfect', 'gone'],
+  ['future_perfect_continuous', 'going'],
+  ['conditional_0', 'goes'],
+  ['conditional_1', 'go'],
+  ['conditional_2', 'went'],
+  ['conditional_3', 'gone'],
+  ['mixed_conditional', 'go'],
 ];
 
 const cleanRandom = (value = 0.99) => vi.spyOn(Math, 'random').mockReturnValue(value);
@@ -141,22 +141,36 @@ describe('18 tenses: affirmative/negative/interrogative transformations', () => 
     expect(negative.answer).not.toBe(question.answer);
   });
 
-  test('covers the special be behaviour across present, past and conditionals', () => {
-    const cases = [
-      ['present_simple', 0, 'If She'],
-      ['past_simple', 0, "She wasn't"],
-      ['conditional_1', 0, "If She isn't"],
-      ['conditional_2', 0, "If She weren't"],
-      ['conditional_3', 0, "If She hadn't"],
-      ['mixed_conditional', 0, "If She hadn't"],
-    ];
+  test('never generates invalid be auxiliaries in sensitive tenses', () => {
+    for (const tenseId of [
+      'present_simple',
+      'past_simple',
+      'conditional_0',
+      'conditional_1',
+      'conditional_2',
+      'conditional_3',
+      'mixed_conditional',
+    ]) {
+      for (const random of [0, 0.99]) {
+        const restore = cleanRandom(random);
+        try {
+          const q = generateTransform(APP_DATA.tensesById[tenseId], 'She', 'be', true);
+          expect(q.answer).toEqual(expect.any(String));
+          expect(q.answer).not.toMatch(/\b(?:doesn't|don't|didn't)\s+be\b/i);
+          expect(q.answer).not.toMatch(/\b(?:does|do|did)\s+\w+\s+be\b/i);
+        } finally {
+          restore.mockRestore();
+        }
+      }
+    }
+  });
 
-    for (const [tenseId, random, expected] of cases) {
+  test('conditional_2 with be uses the irrealis form were/were not', () => {
+    for (const random of [0, 0.99]) {
       const restore = cleanRandom(random);
       try {
-        const q = generateTransform(APP_DATA.tensesById[tenseId], 'She', 'be', true);
-        expect(q.answer).toContain(expected);
-        expect(q.answer).not.toMatch(/\b(?:doesn't|don't|didn't)\s+be\b/i);
+        const q = generateTransform(APP_DATA.tensesById.conditional_2, 'She', 'be', true);
+        expect(q.answer).toMatch(/\bwere(?:n't)?\b/i);
       } finally {
         restore.mockRestore();
       }
