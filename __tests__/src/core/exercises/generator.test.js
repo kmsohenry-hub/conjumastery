@@ -4,6 +4,10 @@ import {
   generateCorrection,
   generateQCM,
   generateTranslation,
+  generateFill,
+  generateQuestions,
+  generateSingleQuestion,
+  generateTransform,
 } from '../../../../src/core/exercises/generator.js';
 
 APP_DATA.verbsByBase = APP_DATA.irregularVerbs.reduce((acc, verb) => {
@@ -70,13 +74,6 @@ describe('tense-aligned generated exercises', () => {
     expect(question.sentence).not.toContain(expectedAnswer);
   });
 });
-
-import {
-  generateFill,
-  generateQuestions,
-  generateSingleQuestion,
-  generateTransform,
-} from '../../../../src/core/exercises/generator.js';
 
 describe('generateFill', () => {
   test('uses a fill template when the template branch is selected', () => {
@@ -167,8 +164,14 @@ describe('generateTransform', () => {
     ['present_continuous', 'I', 'work', false, 'I am working', 'I am not working.'],
     ['past_continuous', 'He', 'work', true, 'He was working', 'He was not working.'],
     ['present_perfect', 'She', 'go', true, 'She has gone', "She hasn't gone."],
+    ['present_perfect_continuous', 'She', 'go', true, 'She has been going', "She hasn't been going."],
+    ['past_perfect', 'She', 'go', true, 'She had gone', "She hadn't gone."],
+    ['past_perfect_continuous', 'She', 'go', true, 'She had been going', "She hadn't been going."],
     ['future_will', 'They', 'work', false, 'They will work', "They won't work."],
     ['future_going_to', 'He', 'work', true, 'He is going to work', 'He is not going to work.'],
+    ['future_continuous', 'She', 'go', true, 'She will be going', "She won't be going."],
+    ['future_perfect', 'She', 'go', true, 'She will have gone', "She won't have gone."],
+    ['future_perfect_continuous', 'She', 'go', true, 'She will have been going', "She won't have been going."],
     ['custom_tense', 'They', 'work', false, 'They work.', "They didn't work."],
   ])(
     'generates the expected negative branch for %s',
@@ -194,8 +197,14 @@ describe('generateTransform', () => {
     ['present_continuous', 'He', 'work', true, 'Is he working?'],
     ['past_continuous', 'They', 'work', false, 'Were they working?'],
     ['present_perfect', 'She', 'go', true, 'Has she gone?'],
+    ['present_perfect_continuous', 'She', 'go', true, 'Has she been going?'],
+    ['past_perfect', 'She', 'go', true, 'Had she gone?'],
+    ['past_perfect_continuous', 'She', 'go', true, 'Had she been going?'],
     ['future_will', 'They', 'work', false, 'Will they work?'],
     ['future_going_to', 'He', 'work', true, 'Is he going to work?'],
+    ['future_continuous', 'She', 'go', true, 'Will she be going?'],
+    ['future_perfect', 'She', 'go', true, 'Will she have gone?'],
+    ['future_perfect_continuous', 'She', 'go', true, 'Will she have been going?'],
     ['custom_tense', 'They', 'work', false, 'Did they work?'],
   ])(
     'generates the expected question branch for %s',

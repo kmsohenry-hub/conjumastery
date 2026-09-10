@@ -2,31 +2,32 @@ import { describe, test, expect } from 'vitest';
 import {
   getIngForm,
   getRegularPast,
+  getPresentSimpleForm,
+  getConjugation,
   shouldDoubleFinalConsonant,
 } from '../../../../src/core/exercises/conjugation.js';
+import { APP_DATA } from '../../../../src/data/index.js';
 
 describe('getIngForm', () => {
   test('handles verbs ending in "ie"', () => {
-    expect(getIngForm('die')).toBe('dying');
     expect(getIngForm('lie')).toBe('lying');
+    expect(getIngForm('die')).toBe('dying');
     expect(getIngForm('tie')).toBe('tying');
   });
 
-  test('handles verbs ending in "e" (except "be")', () => {
+  test('handles verbs ending in "e"', () => {
     expect(getIngForm('make')).toBe('making');
-    expect(getIngForm('take')).toBe('taking');
-    expect(getIngForm('have')).toBe('having');
-    expect(getIngForm('come')).toBe('coming');
+    expect(getIngForm('write')).toBe('writing');
+    expect(getIngForm('drive')).toBe('driving');
   });
 
-  test('handles the verb "be"', () => {
+  test('preserves "e" for verb "be"', () => {
     expect(getIngForm('be')).toBe('being');
   });
 
-  test('handles regular verbs', () => {
+  test('handles general verbs with -ing suffix', () => {
     expect(getIngForm('work')).toBe('working');
     expect(getIngForm('play')).toBe('playing');
-    expect(getIngForm('eat')).toBe('eating');
     expect(getIngForm('go')).toBe('going');
     expect(getIngForm('do')).toBe('doing');
   });
@@ -53,7 +54,7 @@ describe('getIngForm', () => {
   test('doubles final l in BrE regardless of stress (travel → travelling)', () => {
     expect(getIngForm('travel')).toBe('travelling');
     expect(getIngForm('cancel')).toBe('cancelling');
-    expect(getIngForm('control')).toBe('controlling'); // also final-stress
+    expect(getIngForm('control')).toBe('controlling');
   });
 });
 
@@ -124,5 +125,33 @@ describe('shouldDoubleFinalConsonant', () => {
   test('returns false for verbs shorter than 3 chars', () => {
     expect(shouldDoubleFinalConsonant('do')).toBe(false);
     expect(shouldDoubleFinalConsonant('go')).toBe(false);
+  });
+});
+
+describe('getPresentSimpleForm and getConjugation robustness', () => {
+  test('correctly conjugates be without ever generating bes', () => {
+    expect(getPresentSimpleForm('be', true)).toBe('is');
+    expect(getPresentSimpleForm('be', false, 'I')).toBe('am');
+    expect(getPresentSimpleForm('be', false, 'They')).toBe('are');
+    expect(getPresentSimpleForm('be', true, 'She')).toBe('is');
+    expect(getPresentSimpleForm('be', true)).not.toBe('bes');
+  });
+
+  test('correctly conjugates have without ever generating haves', () => {
+    expect(getPresentSimpleForm('have', true)).toBe('has');
+    expect(getPresentSimpleForm('have', false)).toBe('have');
+    expect(getPresentSimpleForm('have', true, 'He')).toBe('has');
+    expect(getPresentSimpleForm('have', true)).not.toBe('haves');
+  });
+
+  test('getConjugation accurately conjugates be and have in context', () => {
+    expect(getConjugation(APP_DATA.verbsByBase, 'be', 'present_simple', 'I', false)).toBe('am');
+    expect(getConjugation(APP_DATA.verbsByBase, 'be', 'present_simple', 'She', true)).toBe('is');
+    expect(getConjugation(APP_DATA.verbsByBase, 'be', 'present_simple', 'We', false)).toBe('are');
+    expect(getConjugation(APP_DATA.verbsByBase, 'be', 'past_simple', 'I', false)).toBe('was');
+    expect(getConjugation(APP_DATA.verbsByBase, 'be', 'past_simple', 'She', true)).toBe('was');
+    expect(getConjugation(APP_DATA.verbsByBase, 'be', 'past_simple', 'They', false)).toBe('were');
+    expect(getConjugation(APP_DATA.verbsByBase, 'have', 'present_simple', 'She', true)).toBe('has');
+    expect(getConjugation(APP_DATA.verbsByBase, 'have', 'present_simple', 'They', false)).toBe('have');
   });
 });

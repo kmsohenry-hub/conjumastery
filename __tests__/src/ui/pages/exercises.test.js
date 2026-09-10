@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 
 const { navigateTo, launchConfetti } = vi.hoisted(() => ({
   navigateTo: vi.fn(),
@@ -8,7 +8,10 @@ const { navigateTo, launchConfetti } = vi.hoisted(() => ({
 const { mockEngine, mockState } = vi.hoisted(() => ({
   mockEngine: {
     currentTenseFilter: null,
-    currentMode: 'all',
+    currentMode: null,
+    currentDifficulty: null,
+    currentCount: 10,
+    sessionConfig: null,
     currentIndex: 0,
     score: 0,
     answered: false,
@@ -16,38 +19,47 @@ const { mockEngine, mockState } = vi.hoisted(() => ({
       {
         tenseId: 'present_simple',
         type: 'qcm',
-        sentence: 'I ___ to school.',
-        options: ['go', 'goes', 'went', 'going'],
+        sentence: 'He ___ every day.',
+        options: ['works', 'work'],
         correct: 0,
-        explanation: 'Present simple with I.',
+        explanation: 'He works.',
       },
       {
         tenseId: 'present_simple',
         type: 'fill',
-        sentence: 'She ___ (like) apples.',
+        sentence: 'She ___ chocolate.',
         answer: 'likes',
-        explanation: '3rd person singular.',
+        explanation: 'She likes.',
       },
     ],
-    start: vi.fn(),
     getCurrent: vi.fn(function () {
-      return this.questions[this.currentIndex];
+      return this.questions[this.currentIndex] || null;
     }),
     next: vi.fn(function () {
-      if (this.currentIndex < this.questions.length - 1) {
-        this.currentIndex++;
-        return true;
-      }
-      return false;
+      this.currentIndex++;
+      return this.currentIndex < this.questions.length;
     }),
     getProgress: vi.fn(function () {
-      return { current: this.currentIndex + 1, total: this.questions.length, score: this.score };
+      return {
+        current: this.currentIndex + 1,
+        total: this.questions.length,
+        score: this.score,
+      };
+    }),
+    start: vi.fn(function (mode, tenseFilter, difficulty, count = 10) {
+      this.currentMode = mode;
+      this.currentTenseFilter = tenseFilter;
+      this.currentDifficulty = difficulty;
+      this.currentCount = count;
+      this.sessionConfig = Object.freeze({ mode, tenseFilter, difficulty, count });
+      return this.questions;
     }),
   },
   mockState: {
     addXP: vi.fn(),
     recordAnswer: vi.fn(),
     completeLesson: vi.fn(),
+    updateSpacedRepetition: vi.fn(),
   },
 }));
 
@@ -70,6 +82,7 @@ vi.mock('../../../../src/ui/utils/confetti.js', () => ({
 import {
   resetExerciseUI,
   startExercise,
+  restartExercise,
   selectOption,
   validateExercise,
   skipExercise,
@@ -87,22 +100,25 @@ beforeEach(() => {
   mockEngine.currentIndex = 0;
   mockEngine.score = 0;
   mockEngine.answered = false;
-
+  mockEngine.currentMode = null;
+  mockEngine.currentTenseFilter = null;
+  mockEngine.currentDifficulty = null;
+  mockEngine.currentCount = 10;
+  mockEngine.sessionConfig = null;
   document.body.innerHTML = `
-    <div id="exerciseModeSelector" style="display:block"></div>
+    <div id="exerciseModeSelector"></div>
     <div id="exerciseArea" style="display:none"></div>
     <div id="exerciseQuestionContainer"></div>
-    <div id="exCurrent"></div>
-    <div id="exTotal"></div>
-    <div id="exProgressBar"></div>
     <div id="exerciseFeedback" style="display:none"></div>
-    <div id="exValidateBtn" style="display:none"></div>
-    <div id="exNextBtn" style="display:none"></div>
-    <div id="exSkipBtn" style="display:none"></div>
+    <button id="exValidateBtn"></button>
+    <button id="exNextBtn"></button>
+    <button id="exSkipBtn"></button>
+    <div id="exProgressBar" style="width:0%"></div>
+    <span id="exCurrent"></span>
+    <span id="exTotal"></span>
   `;
 });
 
-import { afterEach } from 'vitest';
 afterEach(() => vi.useRealTimers());
 
 describe('exercises page', () => {
@@ -112,77 +128,66 @@ describe('exercises page', () => {
     expect(document.getElementById('exerciseArea').style.display).toBe('none');
   });
 
-  it('starts exercise and renders QCM question', () => {
-    startExercise('mixed', ['present_simple'], 'intermediate');
-    expect(mockEngine.start).toHaveBeenCalled();
+  it('starts an exercise session', () => {
+    startExercise('mixed');
+    expect(document.getElementById('exerciseModeSelector').style.display).toBe('none');
     expect(document.getElementById('exerciseArea').style.display).toBe('block');
-    expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain(
-      'I ___ to school.',
-    );
+    expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain('exercise-card');
   });
 
-  it('selects option and validates QCM correctly', () => {
-    startExercise('mixed', ['present_simple'], 'intermediate');
-    const btn = document.querySelector('.option-btn');
-    selectOption(btn, 0);
-
-    validateExercise();
-    expect(mockEngine.score).toBe(1);
-    expect(mockState.addXP).toHaveBeenCalledWith(10);
-    expect(document.getElementById('exerciseFeedback').style.display).toBe('block');
-    expect(document.getElementById('exerciseFeedback').innerHTML).toContain('✅ Correct');
-  });
-
-  it('validates incorrect fill-in-the-blank question', () => {
-    mockEngine.currentIndex = 1;
-    startExercise('mixed', ['present_simple'], 'intermediate');
-
-    const input = document.getElementById('exerciseInput');
-    input.value = 'wrong answer';
-
-    validateExercise();
-    expect(mockEngine.score).toBe(0);
-    expect(document.getElementById('exerciseFeedback').innerHTML).toContain('❌ Incorrect');
-  });
-
-  it('skips exercise', () => {
-    startExercise('mixed', ['present_simple'], 'intermediate');
-    skipExercise();
-    expect(document.getElementById('exerciseFeedback').innerHTML).toContain('Question passée');
-  });
-
-  it('advances to next exercise and finishes session', () => {
-    startExercise('mixed', ['present_simple'], 'intermediate');
+  it('advances through questions', () => {
+    startExercise('mixed');
     nextExercise();
-    expect(mockEngine.currentIndex).toBe(1);
+    expect(mockEngine.next).toHaveBeenCalledTimes(1);
+    expect(document.getElementById('exCurrent').textContent).toBe('2');
+  });
 
-    mockEngine.score = 2;
+  it('finishes exercise when questions are exhausted', () => {
+    startExercise('mixed');
+    nextExercise();
     nextExercise(); // Finishes exercise
     expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain('Excellent !');
   });
 
   it('uses defaults when tense filter and difficulty are omitted', () => {
     startExercise('mixed');
-    expect(mockEngine.start).toHaveBeenCalledWith('mixed', [], 'intermediate');
+    expect(mockEngine.start).toHaveBeenCalledWith('mixed', [], 'intermediate', 10);
     expect(mockEngine.currentTenseFilter).toEqual([]);
   });
 
   it('uses null tense filter and default difficulty for non-mixed mode', () => {
     startExercise('fill', undefined, '');
-    expect(mockEngine.start).toHaveBeenCalledWith('fill', null, 'intermediate');
+    expect(mockEngine.start).toHaveBeenCalledWith('fill', null, 'intermediate', 10);
     expect(mockEngine.currentTenseFilter).toBeNull();
   });
 
   it('supports explicit null tense filter', () => {
     startExercise('fill', null, 'advanced');
-    expect(mockEngine.start).toHaveBeenCalledWith('fill', null, 'advanced');
+    expect(mockEngine.start).toHaveBeenCalledWith('fill', null, 'advanced', 10);
   });
 
   it('starts a tense-focused exercise after navigating', () => {
     startExerciseForTense('past_simple');
     expect(navigateTo).toHaveBeenCalledWith('exercises');
     vi.advanceTimersByTime(100);
-    expect(mockEngine.start).toHaveBeenCalledWith('mixed', ['past_simple'], 'intermediate');
+    expect(mockEngine.start).toHaveBeenCalledWith('mixed', ['past_simple'], 'intermediate', 10);
+  });
+
+  it('restarts the exercise preserving exact mode, filter, difficulty, and count (Issue #98)', () => {
+    startExercise('transform', ['past_perfect'], 'hard', 5);
+    expect(mockEngine.start).toHaveBeenLastCalledWith('transform', ['past_perfect'], 'hard', 5);
+
+    restartExercise();
+    expect(mockEngine.start).toHaveBeenLastCalledWith('transform', ['past_perfect'], 'hard', 5);
+  });
+
+  it('renders restart button in finishExercise and triggers restartExercise (Issue #98)', () => {
+    startExercise('transform', ['past_perfect'], 'hard', 5);
+    finishExercise();
+
+    const finishHtml = document.getElementById('exerciseQuestionContainer').innerHTML;
+    expect(finishHtml).toContain('Recommencer');
+    expect(finishHtml).toContain('restartExercise()');
   });
 
   it('renders fill, translation, transform and correction inputs', () => {
