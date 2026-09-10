@@ -52,7 +52,22 @@ jobs:
         run: npm run format:check
 
       - name: Run unit tests
-        run: npm test
+        id: unit_tests
+        continue-on-error: true
+        run: npm test > unit-test.log 2>&1
+
+      - name: Upload unit test log (ci-fix diagnostics)
+        if: always() && github.ref == 'refs/heads/ci-fix'
+        uses: actions/upload-artifact@v6
+        with:
+          name: unit-test-log
+          path: unit-test.log
+          if-no-files-found: warn
+          retention-days: 3
+
+      - name: Fail if unit tests failed
+        if: steps.unit_tests.outcome == 'failure'
+        run: exit 1
 
       - name: Run coverage (blocking quality gate)
         run: npm run test:coverage
