@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const cancelTest = vi.fn();
-
-const { renderers } = vi.hoisted(() => ({
+const { cancelTest, renderers } = vi.hoisted(() => ({
+  cancelTest: vi.fn(),
   renderers: Object.fromEntries(
     [
       ['dashboard', 'renderDashboard'],
@@ -23,7 +22,10 @@ const { renderers } = vi.hoisted(() => ({
 
 vi.mock('../../../src/ui/pages/dashboard.js', () => ({ renderDashboard: renderers.dashboard }));
 vi.mock('../../../src/ui/pages/lessons.js', () => ({ renderLessons: renderers.lessons }));
-vi.mock('../../../src/ui/pages/exercises.js', () => ({ resetExerciseUI: renderers.exercises }));
+vi.mock('../../../src/ui/pages/exercises.js', () => ({
+  resetExerciseUI: renderers.exercises,
+  cancelTest,
+}));
 vi.mock('../../../src/ui/pages/test.js', () => ({
   renderTestSetup: renderers.test,
   cancelTest,
@@ -201,14 +203,12 @@ describe('navigation', () => {
 
     it('traps focus inside the modal on Tab (cycles from last to first)', () => {
       openModal();
-      const modal = document.getElementById('modalOverlay');
       const first = document.getElementById('modalBtnFirst');
       const last = document.getElementById('modalBtnSecond');
 
       last.focus();
       expect(document.activeElement).toBe(last);
 
-      // Tab from last button should wrap to first button
       const { KeyboardEvent } = window;
       const tabEvent = new KeyboardEvent('keydown', {
         key: 'Tab',
@@ -223,14 +223,12 @@ describe('navigation', () => {
 
     it('traps focus inside the modal on Shift+Tab (cycles from first to last)', () => {
       openModal();
-      const modal = document.getElementById('modalOverlay');
       const first = document.getElementById('modalBtnFirst');
       const last = document.getElementById('modalBtnSecond');
 
       first.focus();
       expect(document.activeElement).toBe(first);
 
-      // Shift+Tab from first button should wrap to last button
       const { KeyboardEvent } = window;
       const shiftTabEvent = new KeyboardEvent('keydown', {
         key: 'Tab',
