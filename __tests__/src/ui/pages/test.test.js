@@ -93,16 +93,33 @@ describe('test mode', () => {
   it('starts with selected tenses and selected difficulty', () => {
     renderTestSetup();
     document.querySelectorAll('#testTenseCheckboxes input')[1].checked = false;
-    engine.getCurrent.mockReturnValue({ type: 'qcm', tenseId: 'present_simple', options: ['a'], correct: 0, sentence: 'She ___.' });
+    engine.getCurrent.mockReturnValue({
+      type: 'qcm',
+      tenseId: 'present_simple',
+      options: ['a'],
+      correct: 0,
+      sentence: 'She ___.',
+    });
     startTest();
-    expect(engine.start).toHaveBeenCalledWith('mixed', ['present_simple', 'future_will'], 'intermediate', 20);
+    expect(engine.start).toHaveBeenCalledWith(
+      'mixed',
+      ['present_simple', 'future_will'],
+      'intermediate',
+      20,
+    );
     expect(document.getElementById('testSetup').style.display).toBe('none');
     expect(document.getElementById('testArea').style.display).toBe('block');
   });
 
   it('updates and stops the timer on cancel', () => {
     renderTestSetup();
-    engine.getCurrent.mockReturnValue({ type: 'qcm', tenseId: 'present_simple', options: ['a'], correct: 0, sentence: 'She ___.' });
+    engine.getCurrent.mockReturnValue({
+      type: 'qcm',
+      tenseId: 'present_simple',
+      options: ['a'],
+      correct: 0,
+      sentence: 'She ___.',
+    });
     startTest();
     vi.advanceTimersByTime(65_000);
     expect(document.getElementById('testTimer').textContent).toBe('01:05');
@@ -112,7 +129,12 @@ describe('test mode', () => {
   });
 
   it('renders text questions and preserves newline structure while preventing script elements', () => {
-    const q = { type: 'fill', tenseId: 'present_simple', sentence: '<script>alert(1)</script>\nNext line', answer: 'works' };
+    const q = {
+      type: 'fill',
+      tenseId: 'present_simple',
+      sentence: '<script>alert(1)</script>\nNext line',
+      answer: 'works',
+    };
     engine.questions = [q];
     engine.getCurrent.mockReturnValue(q);
     renderTestQuestion();
@@ -138,7 +160,13 @@ describe('test mode', () => {
   });
 
   it('renders QCM options and replaces a previous selection', () => {
-    const q = { type: 'qcm', tenseId: 'past_simple', sentence: 'They ___.', options: ['left', 'leave'], correct: 0 };
+    const q = {
+      type: 'qcm',
+      tenseId: 'past_simple',
+      sentence: 'They ___.',
+      options: ['left', 'leave'],
+      correct: 0,
+    };
     engine.questions = [q];
     engine.getCurrent.mockReturnValue(q);
     renderTestQuestion();
@@ -151,7 +179,13 @@ describe('test mode', () => {
   });
 
   it('blocks QCM validation until an option is selected', () => {
-    const q = { type: 'qcm', tenseId: 'present_simple', sentence: 'He ___.', options: ['runs', 'run'], correct: 0 };
+    const q = {
+      type: 'qcm',
+      tenseId: 'present_simple',
+      sentence: 'He ___.',
+      options: ['runs', 'run'],
+      correct: 0,
+    };
     engine.questions = [q];
     engine.getCurrent.mockReturnValue(q);
     renderTestQuestion();
@@ -164,8 +198,17 @@ describe('test mode', () => {
   });
 
   it('records a correct QCM answer and awards XP', () => {
-    const q = { type: 'qcm', tenseId: 'present_simple', sentence: 'She ___.', options: ['works', 'work'], correct: 0, explanation: '3rd person singular' };
-    engine.questions = [q]; engine.getCurrent.mockReturnValue(q); renderTestQuestion();
+    const q = {
+      type: 'qcm',
+      tenseId: 'present_simple',
+      sentence: 'She ___.',
+      options: ['works', 'work'],
+      correct: 0,
+      explanation: '3rd person singular',
+    };
+    engine.questions = [q];
+    engine.getCurrent.mockReturnValue(q);
+    renderTestQuestion();
     selectOption(document.querySelectorAll('.option-btn')[0], 0);
     validateTestAnswer();
     expect(engine.score).toBe(1);
@@ -175,8 +218,17 @@ describe('test mode', () => {
   });
 
   it('records a wrong QCM answer without XP', () => {
-    const q = { type: 'qcm', tenseId: 'past_simple', sentence: 'She ___.', options: ['see', 'saw'], correct: 1, explanation: 'Past of see' };
-    engine.questions = [q]; engine.getCurrent.mockReturnValue(q); renderTestQuestion();
+    const q = {
+      type: 'qcm',
+      tenseId: 'past_simple',
+      sentence: 'She ___.',
+      options: ['see', 'saw'],
+      correct: 1,
+      explanation: 'Past of see',
+    };
+    engine.questions = [q];
+    engine.getCurrent.mockReturnValue(q);
+    renderTestQuestion();
     selectOption(document.querySelectorAll('.option-btn')[0], 0);
     validateTestAnswer();
     expect(engine.score).toBe(0);
@@ -186,8 +238,17 @@ describe('test mode', () => {
   });
 
   it('validates free text through answerMatches and trims whitespace', () => {
-    const q = { type: 'fill', tenseId: 'future_will', sentence: 'They ___.', answer: 'will', explanation: 'Use will' };
-    engine.questions = [q]; engine.getCurrent.mockReturnValue(q); answerMatches.mockReturnValue(true); renderTestQuestion();
+    const q = {
+      type: 'fill',
+      tenseId: 'future_will',
+      sentence: 'They ___.',
+      answer: 'will',
+      explanation: 'Use will',
+    };
+    engine.questions = [q];
+    engine.getCurrent.mockReturnValue(q);
+    answerMatches.mockReturnValue(true);
+    renderTestQuestion();
     document.getElementById('testInput').value = '  WILL  ';
     validateTestAnswer();
     expect(answerMatches).toHaveBeenCalledWith('WILL', 'will');
@@ -197,21 +258,37 @@ describe('test mode', () => {
 
   it('ignores blank and duplicate validation attempts', () => {
     const q = { type: 'fill', tenseId: 'present_simple', sentence: 'She ___.', answer: 'works' };
-    engine.questions = [q]; engine.getCurrent.mockReturnValue(q); answerMatches.mockReturnValue(true); renderTestQuestion();
+    engine.questions = [q];
+    engine.getCurrent.mockReturnValue(q);
+    answerMatches.mockReturnValue(true);
+    renderTestQuestion();
     const input = document.getElementById('testInput');
-    input.value = '   '; validateTestAnswer();
+    input.value = '   ';
+    validateTestAnswer();
     expect(engine.answered).toBe(false);
-    input.value = 'works'; validateTestAnswer(); validateTestAnswer();
+    input.value = 'works';
+    validateTestAnswer();
+    validateTestAnswer();
     expect(state.recordAnswer).toHaveBeenCalledTimes(1);
   });
 
   it('advances when questions remain and finishes otherwise', () => {
-    const q = { type: 'qcm', tenseId: 'past_simple', sentence: 'He ___.', options: ['ran', 'run'], correct: 0 };
-    engine.questions = [{ ...q, sentence: 'First' }, q]; engine.currentIndex = 1; engine.getCurrent.mockReturnValue(q); engine.next.mockReturnValue(true);
+    const q = {
+      type: 'qcm',
+      tenseId: 'past_simple',
+      sentence: 'He ___.',
+      options: ['ran', 'run'],
+      correct: 0,
+    };
+    engine.questions = [{ ...q, sentence: 'First' }, q];
+    engine.currentIndex = 1;
+    engine.getCurrent.mockReturnValue(q);
+    engine.next.mockReturnValue(true);
     nextTestQuestion();
     expect(engine.next).toHaveBeenCalledOnce();
     expect(document.getElementById('testCurrent').textContent).toBe('2');
-    engine.next.mockReturnValue(false); nextTestQuestion();
+    engine.next.mockReturnValue(false);
+    nextTestQuestion();
     expect(document.getElementById('testResults').style.display).toBe('block');
   });
 
@@ -220,7 +297,11 @@ describe('test mode', () => {
     [60, '🎯', '🌿 Intermédiaire'],
     [20, '📚', '🌱 Débutant'],
   ])('renders the correct recommendation at %s%%', (pct, emoji, level) => {
-    engine.questions = Array.from({ length: 10 }, (_, i) => ({ tenseId: i % 2 ? 'past_simple' : 'present_simple', sentence: `Q${i}`, answeredCorrectly: i < pct / 10 }));
+    engine.questions = Array.from({ length: 10 }, (_, i) => ({
+      tenseId: i % 2 ? 'past_simple' : 'present_simple',
+      sentence: `Q${i}`,
+      answeredCorrectly: i < pct / 10,
+    }));
     engine.score = pct / 10;
     finishTest();
     const results = document.getElementById('testResults').textContent;
