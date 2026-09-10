@@ -216,3 +216,121 @@ window.addEventListener('keydown', (e) => {
     }
   }
 });
+
+export function initEventDelegation() {
+  if (typeof document === 'undefined' || !document.addEventListener) return;
+
+  document.addEventListener('click', (e) => {
+    // 1. Navigation items: [data-page]
+    const navItem = e.target.closest?.('[data-page]');
+    if (
+      navItem &&
+      !navItem.closest?.('#modalContent') &&
+      !navItem.closest?.('#lessonTabs') &&
+      !navItem.closest?.('#tenseCategoryTabs') &&
+      !navItem.closest?.('#comparisonTabs')
+    ) {
+      const page = navItem.dataset.page;
+      if (page) {
+        navigateTo(page);
+        return;
+      }
+    }
+
+    // 2. Mode cards: [data-mode]
+    const modeCard = e.target.closest?.('[data-mode]');
+    if (modeCard) {
+      const mode = modeCard.dataset.mode;
+      if (mode && typeof window !== 'undefined' && typeof window.startExercise === 'function') {
+        window.startExercise(mode);
+        return;
+      }
+    }
+
+    // 3. Action buttons: [data-action]
+    const actionEl = e.target.closest?.('[data-action]');
+    if (actionEl) {
+      const action = actionEl.dataset.action;
+      switch (action) {
+        case 'toggle-sidebar':
+          toggleSidebar();
+          break;
+        case 'toggle-theme':
+          toggleTheme();
+          break;
+        case 'set-theme':
+          if (actionEl.dataset.theme) setTheme(actionEl.dataset.theme);
+          break;
+        case 'exit-exercise':
+          if (typeof window !== 'undefined' && typeof window.exitExercise === 'function') window.exitExercise();
+          break;
+        case 'skip-exercise':
+          if (typeof window !== 'undefined' && typeof window.skipExercise === 'function') window.skipExercise();
+          break;
+        case 'validate-exercise':
+          if (typeof window !== 'undefined' && typeof window.validateExercise === 'function') window.validateExercise();
+          break;
+        case 'next-exercise':
+          if (typeof window !== 'undefined' && typeof window.nextExercise === 'function') window.nextExercise();
+          break;
+        case 'start-test':
+          if (typeof window !== 'undefined' && typeof window.startTest === 'function') window.startTest();
+          break;
+        case 'validate-test':
+          if (typeof window !== 'undefined' && typeof window.validateTestAnswer === 'function') window.validateTestAnswer();
+          break;
+        case 'next-test':
+          if (typeof window !== 'undefined' && typeof window.nextTestQuestion === 'function') window.nextTestQuestion();
+          break;
+        case 'toggle-notifications':
+          if (typeof window !== 'undefined' && window.NotificationManager?.toggle) {
+            window.NotificationManager.toggle();
+          }
+          break;
+        case 'export-data':
+          if (typeof window !== 'undefined' && typeof window.exportData === 'function') window.exportData();
+          break;
+        case 'import-data-click':
+          document.getElementById('importFile')?.click();
+          break;
+        case 'reset-progress':
+          if (typeof window !== 'undefined' && typeof window.confirmReset === 'function') window.confirmReset();
+          else if (typeof window !== 'undefined' && typeof window.resetProgress === 'function') window.resetProgress();
+          break;
+      }
+      return;
+    }
+
+    // 4. Modal overlay click (outside modalContent)
+    if (e.target === document.getElementById('modalOverlay')) {
+      closeModalDirect();
+      return;
+    }
+
+    // 5. Specific static button IDs for clean semantic HTML
+    const btn = e.target.closest?.('button');
+    if (btn) {
+      if (btn.id === 'menuToggleBtn' || btn.classList.contains('menu-toggle')) {
+        toggleSidebar();
+      } else if (btn.id === 'themeBtn') {
+        toggleTheme();
+      } else if (btn.id === 'exSkipBtn') {
+        if (typeof window !== 'undefined' && typeof window.skipExercise === 'function') window.skipExercise();
+      } else if (btn.id === 'exValidateBtn') {
+        if (typeof window !== 'undefined' && typeof window.validateExercise === 'function') window.validateExercise();
+      } else if (btn.id === 'exNextBtn') {
+        if (typeof window !== 'undefined' && typeof window.nextExercise === 'function') window.nextExercise();
+      } else if (btn.id === 'testValidateBtn') {
+        if (typeof window !== 'undefined' && typeof window.validateTestAnswer === 'function') window.validateTestAnswer();
+      } else if (btn.id === 'testNextBtn') {
+        if (typeof window !== 'undefined' && typeof window.nextTestQuestion === 'function') window.nextTestQuestion();
+      } else if (btn.classList.contains('modal-close')) {
+        closeModalDirect();
+      }
+    }
+  });
+}
+
+if (typeof window !== 'undefined') {
+  initEventDelegation();
+}

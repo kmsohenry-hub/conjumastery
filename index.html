@@ -7,7 +7,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
     />
     <title>ConjuMaster UK — Maîtrisez la conjugaison anglaise</title>
     <link
@@ -18,7 +18,7 @@
   </head>
   <body>
     <!-- SIDEBAR -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay" data-action="toggle-sidebar"></div>
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <div class="logo-icon">🇬🇧</div>
@@ -28,51 +28,51 @@
       </div>
       <nav class="sidebar-nav">
         <div class="nav-section-title">Principal</div>
-        <a class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+        <a class="nav-item active" data-page="dashboard">
           <span class="nav-icon">🏠</span> Tableau de bord
         </a>
-        <a class="nav-item" data-page="lessons" onclick="navigateTo('lessons')">
+        <a class="nav-item" data-page="lessons">
           <span class="nav-icon">📚</span> Leçons
           <span class="badge" id="lessonsBadge">12</span>
         </a>
-        <a class="nav-item" data-page="exercises" onclick="navigateTo('exercises')">
+        <a class="nav-item" data-page="exercises">
           <span class="nav-icon">🎮</span> Exercices
         </a>
-        <a class="nav-item" data-page="test" onclick="navigateTo('test')">
+        <a class="nav-item" data-page="test">
           <span class="nav-icon">🧪</span> Mode Test
         </a>
 
         <div class="nav-section-title">Référence</div>
-        <a class="nav-item" data-page="tenses" onclick="navigateTo('tenses')">
+        <a class="nav-item" data-page="tenses">
           <span class="nav-icon">⏱️</span> Temps verbaux
         </a>
-        <a class="nav-item" data-page="verbs" onclick="navigateTo('verbs')">
+        <a class="nav-item" data-page="verbs">
           <span class="nav-icon">📘</span> Verbes irréguliers
         </a>
-        <a class="nav-item" data-page="comparison" onclick="navigateTo('comparison')">
+        <a class="nav-item" data-page="comparison">
           <span class="nav-icon">📊</span> Comparatif
         </a>
 
         <div class="nav-section-title">Outils</div>
-        <a class="nav-item" data-page="revision" onclick="navigateTo('revision')">
+        <a class="nav-item" data-page="revision">
           <span class="nav-icon">🔄</span> Révisions
           <span class="badge" id="revisionBadge">0</span>
         </a>
-        <a class="nav-item" data-page="weakpoints" onclick="navigateTo('weakpoints')">
+        <a class="nav-item" data-page="weakpoints">
           <span class="nav-icon">🎯</span> Points faibles
         </a>
-        <a class="nav-item" data-page="search" onclick="navigateTo('search')">
+        <a class="nav-item" data-page="search">
           <span class="nav-icon">🔍</span> Recherche
         </a>
-        <a class="nav-item" data-page="favorites" onclick="navigateTo('favorites')">
+        <a class="nav-item" data-page="favorites">
           <span class="nav-icon">⭐</span> Favoris
         </a>
 
         <div class="nav-section-title">Paramètres</div>
-        <a class="nav-item" data-page="stats" onclick="navigateTo('stats')">
+        <a class="nav-item" data-page="stats">
           <span class="nav-icon">📈</span> Statistiques
         </a>
-        <a class="nav-item" data-page="settings" onclick="navigateTo('settings')">
+        <a class="nav-item" data-page="settings">
           <span class="nav-icon">⚙️</span> Paramètres
         </a>
       </nav>
@@ -101,7 +101,7 @@
     <div class="main-content">
       <header class="app-header">
         <div class="header-left">
-          <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+          <button class="menu-toggle" id="menuToggleBtn" data-action="toggle-sidebar">☰</button>
           <h1 class="header-title" id="pageTitle">Tableau de bord</h1>
         </div>
         <div class="header-right">
@@ -110,7 +110,7 @@
           </div>
           <div class="header-stat">⭐ <span id="headerXP">0</span> XP</div>
           <div class="header-stat">🏆 <span id="headerLevel">1</span></div>
-          <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+          <button class="theme-toggle" id="themeBtn" data-action="toggle-theme">🌙</button>
         </div>
       </header>
 
@@ -183,32 +183,32 @@
 
         <div id="exerciseModeSelector">
           <div class="mode-cards">
-            <div class="mode-card" onclick="startExercise('qcm')">
+            <div class="mode-card" data-mode="qcm">
               <div class="mode-icon">🅰️</div>
               <h3>QCM intelligent</h3>
               <p>Choisissez la bonne forme verbale parmi 4 options</p>
             </div>
-            <div class="mode-card" onclick="startExercise('fill')">
+            <div class="mode-card" data-mode="fill">
               <div class="mode-icon">✏️</div>
               <h3>Phrases à compléter</h3>
               <p>Écrivez la forme correcte du verbe</p>
             </div>
-            <div class="mode-card" onclick="startExercise('transform')">
+            <div class="mode-card" data-mode="transform">
               <div class="mode-icon">🔄</div>
               <h3>Transformation</h3>
               <p>Affirmatif → Négatif → Interrogatif</p>
             </div>
-            <div class="mode-card" onclick="startExercise('correction')">
+            <div class="mode-card" data-mode="correction">
               <div class="mode-icon">🔍</div>
               <h3>Correction d'erreurs</h3>
               <p>Trouvez et corrigez l'erreur dans la phrase</p>
             </div>
-            <div class="mode-card" onclick="startExercise('translation')">
+            <div class="mode-card" data-mode="translation">
               <div class="mode-icon">🌍</div>
               <h3>Traduction FR → EN</h3>
               <p>Traduisez des phrases en conjuguant correctement</p>
             </div>
-            <div class="mode-card" onclick="startExercise('mixed')">
+            <div class="mode-card" data-mode="mixed">
               <div class="mode-icon">🎲</div>
               <h3>Mode mixte</h3>
               <p>Tous les types d'exercices mélangés</p>
@@ -231,7 +231,7 @@
                 >Question <span id="exCurrent">1</span> / <span id="exTotal">10</span></span
               >
             </div>
-            <button class="btn btn-outline btn-sm" onclick="exitExercise()">✕ Quitter</button>
+            <button class="btn btn-outline btn-sm" id="exExitBtn" data-action="exit-exercise">✕ Quitter</button>
           </div>
           <div class="progress-bar" style="margin-bottom: 24px">
             <div class="progress-fill" id="exProgressBar" style="width: 0%"></div>
@@ -239,16 +239,16 @@
           <div id="exerciseQuestionContainer"></div>
           <div id="exerciseFeedback" style="display: none"></div>
           <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end">
-            <button class="btn btn-outline" id="exSkipBtn" onclick="skipExercise()">
+            <button class="btn btn-outline" id="exSkipBtn" data-action="skip-exercise">
               Passer ⏭️
             </button>
-            <button class="btn btn-primary" id="exValidateBtn" onclick="validateExercise()">
+            <button class="btn btn-primary" id="exValidateBtn" data-action="validate-exercise">
               Valider ✓
             </button>
             <button
               class="btn btn-primary"
               id="exNextBtn"
-              onclick="nextExercise()"
+              data-action="next-exercise"
               style="display: none"
             >
               Suivant →
@@ -281,7 +281,8 @@
             </div>
             <button
               class="btn btn-primary btn-lg btn-block"
-              onclick="startTest()"
+              id="startTestBtn"
+              data-action="start-test"
               style="margin-top: 12px"
             >
               🚀 Commencer le test
@@ -318,14 +319,14 @@
             <button
               class="btn btn-primary"
               id="testValidateBtn"
-              onclick="validateTestAnswer()"
+              data-action="validate-test"
             >
               Valider ✓
             </button>
             <button
               class="btn btn-primary"
               id="testNextBtn"
-              onclick="nextTestQuestion()"
+              data-action="next-test"
               style="display: none"
             >
               Suivant →
@@ -459,7 +460,10 @@
                 Activer le mode sombre pour moins de fatigue visuelle
               </div>
             </div>
-            <button class="btn btn-outline btn-sm" onclick="toggleTheme()">Basculer</button>
+            <div style="display: flex; gap: 8px">
+              <button class="btn btn-outline" id="lightModeBtn" data-action="set-theme" data-theme="light">Clair</button>
+              <button class="btn btn-outline" id="darkModeBtn" data-action="set-theme" data-theme="dark">Sombre</button>
+            </div>
           </div>
 
           <div
@@ -480,7 +484,7 @@
             <button
               class="btn btn-outline btn-sm"
               id="notificationToggleBtn"
-              onclick="NotificationManager.toggle()"
+              data-action="toggle-notifications"
             >
               Activer
             </button>
@@ -502,10 +506,11 @@
               </div>
             </div>
             <div style="display: flex; gap: 8px">
-              <button class="btn btn-outline btn-sm" onclick="exportData()">Exporter</button>
+              <button class="btn btn-outline btn-sm" id="exportDataBtn" data-action="export-data">Exporter</button>
               <button
                 class="btn btn-outline btn-sm"
-                onclick="document.getElementById('importFile').click()"
+                id="importDataBtn"
+                data-action="import-data-click"
               >
                 Importer
               </button>
@@ -533,7 +538,7 @@
                 Effacer toutes les données et recommencer à zéro
               </div>
             </div>
-            <button class="btn btn-outline btn-sm" onclick="confirmReset()" style="color: var(--danger)">
+            <button class="btn btn-outline btn-sm" id="resetProgressBtn" data-action="reset-progress" style="color: var(--danger)">
               Réinitialiser
             </button>
           </div>
@@ -549,9 +554,8 @@
       aria-modal="true"
       aria-labelledby="modalTitle"
       aria-label="Contenu de la leçon"
-      onclick="closeModal(event)"
     >
-      <div class="modal" id="modalContent" onclick="event.stopPropagation()"></div>
+      <div class="modal" id="modalContent"></div>
     </div>
 
     <script type="module" src="src/pwa.js"></script>
