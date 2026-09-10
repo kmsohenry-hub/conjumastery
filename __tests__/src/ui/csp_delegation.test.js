@@ -1,14 +1,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { initEventDelegation, navigateTo } from '../../../src/ui/navigation.js';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { navigateTo } from '../../../src/ui/navigation.js';
 
 describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-02)', () => {
   let indexHtmlContent;
 
-  beforeEach(() => {
+  beforeAll(() => {
     indexHtmlContent = fs.readFileSync('index.html', 'utf8');
     document.body.innerHTML = indexHtmlContent.match(/<body[^>]*>([\s\S]*)<\/body>/i)[1];
+  });
+
+  beforeEach(() => {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('sidebarOverlay')?.classList.remove('active');
   });
 
   it('verifies that CSP script-src strictly enforces self and prohibits unsafe-inline', () => {
@@ -69,13 +75,12 @@ describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-
     expect(lessonsPage.classList.contains('active')).toBe(true);
   });
 
-  it('delegates clicks on mode cards to startExercise', () => {
-    window.startExercise = vi.fn();
+  it('delegates clicks on mode cards to the application exercise handler', () => {
     const qcmCard = document.querySelector('[data-mode="qcm"]');
     expect(qcmCard).toBeTruthy();
 
     qcmCard.click();
-    expect(qcmCard).toBeTruthy();
+    expect(document.getElementById('page-exercises')?.classList.contains('active')).toBe(true);
   });
 
   it('delegates clicks on theme toggle button', () => {
