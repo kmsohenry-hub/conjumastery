@@ -2,7 +2,10 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 const routes = [
-  { name: 'dashboard', setup: async () => {} },
+  {
+    name: 'dashboard',
+    setup: async () => {},
+  },
   {
     name: 'exercises',
     setup: async (page) => {
