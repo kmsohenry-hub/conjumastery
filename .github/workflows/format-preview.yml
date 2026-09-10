@@ -1,0 +1,21 @@
+name: Format preview
+
+on:
+  push:
+    branches: [ci-fix]
+
+permissions:
+  contents: read
+
+jobs:
+  format-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write __tests__/src/core/exercises/tenses-depth.test.js
+      - run: git diff -- __tests__/src/core/exercises/tenses-depth.test.js
