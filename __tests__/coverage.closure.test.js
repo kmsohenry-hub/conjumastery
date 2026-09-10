@@ -239,7 +239,15 @@ describe('coverage closure integration', () => {
     });
     State.removeFavorite('lv_beginner');
     expect(Lessons.renderTimeline({})).toBe('');
-    for (const type of ['dots', 'range', 'point', 'arrow', 'double-point', 'cycle', 'conditional']) {
+    for (const type of [
+      'dots',
+      'range',
+      'point',
+      'arrow',
+      'double-point',
+      'cycle',
+      'conditional',
+    ]) {
       expect(
         Lessons.renderTimeline({
           timeline: {
