@@ -165,31 +165,34 @@ describe('exercises page', () => {
     ['transform', 'Rewrite this sentence.', 'textarea', 'Transformer'],
     ['correction', 'Correct this sentence.', 'textarea', 'Corriger'],
     ['other', 'What does this mean?', 'textarea', 'Traduire'],
-  ])('renders the %s question shape and escapes user-visible content', (type, sentence, control, label) => {
-    const q = {
-      type,
-      tenseId: 'past_simple',
-      sentence,
-      answer: 'answer',
-      explanation: 'Explanation',
-    };
-    mockEngine.questions = [q];
-    mockEngine.getCurrent.mockReturnValue(q);
+  ])(
+    'renders the %s question shape and escapes user-visible content',
+    (type, sentence, control, label) => {
+      const q = {
+        type,
+        tenseId: 'past_simple',
+        sentence,
+        answer: 'answer',
+        explanation: 'Explanation',
+      };
+      mockEngine.questions = [q];
+      mockEngine.getCurrent.mockReturnValue(q);
 
-    renderExerciseQuestion(q);
+      renderExerciseQuestion(q);
 
-    expect(document.querySelector(control)).not.toBeNull();
-    expect(document.querySelectorAll('.option-btn')).toHaveLength(0);
-    expect(document.getElementById('exerciseQuestionContainer').innerHTML).not.toContain(
-      '<script>',
-    );
-    expect(document.getElementById('exerciseQuestionContainer').textContent).toContain(
-      sentence.replace(/\n/g, ' '),
-    );
-    expect(document.getElementById('exerciseQuestionContainer').textContent).toContain(label);
-    vi.advanceTimersByTime(100);
-    expect(document.activeElement?.id).toBe('exerciseInput');
-  });
+      expect(document.querySelector(control)).not.toBeNull();
+      expect(document.querySelectorAll('.option-btn')).toHaveLength(0);
+      expect(document.getElementById('exerciseQuestionContainer').innerHTML).not.toContain(
+        '<script>',
+      );
+      expect(document.getElementById('exerciseQuestionContainer').textContent).toContain(
+        sentence.replace(/\n/g, ' '),
+      );
+      expect(document.getElementById('exerciseQuestionContainer').textContent).toContain(label);
+      vi.advanceTimersByTime(100);
+      expect(document.activeElement?.id).toBe('exerciseInput');
+    },
+  );
 
   it('renders QCM options and assigns stable keyboard-facing letters', () => {
     const q = {
@@ -205,12 +208,9 @@ describe('exercises page', () => {
 
     const buttons = document.querySelectorAll('.option-btn');
     expect(buttons).toHaveLength(4);
-    expect([...buttons].map((button) => button.querySelector('.option-letter').textContent)).toEqual([
-      'A',
-      'B',
-      'C',
-      'D',
-    ]);
+    expect(
+      [...buttons].map((button) => button.querySelector('.option-letter').textContent),
+    ).toEqual(['A', 'B', 'C', 'D']);
     expect([...buttons].map((button) => button.dataset.action)).toEqual(
       Array(4).fill('select-option'),
     );

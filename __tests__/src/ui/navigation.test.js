@@ -86,8 +86,12 @@ vi.mock('../../../src/ui/pages/reviews.js', () => ({
   renderRevision: mocks.renderRevision,
   startRevisionSession: mocks.startRevisionSession,
 }));
-vi.mock('../../../src/ui/pages/weakpoints.js', () => ({ renderWeakpoints: mocks.renderWeakpoints }));
-vi.mock('../../../src/ui/pages/search.js', () => ({ performGlobalSearch: mocks.performGlobalSearch }));
+vi.mock('../../../src/ui/pages/weakpoints.js', () => ({
+  renderWeakpoints: mocks.renderWeakpoints,
+}));
+vi.mock('../../../src/ui/pages/search.js', () => ({
+  performGlobalSearch: mocks.performGlobalSearch,
+}));
 vi.mock('../../../src/ui/pages/favorites.js', () => ({
   renderFavorites: mocks.renderFavorites,
   toggleFav: mocks.toggleFav,
@@ -153,8 +157,12 @@ describe('navigation', () => {
     expect(document.getElementById('page-dashboard').classList.contains('active')).toBe(false);
     expect(document.getElementById('pageTitle').textContent).toBe('Leçons');
     expect(document.querySelector('[data-page="lessons"]').classList.contains('active')).toBe(true);
-    expect(document.querySelector('[data-page="lessons"]').getAttribute('aria-current')).toBe('page');
-    expect(document.querySelector('[data-page="dashboard"]').hasAttribute('aria-current')).toBe(false);
+    expect(document.querySelector('[data-page="lessons"]').getAttribute('aria-current')).toBe(
+      'page',
+    );
+    expect(document.querySelector('[data-page="dashboard"]').hasAttribute('aria-current')).toBe(
+      false,
+    );
     expect(mocks.renderLessons).toHaveBeenCalledOnce();
   });
 

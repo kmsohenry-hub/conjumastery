@@ -147,7 +147,9 @@ describe('test mode', () => {
   });
 
   it('advances the timer accurately across minutes and resets it on cancel', () => {
-    mockEngine.questions = [{ type: 'qcm', tenseId: 'present_simple', options: ['a', 'b'], correct: 0 }];
+    mockEngine.questions = [
+      { type: 'qcm', tenseId: 'present_simple', options: ['a', 'b'], correct: 0 },
+    ];
     mockEngine.getCurrent.mockReturnValue(mockEngine.questions[0]);
     renderTestSetup();
     startTest();
@@ -174,21 +176,26 @@ describe('test mode', () => {
     ['fill', '<script>alert(1)</script>\nGo tomorrow.'],
     ['translation', 'Line one\nLine two'],
     ['transform', 'Rewrite the sentence.'],
-  ])('renders %s questions with the correct input control and escapes the sentence', (type, sentence) => {
-    mockEngine.currentIndex = 0;
-    mockEngine.questions = [{ type, tenseId: 'present_simple', sentence, answer: 'answer' }];
-    mockEngine.getCurrent.mockReturnValue(mockEngine.questions[0]);
+  ])(
+    'renders %s questions with the correct input control and escapes the sentence',
+    (type, sentence) => {
+      mockEngine.currentIndex = 0;
+      mockEngine.questions = [{ type, tenseId: 'present_simple', sentence, answer: 'answer' }];
+      mockEngine.getCurrent.mockReturnValue(mockEngine.questions[0]);
 
-    renderTestQuestion();
+      renderTestQuestion();
 
-    const input = document.getElementById('testInput');
-    expect(input).not.toBeNull();
-    expect(document.getElementById('testQuestionContainer').innerHTML).not.toContain('<script>');
-    expect(document.getElementById('testQuestionContainer').innerHTML).toContain('&lt;script&gt;');
-    expect(document.getElementById('testQuestionContainer').innerHTML).toContain('<br>');
-    vi.advanceTimersByTime(100);
-    expect(document.activeElement).toBe(input);
-  });
+      const input = document.getElementById('testInput');
+      expect(input).not.toBeNull();
+      expect(document.getElementById('testQuestionContainer').innerHTML).not.toContain('<script>');
+      expect(document.getElementById('testQuestionContainer').innerHTML).toContain(
+        '&lt;script&gt;',
+      );
+      expect(document.getElementById('testQuestionContainer').innerHTML).toContain('<br>');
+      vi.advanceTimersByTime(100);
+      expect(document.activeElement).toBe(input);
+    },
+  );
 
   it('renders QCM options and replaces an earlier selection', () => {
     mockEngine.questions = [
@@ -205,12 +212,9 @@ describe('test mode', () => {
 
     const buttons = document.querySelectorAll('.option-btn');
     expect(buttons).toHaveLength(4);
-    expect([...buttons].map((button) => button.querySelector('.option-letter').textContent)).toEqual([
-      'A',
-      'B',
-      'C',
-      'D',
-    ]);
+    expect(
+      [...buttons].map((button) => button.querySelector('.option-letter').textContent),
+    ).toEqual(['A', 'B', 'C', 'D']);
 
     selectOption(buttons[1], 1);
     selectOption(buttons[3], 3);
