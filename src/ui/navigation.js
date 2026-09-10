@@ -1,7 +1,7 @@
 import { renderDashboard } from './pages/dashboard.js';
 import { renderLessons } from './pages/lessons.js';
 import { resetExerciseUI } from './pages/exercises.js';
-import { renderTestSetup } from './pages/test.js';
+import { renderTestSetup, cancelTest } from './pages/test.js';
 import { renderTenses, renderComparison } from './pages/tenses.js';
 import { renderVerbs } from './pages/verbs.js';
 import { renderRevision } from './pages/reviews.js';
@@ -16,6 +16,9 @@ let _cachedNavItems = null;
 let _previousActiveElement = null;
 
 export function navigateTo(page) {
+  if (page !== 'test') {
+    cancelTest();
+  }
   if (!_cachedPages) _cachedPages = document.querySelectorAll('.page');
   if (!_cachedNavItems) _cachedNavItems = document.querySelectorAll('.nav-item');
 
@@ -26,10 +29,8 @@ export function navigateTo(page) {
   _cachedNavItems.forEach((n) => {
     if (n.dataset.page === page) {
       n.classList.add('active');
-      n.setAttribute('aria-selected', 'true');
     } else {
       n.classList.remove('active');
-      n.setAttribute('aria-selected', 'false');
     }
   });
 
@@ -94,49 +95,38 @@ export function navigateTo(page) {
 
   // Close mobile sidebar
   if (window.innerWidth <= 768) {
-    document.getElementById('sidebar')?.classList.remove('open');
-    document.getElementById('sidebarOverlay')?.classList.remove('active');
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
   }
 }
 
 export function toggleSidebar() {
-  document.getElementById('sidebar')?.classList.toggle('open');
-  document.getElementById('sidebarOverlay')?.classList.toggle('active');
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
 }
 
 export function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme');
-  const target = current === 'dark' ? 'light' : 'dark';
-  setTheme(target);
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  setTheme(next);
 }
 
 export function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  const themeBtn = document.getElementById('themeBtn');
-  if (themeBtn) {
-    themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
-    themeBtn.setAttribute(
-      'aria-label',
-      theme === 'dark' ? 'Passer au mode clair' : 'Passer au mode sombre',
-    );
-  }
+  document.getElementById('themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
   State.data.settings.theme = theme;
   State.save();
 }
 
 export function openModal() {
   _previousActiveElement = document.activeElement;
-  const overlay = document.getElementById('modalOverlay');
-  if (overlay) {
-    overlay.classList.add('active');
-    setTimeout(() => {
-      const focusable = overlay.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusable) {
-        focusable.focus();
-      }
-    }, 50);
+  const modal = document.getElementById('modalOverlay');
+  if (!modal) return;
+  modal.classList.add('active');
+  const closeBtn = modal.querySelector('.modal-close');
+  if (closeBtn && typeof closeBtn.focus === 'function') {
+    closeBtn.focus();
   }
 }
 
@@ -147,16 +137,13 @@ export function closeModal(event) {
 
 export function closeModalDirect() {
   const overlay = document.getElementById('modalOverlay');
-  if (overlay) {
-    overlay.classList.remove('active');
-  }
+  if (overlay) overlay.classList.remove('active');
   if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
     _previousActiveElement.focus();
     _previousActiveElement = null;
   }
 }
 
-// Global keyboard navigation
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     const modal = document.getElementById('modalOverlay');
