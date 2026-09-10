@@ -37,6 +37,10 @@ store.subscribe(() => {
 });
 
 const State = {
+  sessionPromotedTenses: new Set(),
+  resetSessionPromotions() {
+    this.sessionPromotedTenses.clear();
+  },
   get data() {
     return store.getState();
   },
@@ -121,7 +125,28 @@ const State = {
   },
   recordAnswer(tenseId, correct) {
     this.checkStreak();
+    const previousSR = correct ? store.getState().spacedRepetition?.[tenseId] : null;
+    const alreadyPromoted = correct && this.sessionPromotedTenses.has(tenseId);
+    if (correct && !alreadyPromoted) {
+      this.sessionPromotedTenses.add(tenseId);
+    } else if (!correct) {
+      this.sessionPromotedTenses.delete(tenseId);
+    }
     store.recordAnswer(tenseId, correct);
+    if (alreadyPromoted && previousSR) {
+      const currentSR = store.getState().spacedRepetition;
+      store.setState({
+        spacedRepetition: {
+          ...currentSR,
+          [tenseId]: {
+            ...currentSR[tenseId],
+            interval: previousSR.interval,
+            ease: previousSR.ease,
+            nextReview: previousSR.nextReview,
+          },
+        },
+      });
+    }
     this.save();
   },
   completeLesson(lessonId) {
@@ -151,6 +176,7 @@ const State = {
     return getReviewQueueSelector(store.getState());
   },
   reset() {
+    this.sessionPromotedTenses.clear();
     store.reset();
     this.save();
   },

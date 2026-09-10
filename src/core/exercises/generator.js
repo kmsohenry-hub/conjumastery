@@ -534,7 +534,7 @@ export function generateSingleQuestion(mode, tense, subjects, verbs, difficulty)
   }
 }
 
-export function generateQuestions(mode, tenseFilter, difficulty, count = 10) {
+export function generateQuestions(mode, tenseFilter, difficulty, count = 10, isRevision = false) {
   const questions = [];
   const subjects = [
     'I',
@@ -580,7 +580,9 @@ export function generateQuestions(mode, tenseFilter, difficulty, count = 10) {
     tenseFilter && tenseFilter.length > 0 ? tenseFilter : APP_DATA.tenses.map((t) => t.id);
 
   for (let i = 0; i < count; i++) {
-    const tenseId = tenses[Math.floor(Math.random() * tenses.length)];
+    const tenseId = isRevision
+      ? tenses[i % tenses.length]
+      : tenses[Math.floor(Math.random() * tenses.length)];
     const tense = APP_DATA.tensesById[tenseId];
     if (!tense) continue;
 

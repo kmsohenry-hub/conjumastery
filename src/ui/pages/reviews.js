@@ -45,5 +45,5 @@ export function startRevisionSession() {
   if (queue.length === 0) return;
   const tenses = queue.map((q) => q.tenseId);
   navigateTo('exercises');
-  setTimeout(() => startExercise('mixed', tenses, 'intermediate'), 100);
+  setTimeout(() => startExercise('mixed', tenses, 'intermediate', tenses.length, null, true), 100);
 }

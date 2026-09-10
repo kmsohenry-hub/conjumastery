@@ -17,20 +17,24 @@ export function resetExerciseUI() {
 export function restartExercise() {
   const cfg = ExerciseEngine.sessionConfig;
   if (cfg) {
-    startExercise(cfg.mode, cfg.tenseFilter, cfg.difficulty, cfg.count);
+    startExercise(cfg.mode, cfg.tenseFilter, cfg.difficulty, cfg.count, cfg.lessonId, cfg.isRevision);
   } else {
     startExercise(
       ExerciseEngine.currentMode || 'mixed',
       ExerciseEngine.currentTenseFilter,
       ExerciseEngine.currentDifficulty || 'intermediate',
       ExerciseEngine.currentCount || 10,
+      ExerciseEngine.currentLessonId || null,
+      ExerciseEngine.isRevision || false,
     );
   }
 }
 
-export function startExercise(mode, tenseFilter, difficulty, count) {
+export function startExercise(mode, tenseFilter, difficulty, count, lessonId = null, isRevision = false) {
   const cfg = ExerciseEngine.sessionConfig;
   const resolvedMode = mode ?? cfg?.mode ?? ExerciseEngine.currentMode ?? 'mixed';
+  const resolvedLessonId = lessonId ?? (mode === undefined || mode === cfg?.mode ? cfg?.lessonId : null);
+  const resolvedIsRevision = isRevision ?? (mode === undefined || mode === cfg?.mode ? cfg?.isRevision : false);
 
   let resolvedTenseFilter = tenseFilter;
   if (resolvedTenseFilter === undefined || resolvedTenseFilter === null) {
@@ -59,7 +63,9 @@ export function startExercise(mode, tenseFilter, difficulty, count) {
     (cfg && (mode === undefined || mode === cfg.mode) ? cfg.count : 10);
 
   ExerciseEngine.currentTenseFilter = resolvedTenseFilter;
-  ExerciseEngine.start(resolvedMode, resolvedTenseFilter, resolvedDifficulty, resolvedCount);
+  ExerciseEngine.currentLessonId = resolvedLessonId;
+  ExerciseEngine.isRevision = resolvedIsRevision;
+  ExerciseEngine.start(resolvedMode, resolvedTenseFilter, resolvedDifficulty, resolvedCount, resolvedLessonId, resolvedIsRevision);
 
   document.getElementById('exerciseModeSelector').style.display = 'none';
   document.getElementById('exerciseArea').style.display = 'block';
@@ -73,9 +79,26 @@ export function startExercise(mode, tenseFilter, difficulty, count) {
   updateExerciseProgress();
 }
 
+export function startExerciseForLesson(lessonId) {
+  let targetLesson = null;
+  for (const mod of APP_DATA.modules) {
+    const l = mod.lessons.find((item) => item.id === lessonId);
+    if (l) {
+      targetLesson = l;
+      break;
+    }
+  }
+
+  const tenseFilter = targetLesson?.tenseId ? [targetLesson.tenseId] : [];
+  const count = targetLesson?.exercises || 10;
+
+  navigateTo('exercises');
+  setTimeout(() => startExercise('mixed', tenseFilter, 'intermediate', count, lessonId, false), 100);
+}
+
 export function startExerciseForTense(tenseId) {
   navigateTo('exercises');
-  setTimeout(() => startExercise('mixed', [tenseId], 'intermediate'), 100);
+  setTimeout(() => startExercise('mixed', [tenseId], 'intermediate', 10, null, false), 100);
 }
 
 export function renderExerciseQuestion(q) {
@@ -188,7 +211,6 @@ export function skipExercise() {
   ExerciseEngine.answered = true;
   const q = ExerciseEngine.getCurrent();
   State.recordAnswer(q.tenseId, false);
-  State.updateSpacedRepetition(q.tenseId, false);
 
   const feedbackEl = document.getElementById('exerciseFeedback');
   feedbackEl.style.display = 'block';
@@ -250,14 +272,8 @@ export function finishExercise() {
 
   if (pct >= 80) {
     launchConfetti();
-    if (ExerciseEngine.currentTenseFilter && ExerciseEngine.currentTenseFilter.length === 1) {
-      APP_DATA.modules.forEach((mod) => {
-        mod.lessons.forEach((lesson) => {
-          if (lesson.tenseId === ExerciseEngine.currentTenseFilter[0]) {
-            State.completeLesson(lesson.id);
-          }
-        });
-      });
+    if (ExerciseEngine.currentLessonId) {
+      State.completeLesson(ExerciseEngine.currentLessonId);
     }
   }
 }
@@ -268,4 +284,5 @@ export function exitExercise() {
 
 if (typeof window !== 'undefined') {
   window.restartExercise = restartExercise;
+  window.startExerciseForLesson = startExerciseForLesson;
 }
