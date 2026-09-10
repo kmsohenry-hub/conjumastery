@@ -22,17 +22,15 @@ import {
   updateExerciseProgress, validateExercise,
 } from '../../../../src/ui/pages/exercises.js';
 
-const buildDOM = () => {
+beforeEach(() => {
+  vi.useFakeTimers();
   document.body.innerHTML = `
     <div id="exerciseModeSelector"></div><div id="exerciseArea">
       <span id="exCurrent"></span><span id="exTotal"></span><div id="exProgressBar"></div>
       <div id="exerciseQuestionContainer"></div><div id="exerciseFeedback"></div>
       <button id="exValidateBtn"></button><button id="exNextBtn"></button><button id="exSkipBtn"></button>
     </div>`;
-};
-
-beforeEach(() => {
-  vi.useFakeTimers(); buildDOM(); vi.clearAllMocks();
+  vi.clearAllMocks();
   Object.assign(engine, { questions: [], currentIndex: 0, score: 0, answered: false, currentMode: null,
     currentTenseFilter: null, currentDifficulty: null, currentCount: 10, currentLessonId: null,
     isRevision: false, sessionConfig: null });
@@ -74,8 +72,12 @@ describe('exercises page', () => {
   ])('renders %s using the expected control contract', (type, control) => {
     const q = { type, tenseId: 'past_simple', sentence: 'A sentence\nwith two lines', answer: 'answer' };
     renderExerciseQuestion(q);
-    expect(control ? document.querySelector(control) : document.getElementById('exerciseInput')).toBe(control ? expect.anything() : null);
-    if (control) expect(document.getElementById('exerciseInput')).not.toBeNull();
+    if (control) {
+      expect(document.querySelector(control)).not.toBeNull();
+      expect(document.getElementById('exerciseInput')).not.toBeNull();
+    } else {
+      expect(document.getElementById('exerciseInput')).toBeNull();
+    }
     expect(document.getElementById('exerciseQuestionContainer').querySelector('script')).toBeNull();
   });
 
