@@ -15,6 +15,8 @@ test('keeps the primary navigation usable on a mobile viewport', async ({ page }
   await expect(page.locator('#page-exercises')).toBeVisible();
   await expect(page.locator('[data-mode="qcm"]')).toBeVisible();
 
-  const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+  const horizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth + 1,
+  );
   expect(horizontalOverflow).toBe(false);
 });
