@@ -32,9 +32,10 @@ test('runs a complete first exercise interaction and persists progress', async (
   await expect(page.locator('#exNextBtn')).toBeVisible();
 
   const persisted = await page.evaluate(() => JSON.parse(localStorage.getItem('conjumaster_data')));
-  expect(persisted.totalExercises).toBe(1);
-  expect(persisted.correctAnswers + persisted.incorrectAnswers).toBe(1);
-  expect(Object.keys(persisted.tenseStats)).toHaveLength(1);
+  expect(persisted.version).toBe(1);
+  expect(persisted.data.totalExercises).toBe(1);
+  expect(persisted.data.correctAnswers + persisted.data.incorrectAnswers).toBe(1);
+  expect(Object.keys(persisted.data.tenseStats)).toHaveLength(1);
 
   await page.locator('#exNextBtn').click();
   await expect(page.locator('#exCurrent')).toHaveText('2');
@@ -46,22 +47,25 @@ test('restores persisted progress after a browser reload', async ({ page }) => {
     localStorage.setItem(
       'conjumaster_data',
       JSON.stringify({
-        xp: 10,
-        level: 1,
-        totalExercises: 1,
-        correctAnswers: 1,
-        incorrectAnswers: 0,
-        bestStreak: 1,
-        currentStreak: 1,
-        daysStreak: 1,
-        lastActiveDate: new Date().toDateString(),
-        completedLessons: [],
-        tenseStats: { present_simple: { correct: 1, total: 1 } },
-        errorLog: [],
-        activityLog: [],
-        favorites: [],
-        spacedRepetition: {},
-        settings: { theme: 'light' },
+        version: 1,
+        data: {
+          xp: 10,
+          level: 1,
+          totalExercises: 1,
+          correctAnswers: 1,
+          incorrectAnswers: 0,
+          bestStreak: 1,
+          currentStreak: 1,
+          daysStreak: 1,
+          lastActiveDate: new Date().toDateString(),
+          completedLessons: [],
+          tenseStats: { present_simple: { correct: 1, total: 1 } },
+          errorLog: [],
+          activityLog: [],
+          favorites: [],
+          spacedRepetition: {},
+          settings: { theme: 'light' },
+        },
       }),
     );
   });
