@@ -1,45 +1,98 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { cancelTest, renderers } = vi.hoisted(() => ({
-  cancelTest: vi.fn(),
-  renderers: Object.fromEntries(
+const { mocks } = vi.hoisted(() => ({
+  mocks: Object.fromEntries(
     [
-      ['dashboard', 'renderDashboard'],
-      ['lessons', 'renderLessons'],
-      ['exercises', 'resetExerciseUI'],
-      ['test', 'renderTestSetup'],
-      ['tenses', 'renderTenses'],
-      ['comparison', 'renderComparison'],
-      ['verbs', 'renderVerbs'],
-      ['revision', 'renderRevision'],
-      ['weakpoints', 'renderWeakpoints'],
-      ['search', 'performGlobalSearch'],
-      ['favorites', 'renderFavorites'],
-      ['stats', 'renderStats'],
-    ].map(([key]) => [key, vi.fn()]),
+      'cancelTest',
+      'renderDashboard',
+      'renderLessons',
+      'openLesson',
+      'showModule',
+      'resetExerciseUI',
+      'restartExercise',
+      'startExercise',
+      'startExerciseForLesson',
+      'startExerciseForTense',
+      'selectOption',
+      'validateExercise',
+      'nextExercise',
+      'skipExercise',
+      'exitExercise',
+      'renderTestSetup',
+      'startTest',
+      'selectTestOption',
+      'validateTestAnswer',
+      'nextTestQuestion',
+      'renderTenses',
+      'renderComparison',
+      'showTenseCategory',
+      'showComparison',
+      'openTenseModal',
+      'renderVerbs',
+      'filterVerbs',
+      'toggleVerbCard',
+      'renderRevision',
+      'startRevisionSession',
+      'renderWeakpoints',
+      'performGlobalSearch',
+      'renderFavorites',
+      'toggleFav',
+      'renderStats',
+    ].map((name) => [name, vi.fn()]),
   ),
 }));
 
-vi.mock('../../../src/ui/pages/dashboard.js', () => ({ renderDashboard: renderers.dashboard }));
-vi.mock('../../../src/ui/pages/lessons.js', () => ({ renderLessons: renderers.lessons }));
+vi.mock('../../../src/ui/pages/dashboard.js', () => ({
+  renderDashboard: mocks.renderDashboard,
+}));
+vi.mock('../../../src/ui/pages/lessons.js', () => ({
+  renderLessons: mocks.renderLessons,
+  openLesson: mocks.openLesson,
+  showModule: mocks.showModule,
+}));
 vi.mock('../../../src/ui/pages/exercises.js', () => ({
-  resetExerciseUI: renderers.exercises,
-  cancelTest,
+  resetExerciseUI: mocks.resetExerciseUI,
+  restartExercise: mocks.restartExercise,
+  startExercise: mocks.startExercise,
+  startExerciseForLesson: mocks.startExerciseForLesson,
+  startExerciseForTense: mocks.startExerciseForTense,
+  selectOption: mocks.selectOption,
+  validateExercise: mocks.validateExercise,
+  nextExercise: mocks.nextExercise,
+  skipExercise: mocks.skipExercise,
+  exitExercise: mocks.exitExercise,
 }));
 vi.mock('../../../src/ui/pages/test.js', () => ({
-  renderTestSetup: renderers.test,
-  cancelTest,
+  renderTestSetup: mocks.renderTestSetup,
+  startTest: mocks.startTest,
+  selectOption: mocks.selectTestOption,
+  validateTestAnswer: mocks.validateTestAnswer,
+  nextTestQuestion: mocks.nextTestQuestion,
+  cancelTest: mocks.cancelTest,
 }));
 vi.mock('../../../src/ui/pages/tenses.js', () => ({
-  renderTenses: renderers.tenses,
-  renderComparison: renderers.comparison,
+  renderTenses: mocks.renderTenses,
+  renderComparison: mocks.renderComparison,
+  showTenseCategory: mocks.showTenseCategory,
+  showComparison: mocks.showComparison,
+  openTenseModal: mocks.openTenseModal,
 }));
-vi.mock('../../../src/ui/pages/verbs.js', () => ({ renderVerbs: renderers.verbs }));
-vi.mock('../../../src/ui/pages/reviews.js', () => ({ renderRevision: renderers.revision }));
-vi.mock('../../../src/ui/pages/weakpoints.js', () => ({ renderWeakpoints: renderers.weakpoints }));
-vi.mock('../../../src/ui/pages/search.js', () => ({ performGlobalSearch: renderers.search }));
-vi.mock('../../../src/ui/pages/favorites.js', () => ({ renderFavorites: renderers.favorites }));
-vi.mock('../../../src/ui/pages/stats.js', () => ({ renderStats: renderers.stats }));
+vi.mock('../../../src/ui/pages/verbs.js', () => ({
+  renderVerbs: mocks.renderVerbs,
+  filterVerbs: mocks.filterVerbs,
+  toggleVerbCard: mocks.toggleVerbCard,
+}));
+vi.mock('../../../src/ui/pages/reviews.js', () => ({
+  renderRevision: mocks.renderRevision,
+  startRevisionSession: mocks.startRevisionSession,
+}));
+vi.mock('../../../src/ui/pages/weakpoints.js', () => ({ renderWeakpoints: mocks.renderWeakpoints }));
+vi.mock('../../../src/ui/pages/search.js', () => ({ performGlobalSearch: mocks.performGlobalSearch }));
+vi.mock('../../../src/ui/pages/favorites.js', () => ({
+  renderFavorites: mocks.renderFavorites,
+  toggleFav: mocks.toggleFav,
+}));
+vi.mock('../../../src/ui/pages/stats.js', () => ({ renderStats: mocks.renderStats }));
 
 import {
   closeModal,
@@ -57,7 +110,7 @@ function buildShell() {
     <div id="pageTitle"></div>
     <div id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div id="modalContent">
-        <div id="modalTitle">Titre de la leçon</div>
+        <div id="modalTitle">Titre</div>
         <button id="modalBtnFirst" class="modal-close">✕</button>
         <button id="modalBtnSecond" class="btn">Valider</button>
       </div>
@@ -79,15 +132,16 @@ function buildShell() {
     ]
       .map((page) => `<div class="page" id="page-${page}"></div>`)
       .join('')}
-    ${['dashboard', 'lessons', 'settings'].map((page) => `<button class="nav-item" data-page="${page}"></button>`).join('')}
+    ${['dashboard', 'lessons', 'settings']
+      .map((page) => `<button class="nav-item" data-page="${page}"></button>`)
+      .join('')}
   `;
 }
 
 beforeEach(() => {
   vi.useFakeTimers();
   buildShell();
-  Object.values(renderers).forEach((fn) => fn.mockClear());
-  cancelTest.mockClear();
+  Object.values(mocks).forEach((fn) => fn.mockClear());
   document.documentElement.removeAttribute('data-theme');
   window.innerWidth = 1024;
 });
@@ -99,21 +153,65 @@ describe('navigation', () => {
     expect(document.getElementById('page-dashboard').classList.contains('active')).toBe(false);
     expect(document.getElementById('pageTitle').textContent).toBe('Leçons');
     expect(document.querySelector('[data-page="lessons"]').classList.contains('active')).toBe(true);
-    expect(renderers.lessons).toHaveBeenCalledOnce();
+    expect(document.querySelector('[data-page="lessons"]').getAttribute('aria-current')).toBe('page');
+    expect(document.querySelector('[data-page="dashboard"]').hasAttribute('aria-current')).toBe(false);
+    expect(mocks.renderLessons).toHaveBeenCalledOnce();
   });
 
-  it('routes supported pages to their renderers', () => {
-    Object.keys(renderers).forEach((page) => navigateTo(page));
-    Object.values(renderers).forEach((renderer) => expect(renderer).toHaveBeenCalled());
+  it('routes all supported pages to their renderers', () => {
+    Object.keys({
+      dashboard: mocks.renderDashboard,
+      lessons: mocks.renderLessons,
+      exercises: mocks.resetExerciseUI,
+      test: mocks.renderTestSetup,
+      tenses: mocks.renderTenses,
+      verbs: mocks.renderVerbs,
+      comparison: mocks.renderComparison,
+      revision: mocks.renderRevision,
+      weakpoints: mocks.renderWeakpoints,
+      search: mocks.performGlobalSearch,
+      favorites: mocks.renderFavorites,
+      stats: mocks.renderStats,
+    }).forEach((page) => navigateTo(page));
+
+    Object.values({
+      dashboard: mocks.renderDashboard,
+      lessons: mocks.renderLessons,
+      exercises: mocks.resetExerciseUI,
+      test: mocks.renderTestSetup,
+      tenses: mocks.renderTenses,
+      verbs: mocks.renderVerbs,
+      comparison: mocks.renderComparison,
+      revision: mocks.renderRevision,
+      weakpoints: mocks.renderWeakpoints,
+      search: mocks.performGlobalSearch,
+      favorites: mocks.renderFavorites,
+      stats: mocks.renderStats,
+    }).forEach((renderer) => expect(renderer).toHaveBeenCalled());
+  });
+
+  it('keeps settings pages valid without invoking an unrelated renderer and handles unknown pages', () => {
+    navigateTo('settings');
+    expect(document.getElementById('pageTitle').textContent).toBe('Paramètres');
+
+    navigateTo('future-page');
+    expect(document.getElementById('pageTitle').textContent).toBe('future-page');
+    expect(mocks.renderDashboard).not.toHaveBeenCalled();
   });
 
   it('cancels active test when navigating away from test page (Issue #104)', () => {
     navigateTo('test');
-    expect(renderers.test).toHaveBeenCalled();
-    cancelTest.mockClear();
+    expect(mocks.renderTestSetup).toHaveBeenCalled();
+    mocks.cancelTest.mockClear();
 
     navigateTo('dashboard');
-    expect(cancelTest).toHaveBeenCalled();
+    expect(mocks.cancelTest).toHaveBeenCalledOnce();
+  });
+
+  it('does not cancel the test while navigating to the test page itself', () => {
+    navigateTo('test');
+
+    expect(mocks.cancelTest).not.toHaveBeenCalled();
   });
 
   it('closes the mobile sidebar after navigation', () => {
@@ -125,30 +223,48 @@ describe('navigation', () => {
     expect(document.getElementById('sidebarOverlay').classList.contains('active')).toBe(false);
   });
 
-  it('toggles sidebar and theme', () => {
+  it('toggles sidebar and theme and persists the selected theme', () => {
     toggleSidebar();
     expect(document.getElementById('sidebar').classList.contains('open')).toBe(true);
     expect(document.getElementById('sidebarOverlay').classList.contains('active')).toBe(true);
+
     setTheme('dark');
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(document.getElementById('themeBtn').textContent).toBe('☀️');
+
     toggleTheme();
     expect(document.documentElement.dataset.theme).toBe('light');
     expect(document.getElementById('themeBtn').textContent).toBe('🌙');
   });
 
-  it('closes the modal only when the overlay is clicked', () => {
+  it('falls back to light mode when toggling with no existing theme', () => {
+    toggleTheme();
+    expect(document.documentElement.dataset.theme).toBe('light');
+  });
+
+  it('closes the modal only when the overlay itself is clicked', () => {
     const overlay = document.getElementById('modalOverlay');
     const child = document.createElement('div');
     overlay.appendChild(child);
     overlay.classList.add('active');
+
     closeModal({ target: child });
     expect(overlay.classList.contains('active')).toBe(true);
+
     closeModal({ target: overlay });
     expect(overlay.classList.contains('active')).toBe(false);
   });
 
-  it('handles keyboard navigation with Enter and Space on interactive elements', () => {
+  it('closes the modal when closeModal is called without an event', () => {
+    const overlay = document.getElementById('modalOverlay');
+    overlay.classList.add('active');
+
+    closeModal();
+
+    expect(overlay.classList.contains('active')).toBe(false);
+  });
+
+  it('handles keyboard activation with Enter and Space on semantic cards', () => {
     const card = document.createElement('div');
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
@@ -156,41 +272,37 @@ describe('navigation', () => {
     card.addEventListener('click', clickSpy);
     document.body.appendChild(card);
 
-    card.focus();
-    const { KeyboardEvent } = window;
     card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    expect(clickSpy).toHaveBeenCalledTimes(1);
+    card.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
 
-    card.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
     expect(clickSpy).toHaveBeenCalledTimes(2);
   });
 
-  it('closes modal on Escape keypress', () => {
+  it('does not synthesize clicks for native buttons and ignores unrelated keys', () => {
+    const button = document.createElement('button');
+    const clickSpy = vi.fn();
+    button.addEventListener('click', clickSpy);
+    document.body.appendChild(button);
+
+    button.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    button.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    button.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+
+    expect(clickSpy).not.toHaveBeenCalled();
+  });
+
+  it('closes modal on Escape and restores the triggering focus', () => {
+    const trigger = document.createElement('button');
+    document.body.appendChild(trigger);
+    trigger.focus();
+    openModal();
     const overlay = document.getElementById('modalOverlay');
     overlay.classList.add('active');
 
-    const { KeyboardEvent } = window;
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
     expect(overlay.classList.contains('active')).toBe(false);
-  });
-
-  it('saves and restores focus when opening and closing modal', () => {
-    const initialButton = document.createElement('button');
-    document.body.appendChild(initialButton);
-    initialButton.focus();
-    expect(document.activeElement).toBe(initialButton);
-
-    openModal();
-    const overlay = document.getElementById('modalOverlay');
-    expect(overlay.classList.contains('active')).toBe(true);
-
-    vi.advanceTimersByTime(100);
-    const closeBtn = document.getElementById('modalBtnFirst');
-    expect(document.activeElement).toBe(closeBtn);
-
-    closeModalDirect();
-    expect(overlay.classList.contains('active')).toBe(false);
-    expect(document.activeElement).toBe(initialButton);
+    expect(document.activeElement).toBe(trigger);
   });
 
   describe('modal focus trap and accessibility (Issue #115)', () => {
@@ -201,61 +313,165 @@ describe('navigation', () => {
       expect(modal.getAttribute('aria-labelledby')).toBe('modalTitle');
     });
 
-    it('traps focus inside the modal on Tab (cycles from last to first)', () => {
-      openModal();
+    it('focuses the first available control after opening', () => {
       const first = document.getElementById('modalBtnFirst');
-      const last = document.getElementById('modalBtnSecond');
-
-      last.focus();
-      expect(document.activeElement).toBe(last);
-
-      const { KeyboardEvent } = window;
-      const tabEvent = new KeyboardEvent('keydown', {
-        key: 'Tab',
-        bubbles: true,
-        cancelable: true,
-      });
-      window.dispatchEvent(tabEvent);
-
+      openModal();
+      vi.advanceTimersByTime(50);
       expect(document.activeElement).toBe(first);
-      closeModalDirect();
     });
 
-    it('traps focus inside the modal on Shift+Tab (cycles from first to last)', () => {
+    it('traps focus inside the modal on Tab from last to first', () => {
       openModal();
       const first = document.getElementById('modalBtnFirst');
       const last = document.getElementById('modalBtnSecond');
+      last.focus();
 
-      first.focus();
+      const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      window.dispatchEvent(event);
+
       expect(document.activeElement).toBe(first);
+      expect(event.defaultPrevented).toBe(true);
+    });
 
-      const { KeyboardEvent } = window;
-      const shiftTabEvent = new KeyboardEvent('keydown', {
+    it('traps focus inside the modal on Shift+Tab from first to last', () => {
+      openModal();
+      const first = document.getElementById('modalBtnFirst');
+      const last = document.getElementById('modalBtnSecond');
+      first.focus();
+
+      const event = new KeyboardEvent('keydown', {
         key: 'Tab',
         shiftKey: true,
         bubbles: true,
         cancelable: true,
       });
-      window.dispatchEvent(shiftTabEvent);
+      window.dispatchEvent(event);
 
       expect(document.activeElement).toBe(last);
-      closeModalDirect();
+      expect(event.defaultPrevented).toBe(true);
     });
 
-    it('restores focus to the triggering element when closed via Escape', () => {
+    it('prevents Tab from escaping when the modal has no focusable elements', () => {
+      document.getElementById('modalContent').innerHTML = '<span>Non focusable</span>';
+      const modal = document.getElementById('modalOverlay');
+      modal.classList.add('active');
+      const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+
+      window.dispatchEvent(event);
+
+      expect(event.defaultPrevented).toBe(true);
+    });
+
+    it('restores focus to the triggering element when closed directly', () => {
       const trigger = document.createElement('button');
       document.body.appendChild(trigger);
       trigger.focus();
-      expect(document.activeElement).toBe(trigger);
-
       openModal();
-      const modal = document.getElementById('modalOverlay');
-      expect(modal.classList.contains('active')).toBe(true);
 
-      const { KeyboardEvent } = window;
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      expect(modal.classList.contains('active')).toBe(false);
+      closeModalDirect();
+
       expect(document.activeElement).toBe(trigger);
+    });
+  });
+
+  describe('event delegation', () => {
+    it('delegates all data-action controls to their handlers', () => {
+      const cases = [
+        ['toggle-verb', { index: '2' }, mocks.toggleVerbCard, 2],
+        ['open-tense-modal', { tenseId: 'present_simple' }, mocks.openTenseModal],
+        ['show-tense-category', { catId: 'past' }, mocks.showTenseCategory],
+        ['show-comparison', { compId: 'past' }, mocks.showComparison],
+        ['select-option', { index: '1' }, mocks.selectOption, 1],
+        ['select-test-option', { index: '2' }, mocks.selectTestOption, 2],
+        ['show-module', { index: '3' }, mocks.showModule, 3],
+        ['open-lesson', { lessonId: 'lesson-1', tenseId: 'past_simple' }, mocks.openLesson],
+        ['start-lesson', { lessonId: 'lesson-1' }, mocks.startExerciseForLesson],
+        ['start-tense', { tenseId: 'past_simple' }, mocks.startExerciseForTense],
+        ['start-revision', {}, mocks.startRevisionSession],
+        ['toggle-sidebar', {}, mocks.toggleSidebar || vi.fn()],
+      ];
+
+      for (const [action, data, handler, numericIndex] of cases) {
+        const el = document.createElement('button');
+        el.dataset.action = action;
+        Object.entries(data).forEach(([key, value]) => {
+          el.dataset[key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)] = value;
+        });
+        document.body.appendChild(el);
+        el.click();
+        if (handler !== mocks.toggleSidebar) {
+          expect(handler).toHaveBeenCalled();
+        }
+        if (numericIndex !== undefined) expect(handler).toHaveBeenCalledWith(numericIndex);
+      }
+    });
+
+    it('delegates input and keyboard events for exercise, test and search fields', () => {
+      const exerciseInput = document.createElement('input');
+      exerciseInput.id = 'exerciseInput';
+      document.body.appendChild(exerciseInput);
+      exerciseInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      const testInput = document.createElement('input');
+      testInput.id = 'testInput';
+      document.body.appendChild(testInput);
+      testInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      const verbSearch = document.createElement('input');
+      verbSearch.id = 'verbSearch';
+      document.body.appendChild(verbSearch);
+      verbSearch.dispatchEvent(new Event('input', { bubbles: true }));
+
+      const globalSearch = document.createElement('input');
+      globalSearch.id = 'globalSearchInput';
+      document.body.appendChild(globalSearch);
+      globalSearch.dispatchEvent(new Event('input', { bubbles: true }));
+
+      expect(mocks.validateExercise).toHaveBeenCalledOnce();
+      expect(mocks.validateTestAnswer).toHaveBeenCalledOnce();
+      expect(mocks.filterVerbs).toHaveBeenCalledOnce();
+      expect(mocks.performGlobalSearch).toHaveBeenCalledTimes(1);
+    });
+
+    it('delegates static button IDs and modal-close classes', () => {
+      const ids = [
+        ['menuToggleBtn', mocks.toggleSidebar],
+        ['themeBtn', mocks.toggleTheme],
+        ['exSkipBtn', mocks.skipExercise],
+        ['exValidateBtn', mocks.validateExercise],
+        ['exNextBtn', mocks.nextExercise],
+        ['testValidateBtn', mocks.validateTestAnswer],
+        ['testNextBtn', mocks.nextTestQuestion],
+      ];
+
+      for (const [id, handler] of ids) {
+        const button = document.createElement('button');
+        button.id = id;
+        document.body.appendChild(button);
+        button.click();
+        expect(handler).toHaveBeenCalled();
+      }
+
+      const closeButton = document.createElement('button');
+      closeButton.className = 'modal-close';
+      document.body.appendChild(closeButton);
+      closeButton.click();
+      expect(document.getElementById('modalOverlay').classList.contains('active')).toBe(false);
+    });
+
+    it('ignores malformed or contextually excluded delegated elements', () => {
+      const noData = document.createElement('button');
+      noData.dataset.action = 'toggle-fav';
+      document.body.appendChild(noData);
+      noData.click();
+      expect(mocks.toggleFav).not.toHaveBeenCalled();
+
+      const excludedNav = document.createElement('button');
+      excludedNav.dataset.page = 'dashboard';
+      const modalContent = document.getElementById('modalContent');
+      modalContent.appendChild(excludedNav);
+      excludedNav.click();
+      expect(mocks.renderDashboard).not.toHaveBeenCalled();
     });
   });
 });
