@@ -1,10 +1,8 @@
 import { APP_DATA } from '../../data/index.js';
-import { escapeHtml, sanitizeInput } from '../../../src/core/security.js';
+import { escapeHtml } from '../../../src/core/security.js';
 
 export function performGlobalSearch() {
-  // Sanitize input to limit length (prevent DoS) and remove unwanted whitespace
-  const rawQuery = document.getElementById('globalSearch')?.value;
-  const query = sanitizeInput(rawQuery).toLowerCase();
+  const query = (document.getElementById('globalSearchInput')?.value || document.getElementById('globalSearch')?.value || '').toLowerCase().trim();
   const container = document.getElementById('searchResults');
 
   if (!query) {
@@ -25,7 +23,8 @@ export function performGlobalSearch() {
         type: 'temps',
         title: t.nameFR,
         desc: t.explanation.substring(0, 100),
-        action: `openTenseModal(APP_DATA.tensesById['${t.id}'])`,
+        actionType: 'open-tense',
+        targetId: t.id,
       });
     }
   });
@@ -42,7 +41,8 @@ export function performGlobalSearch() {
         type: 'verbe',
         title: `${v.base} → ${v.past} → ${v.pp}`,
         desc: v.meaning,
-        action: `navigateTo('verbs')`,
+        actionType: 'nav-page',
+        targetPage: 'verbs',
       });
     }
   });
@@ -50,14 +50,14 @@ export function performGlobalSearch() {
   // Search phrasal verbs
   APP_DATA.phrasalVerbs.forEach((pv) => {
     if (pv.pv.includes(query) || pv.meaning.includes(query)) {
-      results.push({ type: 'phrasal verb', title: pv.pv, desc: pv.meaning, action: '' });
+      results.push({ type: 'phrasal verb', title: pv.pv, desc: pv.meaning });
     }
   });
 
   // Search modals
   APP_DATA.modals.forEach((m) => {
     if (m.name.toLowerCase().includes(query) || m.ability.toLowerCase().includes(query)) {
-      results.push({ type: 'modal', title: m.name, desc: m.ability, action: '' });
+      results.push({ type: 'modal', title: m.name, desc: m.ability });
     }
   });
 
@@ -68,14 +68,19 @@ export function performGlobalSearch() {
   }
 
   container.innerHTML = results
-    .map(
-      (r) => `
-    <div class="search-result-item" onclick="${r.action || ''}">
+    .map((r) => {
+      let attrs = 'class="search-result-item" role="button" tabindex="0"';
+      if (r.actionType === 'open-tense') {
+        attrs += ` data-action="open-tense-modal" data-tense-id="${r.targetId}"`;
+      } else if (r.actionType === 'nav-page') {
+        attrs += ` data-page="${r.targetPage}"`;
+      }
+      return `
+    <div ${attrs}>
       <div class="sr-type">${escapeHtml(r.type)}</div>
       <div class="sr-title">${escapeHtml(r.title)}</div>
       <div class="sr-desc">${escapeHtml(r.desc)}</div>
-    </div>
-  `,
-    )
+    </div>`;
+    })
     .join('');
 }

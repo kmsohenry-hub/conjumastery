@@ -1,15 +1,40 @@
 import { renderDashboard } from './pages/dashboard.js';
-import { renderLessons } from './pages/lessons.js';
-import { resetExerciseUI } from './pages/exercises.js';
-import { renderTestSetup, cancelTest } from './pages/test.js';
-import { renderTenses, renderComparison } from './pages/tenses.js';
-import { renderVerbs } from './pages/verbs.js';
-import { renderRevision } from './pages/reviews.js';
+import { renderLessons, openLesson, showModule } from './pages/lessons.js';
+import {
+  resetExerciseUI,
+  restartExercise,
+  startExercise,
+  startExerciseForLesson,
+  startExerciseForTense,
+  selectOption,
+  validateExercise,
+  nextExercise,
+  skipExercise,
+  exitExercise,
+} from './pages/exercises.js';
+import {
+  renderTestSetup,
+  startTest,
+  selectOption as selectTestOption,
+  validateTestAnswer,
+  nextTestQuestion,
+  cancelTest,
+} from './pages/test.js';
+import {
+  renderTenses,
+  renderComparison,
+  showTenseCategory,
+  showComparison,
+  openTenseModal,
+} from './pages/tenses.js';
+import { renderVerbs, filterVerbs, toggleVerbCard } from './pages/verbs.js';
+import { renderRevision, startRevisionSession } from './pages/reviews.js';
 import { renderWeakpoints } from './pages/weakpoints.js';
 import { performGlobalSearch } from './pages/search.js';
-import { renderFavorites } from './pages/favorites.js';
+import { renderFavorites, toggleFav } from './pages/favorites.js';
 import { renderStats } from './pages/stats.js';
 import { State } from '../core/state/State.js';
+import { APP_DATA } from '../data/index.js';
 
 let _cachedPages = null;
 let _cachedNavItems = null;
@@ -99,14 +124,14 @@ export function navigateTo(page) {
 
   // Close mobile sidebar
   if (window.innerWidth <= 768) {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').classList.remove('active');
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('sidebarOverlay')?.classList.remove('active');
   }
 }
 
 export function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('active');
+  document.getElementById('sidebar')?.classList.toggle('open');
+  document.getElementById('sidebarOverlay')?.classList.toggle('active');
 }
 
 export function toggleTheme() {
@@ -118,7 +143,8 @@ export function toggleTheme() {
 
 export function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+  const themeBtn = document.getElementById('themeBtn');
+  if (themeBtn) themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
   State.data.settings.theme = theme;
   State.save();
 }
@@ -204,7 +230,8 @@ window.addEventListener('keydown', (e) => {
         target.classList.contains('nav-item') ||
         target.classList.contains('mode-card') ||
         target.classList.contains('lesson-card') ||
-        target.classList.contains('verb-card'))
+        target.classList.contains('verb-card') ||
+        target.classList.contains('search-result-item'))
     ) {
       if (
         target.tagName === 'BUTTON' ||
@@ -227,13 +254,9 @@ export function initEventDelegation() {
     if (e.key === 'Enter') {
       const target = e.target;
       if (target && target.id === 'exerciseInput') {
-        if (typeof window !== 'undefined' && typeof window.validateExercise === 'function') {
-          window.validateExercise();
-        }
+        validateExercise();
       } else if (target && target.id === 'testInput') {
-        if (typeof window !== 'undefined' && typeof window.validateTestAnswer === 'function') {
-          window.validateTestAnswer();
-        }
+        validateTestAnswer();
       }
     }
   });
@@ -242,17 +265,23 @@ export function initEventDelegation() {
   document.addEventListener('input', (e) => {
     const target = e.target;
     if (target && target.id === 'verbSearch') {
-      if (typeof window !== 'undefined' && typeof window.filterVerbs === 'function') {
-        window.filterVerbs();
-      }
-    } else if (target && target.id === 'globalSearchInput') {
-      if (typeof window !== 'undefined' && typeof window.performGlobalSearch === 'function') {
-        window.performGlobalSearch();
-      }
+      filterVerbs();
+    } else if (target && (target.id === 'globalSearchInput' || target.id === 'globalSearch')) {
+      performGlobalSearch();
     }
   });
 
   document.addEventListener('click', (e) => {
+    // 0. Toggle Favorite (MUST run before verb-card/lesson-card to prevent event bubbling)
+    const favBtn = e.target.closest?.('[data-action="toggle-fav"]');
+    if (favBtn) {
+      const favId = favBtn.dataset.favId;
+      if (favId) {
+        toggleFav(favId, favBtn);
+      }
+      return;
+    }
+
     // 1. Navigation items: [data-page]
     const navItem = e.target.closest?.('[data-page]');
     if (
@@ -273,72 +302,79 @@ export function initEventDelegation() {
     const modeCard = e.target.closest?.('[data-mode]');
     if (modeCard) {
       const mode = modeCard.dataset.mode;
-      if (mode && typeof window !== 'undefined' && typeof window.startExercise === 'function') {
-        window.startExercise(mode);
+      if (mode) {
+        startExercise(mode);
         return;
       }
     }
 
-    // 3. Action buttons: [data-action]
+    // 3. Action buttons & cards: [data-action]
     const actionEl = e.target.closest?.('[data-action]');
     if (actionEl) {
       const action = actionEl.dataset.action;
       switch (action) {
+        case 'toggle-verb': {
+          const idx = Number(actionEl.dataset.index);
+          toggleVerbCard(idx);
+          break;
+        }
+        case 'open-tense-modal': {
+          const tenseId = actionEl.dataset.tenseId;
+          const tense = APP_DATA.tensesById[tenseId];
+          if (tense) {
+            openTenseModal(tense);
+          }
+          break;
+        }
+        case 'show-tense-category': {
+          const catId = actionEl.dataset.catId;
+          showTenseCategory(catId, actionEl);
+          break;
+        }
+        case 'show-comparison': {
+          const compId = actionEl.dataset.compId;
+          showComparison(compId, actionEl);
+          break;
+        }
         case 'select-option': {
           const idx = Number(actionEl.dataset.index);
-          if (typeof window !== 'undefined' && typeof window.selectOption === 'function') {
-            window.selectOption(actionEl, idx);
-          }
+          selectOption(actionEl, idx);
           break;
         }
         case 'select-test-option': {
           const idx = Number(actionEl.dataset.index);
-          if (typeof window !== 'undefined' && typeof window.selectTestOption === 'function') {
-            window.selectTestOption(actionEl, idx);
-          }
+          selectTestOption(actionEl, idx);
           break;
         }
         case 'show-module': {
           const idx = Number(actionEl.dataset.index);
-          if (typeof window !== 'undefined' && typeof window.showModule === 'function') {
-            window.showModule(idx, actionEl);
-          }
+          showModule(idx, actionEl);
           break;
         }
         case 'open-lesson': {
           const lId = actionEl.dataset.lessonId;
           const tId = actionEl.dataset.tenseId;
-          if (typeof window !== 'undefined' && typeof window.openLesson === 'function') {
-            window.openLesson(lId, tId);
-          }
+          openLesson(lId, tId);
           break;
         }
         case 'start-lesson': {
           closeModalDirect();
           const lId = actionEl.dataset.lessonId;
-          if (typeof window !== 'undefined' && typeof window.startExerciseForLesson === 'function') {
-            window.startExerciseForLesson(lId);
-          }
+          startExerciseForLesson(lId);
           break;
         }
         case 'start-tense': {
           closeModalDirect();
           const tId = actionEl.dataset.tenseId;
-          if (typeof window !== 'undefined' && typeof window.startExerciseForTense === 'function') {
-            window.startExerciseForTense(tId);
-          }
+          startExerciseForTense(tId);
           break;
         }
         case 'start-revision': {
-          if (typeof window !== 'undefined' && typeof window.startRevisionSession === 'function') {
-            window.startRevisionSession();
-          }
+          startRevisionSession();
           break;
         }
         case 'new-test': {
-          if (typeof window !== 'undefined' && typeof window.renderTestSetup === 'function') {
-            window.renderTestSetup();
-          }
+          renderTestSetup();
           const setupEl = document.getElementById('testSetup');
           const resultsEl = document.getElementById('testResults');
           if (setupEl) setupEl.style.display = 'block';
@@ -355,31 +391,34 @@ export function initEventDelegation() {
           if (actionEl.dataset.theme) setTheme(actionEl.dataset.theme);
           break;
         case 'exit-exercise':
-          if (typeof window !== 'undefined' && typeof window.exitExercise === 'function') window.exitExercise();
+          exitExercise();
           break;
         case 'skip-exercise':
-          if (typeof window !== 'undefined' && typeof window.skipExercise === 'function') window.skipExercise();
+          skipExercise();
           break;
         case 'validate-exercise':
-          if (typeof window !== 'undefined' && typeof window.validateExercise === 'function') window.validateExercise();
+          validateExercise();
           break;
         case 'next-exercise':
-          if (typeof window !== 'undefined' && typeof window.nextExercise === 'function') window.nextExercise();
+          nextExercise();
           break;
         case 'restart-exercise':
-          if (typeof window !== 'undefined' && typeof window.restartExercise === 'function') window.restartExercise();
+          restartExercise();
           break;
         case 'reset-exercise-ui':
-          if (typeof window !== 'undefined' && typeof window.resetExerciseUI === 'function') window.resetExerciseUI();
+          resetExerciseUI();
           break;
         case 'start-test':
-          if (typeof window !== 'undefined' && typeof window.startTest === 'function') window.startTest();
+          startTest();
           break;
         case 'validate-test':
-          if (typeof window !== 'undefined' && typeof window.validateTestAnswer === 'function') window.validateTestAnswer();
+          validateTestAnswer();
           break;
         case 'next-test':
-          if (typeof window !== 'undefined' && typeof window.nextTestQuestion === 'function') window.nextTestQuestion();
+          nextTestQuestion();
+          break;
+        case 'close-modal':
+          closeModalDirect();
           break;
         case 'toggle-notifications':
           if (typeof window !== 'undefined' && window.NotificationManager?.toggle) {
@@ -387,14 +426,19 @@ export function initEventDelegation() {
           }
           break;
         case 'export-data':
-          if (typeof window !== 'undefined' && typeof window.exportData === 'function') window.exportData();
+          if (typeof window !== 'undefined' && typeof window.exportData === 'function') {
+            window.exportData();
+          }
           break;
         case 'import-data-click':
           document.getElementById('importFile')?.click();
           break;
         case 'reset-progress':
-          if (typeof window !== 'undefined' && typeof window.confirmReset === 'function') window.confirmReset();
-          else if (typeof window !== 'undefined' && typeof window.resetProgress === 'function') window.resetProgress();
+          if (typeof window !== 'undefined' && typeof window.confirmReset === 'function') {
+            window.confirmReset();
+          } else if (typeof window !== 'undefined' && typeof window.resetProgress === 'function') {
+            window.resetProgress();
+          }
           break;
       }
       return;
@@ -414,15 +458,15 @@ export function initEventDelegation() {
       } else if (btn.id === 'themeBtn') {
         toggleTheme();
       } else if (btn.id === 'exSkipBtn') {
-        if (typeof window !== 'undefined' && typeof window.skipExercise === 'function') window.skipExercise();
+        skipExercise();
       } else if (btn.id === 'exValidateBtn') {
-        if (typeof window !== 'undefined' && typeof window.validateExercise === 'function') window.validateExercise();
+        validateExercise();
       } else if (btn.id === 'exNextBtn') {
-        if (typeof window !== 'undefined' && typeof window.nextExercise === 'function') window.nextExercise();
+        nextExercise();
       } else if (btn.id === 'testValidateBtn') {
-        if (typeof window !== 'undefined' && typeof window.validateTestAnswer === 'function') window.validateTestAnswer();
+        validateTestAnswer();
       } else if (btn.id === 'testNextBtn') {
-        if (typeof window !== 'undefined' && typeof window.nextTestQuestion === 'function') window.nextTestQuestion();
+        nextTestQuestion();
       } else if (btn.classList.contains('modal-close')) {
         closeModalDirect();
       }

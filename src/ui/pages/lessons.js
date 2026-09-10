@@ -79,7 +79,7 @@ function renderTenseModal(tense, lessonId) {
         <div class="modal-title" id="modalTitle">${tense.nameEN}</div>
         <div style="color:var(--text-light);font-size:0.9rem">${tense.nameFR} • ${tense.level}</div>
       </div>
-      <button class="modal-close" data-action="close-modal">✕</button>
+      <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
     
     <div class="explain-block">
@@ -145,7 +145,7 @@ export function openPassiveModal(lessonId = 'l_passive') {
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Voix Passive</div>
-      <button class="modal-close" data-action="close-modal">✕</button>
+      <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
@@ -176,7 +176,7 @@ export function openReportedModal(lessonId = 'l_reported') {
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Discours Indirect (Reported Speech)</div>
-      <button class="modal-close" data-action="close-modal">✕</button>
+      <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
