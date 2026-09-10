@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
-import { APP_DATA } from '../../../src/data/index.js';
-import { generateQuestions, generateTransform } from '../../../src/core/exercises/generator.js';
+import { APP_DATA } from '../../../../src/data/index.js';
+import { generateQuestions, generateTransform } from '../../../../src/core/exercises/generator.js';
 
 describe('generator core distribution', () => {
   test('revision mode cycles deterministically across the requested review queue (Issue #107)', () => {
