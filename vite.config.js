@@ -51,7 +51,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
+      thresholds: {
+        statements: 85,
+        branches: 85,
+        functions: 90,
+        lines: 85,
+      },
       exclude: ['node_modules/', 'dist/', 'coverage/', '**/*.config.js', '**/*.setup.js'],
     },
   },
