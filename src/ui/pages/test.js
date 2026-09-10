@@ -14,6 +14,10 @@ export function cancelTest() {
     testTimer = null;
   }
   testSeconds = 0;
+  const timerEl = document.getElementById('testTimer');
+  if (timerEl) {
+    timerEl.textContent = '00:00';
+  }
 }
 let selectedOptionIndex = -1;
 let currentOptionButtons = [];
@@ -90,7 +94,7 @@ export function renderTestQuestion() {
     const letters = ['A', 'B', 'C', 'D'];
     html += `<div class="options-grid">`;
     (q.options || []).forEach((opt, i) => {
-      html += `<button class="option-btn" onclick="selectTestOption(this, ${i})">
+      html += `<button class="option-btn" data-action="select-test-option" data-index="${i}">
         <span class="option-letter">${letters[i]}</span>
         <span>${escapeHtml(opt)}</span>
       </button>`;
@@ -98,7 +102,7 @@ export function renderTestQuestion() {
     html += `</div>`;
   } else {
     html += `<div class="input-group" style="margin-top:16px">
-      <input class="input" type="text" id="testInput" placeholder="Votre réponse..." onkeydown="if(event.key==='Enter')validateTestAnswer()">
+      <input class="input" type="text" id="testInput" data-action="submit-test" placeholder="Votre réponse...">
     </div>`;
   }
 
@@ -150,9 +154,6 @@ export function validateTestAnswer() {
   } else {
     State.recordAnswer(q.tenseId, false);
   }
-  if (typeof window !== 'undefined' && typeof window.updateUI === 'function') {
-    window.updateUI();
-  }
 
   const feedbackEl = document.getElementById('testFeedback');
   feedbackEl.style.display = 'block';
@@ -181,6 +182,7 @@ export function nextTestQuestion() {
 }
 
 export function finishTest() {
+  const elapsedSeconds = testSeconds;
   cancelTest();
   document.getElementById('testArea').style.display = 'none';
   const resultsEl = document.getElementById('testResults');
@@ -189,21 +191,20 @@ export function finishTest() {
   const total = ExerciseEngine.questions.length;
   const score = ExerciseEngine.score;
   const pct = Math.round((score / total) * 100);
+  const mins = Math.floor(elapsedSeconds / 60);
+  const secs = elapsedSeconds % 60;
 
   let levelRecommendation = '';
   if (pct >= 80) levelRecommendation = 'Niveau recommandé : 🌳 Avancé';
   else if (pct >= 50) levelRecommendation = 'Niveau recommandé : 🌿 Intermédiaire';
   else levelRecommendation = 'Niveau recommandé : 🌱 Débutant';
 
-  const mins = Math.floor(testSeconds / 60);
-  const secs = testSeconds % 60;
-
   resultsEl.innerHTML = `
     <div class="card" style="text-align:center;padding:48px">
       <div style="font-size:4rem;margin-bottom:16px">${pct >= 80 ? '🏆' : pct >= 50 ? '🎯' : '📚'}</div>
       <h2 style="margin-bottom:8px">Test terminé !</h2>
       <p style="font-size:2rem;font-weight:700;color:var(--primary);margin:16px 0">${score} / ${total} (${pct}%)</p>
-      <p style="color:var(--text-light);margin-bottom:8px">Temps : ${mins}m ${secs}s</p>
+      <p style="color:var(--text-light);margin-bottom:8px">Temps : ${mins}min ${secs}s</p>
       <p style="font-size:1.1rem;font-weight:600;color:var(--success);margin-bottom:24px">${levelRecommendation}</p>
 
       <h3 style="text-align:left;margin:24px 0 12px">Détail des réponses</h3>
@@ -220,8 +221,8 @@ export function finishTest() {
       </div>
 
       <div style="display:flex;gap:12px;justify-content:center">
-        <button class="btn btn-primary" onclick="renderTestSetup();document.getElementById('testSetup').style.display='block';document.getElementById('testResults').style.display='none'">🔄 Nouveau test</button>
-        <button class="btn btn-outline" onclick="navigateTo('dashboard')">🏠 Tableau de bord</button>
+        <button class="btn btn-primary" data-action="new-test">🔄 Nouveau test</button>
+        <button class="btn btn-outline" data-page="dashboard">🏠 Tableau de bord</button>
       </div>
     </div>`;
 }

@@ -48,8 +48,8 @@ const ExerciseEngine = {
     return getConjugation(APP_DATA.verbsByBase, verb, tenseId, subject, is3rdSing);
   },
 
-  generateQuestions(mode, tenseFilter, difficulty, count = 10, isRevision = false) {
-    return generateQuestions(mode, tenseFilter, difficulty, count, isRevision);
+  generateQuestions(mode, tenseFilter, difficulty, count = 10, isRevision = false, lessonId = null) {
+    return generateQuestions(mode, tenseFilter, difficulty, count, isRevision, lessonId);
   },
 
   start(mode = 'mixed', tenseFilter = null, difficulty = 'intermediate', count = 10, lessonId = null, isRevision = false) {
@@ -67,7 +67,7 @@ const ExerciseEngine = {
       lessonId,
       isRevision,
     });
-    this.questions = generateQuestions(mode, tenseFilter, difficulty, count, isRevision);
+    this.questions = generateQuestions(mode, tenseFilter, difficulty, count, isRevision, lessonId);
     this.currentIndex = 0;
     this.score = 0;
     this.answered = false;

@@ -10,7 +10,7 @@ export function renderLessons() {
   tabs.innerHTML = APP_DATA.modules
     .map(
       (m, i) => `
-    <button class="tab ${i === 0 ? 'active' : ''}" onclick="showModule(${i}, this)">
+    <button class="tab ${i === 0 ? 'active' : ''}" data-action="show-module" data-index="${i}">
       ${m.title}
     </button>`,
     )
@@ -39,7 +39,7 @@ export function showModule(index, btn) {
           const isDone = completed.includes(l.id);
           const tense = l.tenseId ? APP_DATA.tensesById[l.tenseId] : null;
           return `
-        <div class="card lesson-card ${isDone ? 'completed' : ''}" onclick="openLesson('${l.id}', '${l.tenseId || ''}')" role="button" tabindex="0">
+        <div class="card lesson-card ${isDone ? 'completed' : ''}" role="button" tabindex="0" data-action="open-lesson" data-lesson-id="${l.id}" data-tense-id="${l.tenseId || ''}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
             <span class="tag ${isDone ? 'tag-green' : 'tag-blue'}">${isDone ? '✓ Terminé' : l.level}</span>
             <span style="font-size:0.8rem;color:var(--text-light)">${l.exercises} exercices</span>
@@ -79,7 +79,7 @@ function renderTenseModal(tense, lessonId) {
         <div class="modal-title" id="modalTitle">${tense.nameEN}</div>
         <div style="color:var(--text-light);font-size:0.9rem">${tense.nameFR} • ${tense.level}</div>
       </div>
-      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      <button class="modal-close" data-action="close-modal">✕</button>
     </div>
     
     <div class="explain-block">
@@ -131,9 +131,9 @@ function renderTenseModal(tense, lessonId) {
     }
 
     <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-      ${lessonId ? `<button class="btn btn-primary" onclick="closeModal();startExerciseForLesson('${lessonId}')">🎯 Commencer la leçon</button>` : ''}
-      <button class="btn ${lessonId ? 'btn-outline' : 'btn-primary'}" onclick="closeModal();startExerciseForTense('${tense.id}')">🎮 Entraînement libre</button>
-      <button class="btn btn-outline" onclick="closeModal();navigateTo('comparison')">📊 Voir le comparatif</button>
+      ${lessonId ? `<button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${lessonId}">🎯 Commencer la leçon</button>` : ''}
+      <button class="btn ${lessonId ? 'btn-outline' : 'btn-primary'}" data-action="start-tense" data-tense-id="${tense.id}">🎮 Entraînement libre</button>
+      <button class="btn btn-outline" data-page="comparison">📊 Voir le comparatif</button>
     </div>`;
 
   openModal();
@@ -145,7 +145,7 @@ export function openPassiveModal(lessonId = 'l_passive') {
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Voix Passive</div>
-      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      <button class="modal-close" data-action="close-modal">✕</button>
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
@@ -166,7 +166,7 @@ export function openPassiveModal(lessonId = 'l_passive') {
       <h4>💡 Nuances</h4>
       <p>${info.nuances}</p>
     </div>
-    <div style="margin-top:20px"><button class="btn btn-primary" onclick="closeModal();startExerciseForLesson('${lessonId}')">🎯 Commencer la leçon</button></div>`;
+    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="l_passive">🎯 Commencer la leçon</button></div>`;
   openModal();
 }
 
@@ -176,7 +176,7 @@ export function openReportedModal(lessonId = 'l_reported') {
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Discours Indirect (Reported Speech)</div>
-      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      <button class="modal-close" data-action="close-modal">✕</button>
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
@@ -196,7 +196,7 @@ export function openReportedModal(lessonId = 'l_reported') {
         ${info.timeChanges.map((t) => `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`).join('')}
       </table>
     </div>
-    <div style="margin-top:20px"><button class="btn btn-primary" onclick="closeModal();startExerciseForLesson('${lessonId}')">🎯 Commencer la leçon</button></div>`;
+    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="l_reported">🎯 Commencer la leçon</button></div>`;
   openModal();
 }
 

@@ -9,6 +9,34 @@ import {
 } from './conjugation.js';
 import { shuffle } from './shuffle.js';
 
+export function generatePassiveQuestion() {
+  const examples = APP_DATA.passiveInfo?.examples || [
+    { tense: 'Present Simple', active: 'They build houses.', passive: 'Houses are built.' },
+  ];
+  const item = examples[Math.floor(Math.random() * examples.length)];
+  return {
+    type: 'transform',
+    sentence: `Transformez à la voix passive :\n"${item.active}"`,
+    answer: item.passive,
+    tenseId: 'passive_voice',
+    explanation: `À la voix passive : "${item.passive}" (${item.tense})`,
+  };
+}
+
+export function generateReportedQuestion() {
+  const rules = APP_DATA.reportedSpeech?.rules || [
+    { direct: 'I am happy', reported: 'He said he was happy', example: 'Present -> Past' },
+  ];
+  const item = rules[Math.floor(Math.random() * rules.length)];
+  return {
+    type: 'transform',
+    sentence: `Transformez au discours indirect :\n"${item.direct}"`,
+    answer: item.reported,
+    tenseId: 'reported_speech',
+    explanation: `Au discours indirect : "${item.reported}" (${item.example})`,
+  };
+}
+
 function buildSentenceForTense(tenseId, subj, verb, is3rdSing, context = 'practice') {
   const ing = getIngForm(verb);
   const { past, pp } = getIrregularForms(APP_DATA.verbsByBase, verb);
@@ -17,6 +45,7 @@ function buildSentenceForTense(tenseId, subj, verb, is3rdSing, context = 'practi
   const bePast = subj === 'I' || is3rdSing ? 'was' : 'were';
   const hasHave = is3rdSing ? 'has' : 'have';
   const pastForm = verb === 'be' ? bePast : past;
+  const cond2Past = verb === 'be' ? 'were' : pastForm;
 
   const sentences = {
     present_simple: `${subj} ${present} every day.`,
@@ -34,7 +63,7 @@ function buildSentenceForTense(tenseId, subj, verb, is3rdSing, context = 'practi
     future_perfect_continuous: `${subj} will have been ${ing} for two hours by then.`,
     conditional_0: `If ${subj} ${present}, ${subj} ${present}.`,
     conditional_1: `If ${subj} ${present}, ${subj} will ${verb}.`,
-    conditional_2: `If ${subj} ${pastForm}, ${subj} would ${verb}.`,
+    conditional_2: `If ${subj} ${cond2Past}, ${subj} would ${verb}.`,
     conditional_3: `If ${subj} had ${pp}, ${subj} would have ${pp}.`,
     mixed_conditional: `If ${subj} had ${pp}, ${subj} would ${verb}.`,
   };
@@ -120,7 +149,7 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty) {
     fullSentence = `If ${subj} ___, ${subj} will ${verb}.`;
   } else if (tense.id === 'conditional_2') {
     const { past: pastForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
-    correctAnswer = verb === 'be' ? (subj === 'I' || is3rdSing ? 'was' : 'were') : pastForm;
+    correctAnswer = verb === 'be' ? 'were' : pastForm;
     fullSentence = `If ${subj} ___, ${subj} would ${verb}.`;
   } else if (tense.id === 'conditional_3') {
     const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
@@ -346,7 +375,7 @@ export function generateFill(tense, subj, verb, is3rdSing) {
     answer = present;
   } else if (tense.id === 'conditional_2') {
     const { past: pastForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
-    const actualPast = verb === 'be' ? (subj === 'I' || is3rdSing ? 'was' : 'were') : pastForm;
+    const actualPast = verb === 'be' ? 'were' : pastForm;
     fullSentence = `If ${subj} ___, ${subj} would ${verb}.`;
     answer = actualPast;
   } else if (tense.id === 'conditional_3') {
@@ -445,14 +474,31 @@ export function generateTransform(tense, subj, verb, is3rdSing) {
     negative = `${subj} won't have been ${ing}.`;
     question = `Will ${s} have been ${ing}?`;
   } else if (tense.id === 'conditional_0') {
-    negative = `If ${subj} ${is3rdSing ? "doesn't" : "don't"} ${verb}, ${subj} ${is3rdSing ? "doesn't" : "don't"} ${verb}.`;
-    question = `If ${subj} ${present}, ${is3rdSing ? 'Does' : 'Do'} ${s} ${verb}?`;
+    if (verb === 'be') {
+      const bePresNeg = subj === 'I' ? 'am not' : is3rdSing ? "isn't" : "aren't";
+      negative = `If ${subj} ${bePresNeg}, ${subj} ${bePresNeg}.`;
+      question = `If ${subj} ${present}, ${beNowCap} ${s}?`;
+    } else {
+      negative = `If ${subj} ${is3rdSing ? "doesn't" : "don't"} ${verb}, ${subj} ${is3rdSing ? "doesn't" : "don't"} ${verb}.`;
+      question = `If ${subj} ${present}, ${is3rdSing ? 'Does' : 'Do'} ${s} ${verb}?`;
+    }
   } else if (tense.id === 'conditional_1') {
-    negative = `If ${subj} ${is3rdSing ? "doesn't" : "don't"} ${verb}, ${subj} won't ${verb}.`;
-    question = `If ${subj} ${present}, will ${s} ${verb}?`;
+    if (verb === 'be') {
+      const bePresNeg = subj === 'I' ? 'am not' : is3rdSing ? "isn't" : "aren't";
+      negative = `If ${subj} ${bePresNeg}, ${subj} won't be.`;
+      question = `If ${subj} ${present}, will ${s} be?`;
+    } else {
+      negative = `If ${subj} ${is3rdSing ? "doesn't" : "don't"} ${verb}, ${subj} won't ${verb}.`;
+      question = `If ${subj} ${present}, will ${s} ${verb}?`;
+    }
   } else if (tense.id === 'conditional_2') {
-    negative = `If ${subj} didn't ${verb}, ${subj} wouldn't ${verb}.`;
-    question = `If ${subj} ${pastForm}, would ${s} ${verb}?`;
+    if (verb === 'be') {
+      negative = `If ${subj} weren't, ${subj} wouldn't be.`;
+      question = `If ${subj} were, would ${s} be?`;
+    } else {
+      negative = `If ${subj} didn't ${verb}, ${subj} wouldn't ${verb}.`;
+      question = `If ${subj} ${pastForm}, would ${s} ${verb}?`;
+    }
   } else if (tense.id === 'conditional_3') {
     negative = `If ${subj} hadn't ${pp}, ${subj} wouldn't have ${pp}.`;
     question = `If ${subj} had ${pp}, would ${s} have ${pp}?`;
@@ -534,7 +580,14 @@ export function generateSingleQuestion(mode, tense, subjects, verbs, difficulty)
   }
 }
 
-export function generateQuestions(mode, tenseFilter, difficulty, count = 10, isRevision = false) {
+export function generateQuestions(mode, tenseFilter, difficulty, count = 10, isRevision = false, lessonId = null) {
+  if (lessonId === 'l_passive') {
+    return Array.from({ length: count }, () => generatePassiveQuestion());
+  }
+  if (lessonId === 'l_reported') {
+    return Array.from({ length: count }, () => generateReportedQuestion());
+  }
+
   const questions = [];
   const subjects = [
     'I',

@@ -89,8 +89,13 @@ export function startExerciseForLesson(lessonId) {
     }
   }
 
-  const tenseFilter = targetLesson?.tenseId ? [targetLesson.tenseId] : [];
-  const count = targetLesson?.exercises || 10;
+  if (!targetLesson) {
+    console.error(`Lesson not found: ${lessonId}`);
+    return;
+  }
+
+  const tenseFilter = targetLesson.tenseId ? [targetLesson.tenseId] : [];
+  const count = targetLesson.exercises || 10;
 
   navigateTo('exercises');
   setTimeout(() => startExercise('mixed', tenseFilter, 'intermediate', count, lessonId, false), 100);
@@ -119,7 +124,7 @@ export function renderExerciseQuestion(q) {
     const letters = ['A', 'B', 'C', 'D'];
     html += `<div class="options-grid">`;
     q.options.forEach((opt, i) => {
-      html += `<button class="option-btn" onclick="selectOption(this, ${i})" data-index="${i}">
+      html += `<button class="option-btn" data-action="select-option" data-index="${i}">
         <span class="option-letter">${letters[i]}</span>
         <span>${escapeHtml(opt)}</span>
       </button>`;
@@ -127,7 +132,7 @@ export function renderExerciseQuestion(q) {
     html += `</div>`;
   } else if (q.type === 'fill' || q.type === 'translation') {
     html += `<div class="input-group" style="margin-top:16px">
-      <input class="input" type="text" id="exerciseInput" placeholder="Votre réponse..." onkeydown="if(event.key==='Enter')validateExercise()">
+      <input class="input" type="text" id="exerciseInput" data-action="submit-exercise" placeholder="Votre réponse...">
     </div>`;
   } else if (q.type === 'transform') {
     html += `<div class="input-group" style="margin-top:16px">
@@ -260,8 +265,8 @@ export function finishExercise() {
       <h2 style="margin-bottom:8px">${pct >= 80 ? 'Excellent !' : pct >= 50 ? 'Bien joué !' : 'Continuez vos efforts !'}</h2>
       <p style="font-size:1.2rem;color:var(--text-light);margin-bottom:20px">${p.score} / ${p.total} bonnes réponses (${pct}%)</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="resetExerciseUI()">🏠 Retour</button>
-        <button class="btn btn-secondary" onclick="restartExercise()">🔄 Recommencer</button>
+        <button class="btn btn-primary" data-action="reset-exercise-ui">🏠 Retour</button>
+        <button class="btn btn-secondary" data-action="restart-exercise">🔄 Recommencer</button>
       </div>
     </div>`;
 

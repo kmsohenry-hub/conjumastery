@@ -29,10 +29,12 @@ export function navigateTo(page) {
   _cachedNavItems.forEach((n) => {
     if (n.dataset.page === page) {
       n.classList.add('active');
-      n.setAttribute('aria-selected', 'true');
+      n.setAttribute('aria-current', 'page');
+      n.removeAttribute('aria-selected');
     } else {
       n.classList.remove('active');
-      n.setAttribute('aria-selected', 'false');
+      n.removeAttribute('aria-current');
+      n.removeAttribute('aria-selected');
     }
   });
 
@@ -220,6 +222,36 @@ window.addEventListener('keydown', (e) => {
 export function initEventDelegation() {
   if (typeof document === 'undefined' || !document.addEventListener) return;
 
+  // Keydown delegation for Enter on exercise and test inputs
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const target = e.target;
+      if (target && target.id === 'exerciseInput') {
+        if (typeof window !== 'undefined' && typeof window.validateExercise === 'function') {
+          window.validateExercise();
+        }
+      } else if (target && target.id === 'testInput') {
+        if (typeof window !== 'undefined' && typeof window.validateTestAnswer === 'function') {
+          window.validateTestAnswer();
+        }
+      }
+    }
+  });
+
+  // Input delegation for search inputs
+  document.addEventListener('input', (e) => {
+    const target = e.target;
+    if (target && target.id === 'verbSearch') {
+      if (typeof window !== 'undefined' && typeof window.filterVerbs === 'function') {
+        window.filterVerbs();
+      }
+    } else if (target && target.id === 'globalSearchInput') {
+      if (typeof window !== 'undefined' && typeof window.performGlobalSearch === 'function') {
+        window.performGlobalSearch();
+      }
+    }
+  });
+
   document.addEventListener('click', (e) => {
     // 1. Navigation items: [data-page]
     const navItem = e.target.closest?.('[data-page]');
@@ -252,6 +284,67 @@ export function initEventDelegation() {
     if (actionEl) {
       const action = actionEl.dataset.action;
       switch (action) {
+        case 'select-option': {
+          const idx = Number(actionEl.dataset.index);
+          if (typeof window !== 'undefined' && typeof window.selectOption === 'function') {
+            window.selectOption(actionEl, idx);
+          }
+          break;
+        }
+        case 'select-test-option': {
+          const idx = Number(actionEl.dataset.index);
+          if (typeof window !== 'undefined' && typeof window.selectTestOption === 'function') {
+            window.selectTestOption(actionEl, idx);
+          }
+          break;
+        }
+        case 'show-module': {
+          const idx = Number(actionEl.dataset.index);
+          if (typeof window !== 'undefined' && typeof window.showModule === 'function') {
+            window.showModule(idx, actionEl);
+          }
+          break;
+        }
+        case 'open-lesson': {
+          const lId = actionEl.dataset.lessonId;
+          const tId = actionEl.dataset.tenseId;
+          if (typeof window !== 'undefined' && typeof window.openLesson === 'function') {
+            window.openLesson(lId, tId);
+          }
+          break;
+        }
+        case 'start-lesson': {
+          closeModalDirect();
+          const lId = actionEl.dataset.lessonId;
+          if (typeof window !== 'undefined' && typeof window.startExerciseForLesson === 'function') {
+            window.startExerciseForLesson(lId);
+          }
+          break;
+        }
+        case 'start-tense': {
+          closeModalDirect();
+          const tId = actionEl.dataset.tenseId;
+          if (typeof window !== 'undefined' && typeof window.startExerciseForTense === 'function') {
+            window.startExerciseForTense(tId);
+          }
+          break;
+        }
+        case 'start-revision': {
+          if (typeof window !== 'undefined' && typeof window.startRevisionSession === 'function') {
+            window.startRevisionSession();
+          }
+          break;
+        }
+        case 'new-test': {
+          if (typeof window !== 'undefined' && typeof window.renderTestSetup === 'function') {
+            window.renderTestSetup();
+          }
+          const setupEl = document.getElementById('testSetup');
+          const resultsEl = document.getElementById('testResults');
+          if (setupEl) setupEl.style.display = 'block';
+          if (resultsEl) resultsEl.style.display = 'none';
+          break;
+        }
         case 'toggle-sidebar':
           toggleSidebar();
           break;
@@ -272,6 +365,12 @@ export function initEventDelegation() {
           break;
         case 'next-exercise':
           if (typeof window !== 'undefined' && typeof window.nextExercise === 'function') window.nextExercise();
+          break;
+        case 'restart-exercise':
+          if (typeof window !== 'undefined' && typeof window.restartExercise === 'function') window.restartExercise();
+          break;
+        case 'reset-exercise-ui':
+          if (typeof window !== 'undefined' && typeof window.resetExerciseUI === 'function') window.resetExerciseUI();
           break;
         case 'start-test':
           if (typeof window !== 'undefined' && typeof window.startTest === 'function') window.startTest();

@@ -129,8 +129,6 @@ const State = {
     const alreadyPromoted = correct && this.sessionPromotedTenses.has(tenseId);
     if (correct && !alreadyPromoted) {
       this.sessionPromotedTenses.add(tenseId);
-    } else if (!correct) {
-      this.sessionPromotedTenses.delete(tenseId);
     }
     store.recordAnswer(tenseId, correct);
     if (alreadyPromoted && previousSR) {
