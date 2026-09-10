@@ -29,8 +29,10 @@ export function navigateTo(page) {
   _cachedNavItems.forEach((n) => {
     if (n.dataset.page === page) {
       n.classList.add('active');
+      n.setAttribute('aria-selected', 'true');
     } else {
       n.classList.remove('active');
+      n.setAttribute('aria-selected', 'false');
     }
   });
 
@@ -121,12 +123,17 @@ export function setTheme(theme) {
 
 export function openModal() {
   _previousActiveElement = document.activeElement;
-  const modal = document.getElementById('modalOverlay');
-  if (!modal) return;
-  modal.classList.add('active');
-  const closeBtn = modal.querySelector('.modal-close');
-  if (closeBtn && typeof closeBtn.focus === 'function') {
-    closeBtn.focus();
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) {
+    overlay.classList.add('active');
+    setTimeout(() => {
+      const focusable = overlay.querySelector(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable && typeof focusable.focus === 'function') {
+        focusable.focus();
+      }
+    }, 50);
   }
 }
 
@@ -137,7 +144,9 @@ export function closeModal(event) {
 
 export function closeModalDirect() {
   const overlay = document.getElementById('modalOverlay');
-  if (overlay) overlay.classList.remove('active');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
   if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
     _previousActiveElement.focus();
     _previousActiveElement = null;
@@ -145,10 +154,45 @@ export function closeModalDirect() {
 }
 
 window.addEventListener('keydown', (e) => {
+  const modal = document.getElementById('modalOverlay');
+  const isModalActive = modal && modal.classList.contains('active');
+
   if (e.key === 'Escape') {
-    const modal = document.getElementById('modalOverlay');
-    if (modal && modal.classList.contains('active')) {
+    if (isModalActive) {
       closeModalDirect();
+    }
+  } else if (e.key === 'Tab' && isModalActive) {
+    const focusable = Array.from(
+      modal.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => {
+      return (
+        el.offsetWidth > 0 ||
+        el.offsetHeight > 0 ||
+        (el.getClientRects && el.getClientRects().length > 0) ||
+        window.getComputedStyle?.(el).display !== 'none'
+      );
+    });
+
+    if (focusable.length === 0) {
+      e.preventDefault();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === first || !modal.contains(document.activeElement)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last || !modal.contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus();
+      }
     }
   } else if (e.key === 'Enter' || e.key === ' ') {
     const target = e.target;

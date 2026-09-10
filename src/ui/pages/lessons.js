@@ -76,7 +76,7 @@ function renderTenseModal(tense, lessonId) {
   modal.innerHTML = `
     <div class="modal-header">
       <div>
-        <div class="modal-title">${tense.nameEN}</div>
+        <div class="modal-title" id="modalTitle">${tense.nameEN}</div>
         <div style="color:var(--text-light);font-size:0.9rem">${tense.nameFR} • ${tense.level}</div>
       </div>
       <button class="modal-close" onclick="closeModalDirect()">✕</button>
@@ -144,7 +144,7 @@ export function openPassiveModal(lessonId = 'l_passive') {
   const info = APP_DATA.passiveInfo;
   modal.innerHTML = `
     <div class="modal-header">
-      <div class="modal-title">Voix Passive</div>
+      <div class="modal-title" id="modalTitle">Voix Passive</div>
       <button class="modal-close" onclick="closeModalDirect()">✕</button>
     </div>
     <div class="explain-block">
@@ -175,7 +175,7 @@ export function openReportedModal(lessonId = 'l_reported') {
   const info = APP_DATA.reportedSpeech;
   modal.innerHTML = `
     <div class="modal-header">
-      <div class="modal-title">Discours Indirect (Reported Speech)</div>
+      <div class="modal-title" id="modalTitle">Discours Indirect (Reported Speech)</div>
       <button class="modal-close" onclick="closeModalDirect()">✕</button>
     </div>
     <div class="explain-block">
