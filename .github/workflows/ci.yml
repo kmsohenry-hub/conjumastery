@@ -1,7 +1,6 @@
 name: CI
 
 on:
-  # La stabilisation reçoit le même signal CI que main avant promotion.
   push:
     branches: [main, stabilization, ci-fix]
   pull_request:
@@ -38,15 +37,27 @@ jobs:
         if: github.ref == 'refs/heads/ci-fix'
         run: |
           npx prettier@3.8.3 --write "**/*.{js,css,json,md}"
-          if git diff --quiet; then
-            echo "Formatting already clean."
+          git diff --name-only > formatting-changed.txt
+
+      - name: Export formatted files (ci-fix only)
+        if: github.ref == 'refs/heads/ci-fix'
+        run: |
+          if [ -s formatting-changed.txt ]; then
+            tar -czf formatted-files.tar.gz -T formatting-changed.txt
           else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -- '*.js' '*.css' '*.json' '*.md'
-            git commit -m "ci: apply Prettier formatting"
-            git push origin HEAD:ci-fix
+            tar -czf formatted-files.tar.gz --files-from /dev/null
           fi
+
+      - name: Upload formatter output (ci-fix diagnostics)
+        if: always() && github.ref == 'refs/heads/ci-fix'
+        uses: actions/upload-artifact@v6
+        with:
+          name: formatted-files
+          path: |
+            formatted-files.tar.gz
+            formatting-changed.txt
+          if-no-files-found: warn
+          retention-days: 3
 
       - name: Check formatting
         run: npm run format:check
