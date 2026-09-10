@@ -88,9 +88,9 @@ describe('18 tenses: generated fill questions', () => {
   test('checks the hardest irregular auxiliary/participle combinations explicitly', () => {
     const restore = cleanRandom();
     try {
-      expect(
-        generateFill(APP_DATA.tensesById.present_perfect, 'She', 'go', true).answer,
-      ).toBe('has gone');
+      expect(generateFill(APP_DATA.tensesById.present_perfect, 'She', 'go', true).answer).toBe(
+        'has gone',
+      );
       expect(generateFill(APP_DATA.tensesById.past_perfect, 'She', 'go', true).answer).toBe(
         'had gone',
       );
