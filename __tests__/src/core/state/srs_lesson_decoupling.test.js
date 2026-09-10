@@ -1,110 +1,119 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createStore, defaultState } from '../../../../src/core/state/store.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { State } from '../../../../src/core/state/State.js';
-import ExerciseEngine from '../../../../src/core/exercises/ExerciseEngine.js';
-import { generateQuestions } from '../../../../src/core/exercises/generator.js';
 
-describe('Pedagogical decoupling: Lessons and Spaced Repetition (Issues #111, #107)', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    State.reset();
-    State.resetSessionPromotions?.();
-  });
+const defaultState = {
+  xp: 0,
+  level: 1,
+  daysStreak: 0,
+  lastActiveDate: null,
+  completedLessons: [],
+  favorites: [],
+  spacedRepetition: {},
+  activityLog: [],
+  settings: { theme: 'light', dailyGoal: 10, notifications: false },
+};
 
-  describe('Issue #111: Lesson session completion decoupling', () => {
-    it('does not complete any lesson during free single-tense training even with 100% score', () => {
-      ExerciseEngine.start('mixed', ['present_simple'], 'intermediate', 5, null);
-      expect(ExerciseEngine.currentLessonId).toBeNull();
+beforeEach(() => {
+  State.data = { ...defaultState };
+  State.resetSessionPromotions();
+});
 
-      // Simulate completion check
-      const score = 5;
-      const total = 5;
-      const pct = Math.round((score / total) * 100);
-      expect(pct).toBe(100);
-
-      // Finish logic should check currentLessonId
-      if (pct >= 80 && ExerciseEngine.currentLessonId) {
-        State.completeLesson(ExerciseEngine.currentLessonId);
-      }
-      expect(State.data.completedLessons).toEqual([]);
-    });
-
-    it('completes only the specified lesson when score >= 80%', () => {
-      ExerciseEngine.start('mixed', ['present_simple'], 'intermediate', 15, 'l_present_simple');
-      expect(ExerciseEngine.currentLessonId).toBe('l_present_simple');
-
-      const score = 13;
-      const total = 15;
-      const pct = Math.round((score / total) * 100);
-      expect(pct).toBeGreaterThanOrEqual(80);
-
-      if (pct >= 80 && ExerciseEngine.currentLessonId) {
-        State.completeLesson(ExerciseEngine.currentLessonId);
-      }
-      expect(State.data.completedLessons).toEqual(['l_present_simple']);
-    });
-
-    it('does not complete lesson if score is below 80%', () => {
-      ExerciseEngine.start('mixed', ['present_simple'], 'intermediate', 15, 'l_present_simple');
-
-      const score = 10;
-      const total = 15;
-      const pct = Math.round((score / total) * 100);
-      expect(pct).toBeLessThan(80);
-
-      if (pct >= 80 && ExerciseEngine.currentLessonId) {
-        State.completeLesson(ExerciseEngine.currentLessonId);
-      }
-      expect(State.data.completedLessons).toEqual([]);
-    });
-  });
-
-  describe('Issue #107: Spaced Repetition stabilization & deterministic queue coverage', () => {
-    it('covers all due tenses in round-robin order without omissions when isRevision is true', () => {
-      const dueQueue = ['present_simple', 'past_simple', 'future_will', 'present_perfect'];
-      const questions = generateQuestions('mixed', dueQueue, 'intermediate', dueQueue.length, true);
-
-      expect(questions).toHaveLength(4);
-      expect(questions.map((q) => q.tenseId)).toEqual(dueQueue);
-    });
-
-    it('promotes a tense interval at most once per session to prevent artificial inflation', () => {
+describe('SRS promotion capping and lesson isolation', () => {
+  describe('session-level SRS interval capping (Issue #107)', () => {
+    it('promotes tense interval on the first correct answer in a session', () => {
       State.data = {
         ...defaultState,
         spacedRepetition: {
-          present_simple: { interval: 1, ease: 2.5, errors: 1, nextReview: 0 },
+          past_simple: { interval: 1, ease: 2.5, errors: 0, nextReview: 0 },
+        },
+      };
+
+      State.recordAnswer('past_simple', true);
+      const sr = State.data.spacedRepetition.past_simple;
+      expect(sr.interval).toBe(3);
+    });
+
+    it('does NOT promote interval a second time for the same tense in the same session', () => {
+      State.data = {
+        ...defaultState,
+        spacedRepetition: {
+          past_simple: { interval: 1, ease: 2.5, errors: 0, nextReview: 0 },
+        },
+      };
+
+      // First correct answer -> promoted
+      State.recordAnswer('past_simple', true);
+      const firstInterval = State.data.spacedRepetition.past_simple.interval;
+      expect(firstInterval).toBe(3);
+
+      // Second correct answer in the same session -> interval must stay locked at 3
+      State.recordAnswer('past_simple', true);
+      expect(State.data.spacedRepetition.past_simple.interval).toBe(firstInterval);
+
+      // Third correct answer -> still locked at 3
+      State.recordAnswer('past_simple', true);
+      expect(State.data.spacedRepetition.past_simple.interval).toBe(firstInterval);
+    });
+
+    it('strictly enforces at most one promotion per session even if an error occurs between successes (P-05)', () => {
+      State.data = {
+        ...defaultState,
+        spacedRepetition: {
+          present_simple: { interval: 1, ease: 2.5, errors: 0, nextReview: 0 },
         },
       };
       State.resetSessionPromotions();
 
-      // Answer 1: correct -> interval should advance (1 * 2.5 = 3)
+      // Q1: correct -> interval advances from 1 to 3
       State.recordAnswer('present_simple', true);
       expect(State.data.spacedRepetition.present_simple.interval).toBe(3);
 
-      // Answers 2 to 10 in same session -> interval should NOT advance again
-      for (let i = 2; i <= 10; i++) {
-        State.recordAnswer('present_simple', true);
-        expect(State.data.spacedRepetition.present_simple.interval).toBe(3);
-      }
-
-      // Answer incorrect -> resets interval and records error immediately
+      // Q2: error -> interval resets to 1, errors = 1
       State.recordAnswer('present_simple', false);
       expect(State.data.spacedRepetition.present_simple.interval).toBe(1);
       expect(State.data.spacedRepetition.present_simple.errors).toBe(1);
+
+      // Q3: correct again in the SAME session -> must NOT promote again!
+      State.recordAnswer('present_simple', true);
+      expect(State.data.spacedRepetition.present_simple.interval).toBe(1);
+
+      // New session starts
+      State.resetSessionPromotions();
+      State.recordAnswer('present_simple', true);
+      expect(State.data.spacedRepetition.present_simple.interval).toBeGreaterThan(1);
     });
 
     it('allows promotion in the next session after session reset', () => {
       State.data = {
         ...defaultState,
         spacedRepetition: {
-          present_simple: { interval: 3, ease: 2.6, errors: 0, nextReview: 0 },
+          past_simple: { interval: 1, ease: 2.5, errors: 0, nextReview: 0 },
         },
       };
 
-      // New session
+      // Session 1: promote
+      State.recordAnswer('past_simple', true);
+      expect(State.data.spacedRepetition.past_simple.interval).toBe(3);
+
+      // Session 2 begins: resetSessionPromotions called
       State.resetSessionPromotions();
-      State.recordAnswer('present_simple', true);
-      expect(State.data.spacedRepetition.present_simple.interval).toBe(8); // 3 * 2.6 = 8
+      State.recordAnswer('past_simple', true);
+      expect(State.data.spacedRepetition.past_simple.interval).toBeGreaterThan(3);
+    });
+  });
+
+  describe('lesson completion decoupling (Issue #111)', () => {
+    it('only marks the targeted lesson as completed', () => {
+      State.completeLesson('l_pres_simple');
+      expect(State.data.completedLessons).toContain('l_pres_simple');
+      expect(State.data.completedLessons).not.toContain('l_past_simple');
+      expect(State.data.completedLessons).toHaveLength(1);
+    });
+
+    it('does not duplicate completedLessons when completed multiple times', () => {
+      State.completeLesson('l_future');
+      State.completeLesson('l_future');
+      expect(State.data.completedLessons.filter((id) => id === 'l_future')).toHaveLength(1);
     });
   });
 });

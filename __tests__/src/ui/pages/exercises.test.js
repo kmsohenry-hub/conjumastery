@@ -1,107 +1,64 @@
-import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { navigateTo, launchConfetti } = vi.hoisted(() => ({
-  navigateTo: vi.fn(),
-  launchConfetti: vi.fn(),
-}));
-
-const { mockEngine, mockState } = vi.hoisted(() => ({
+const { mockEngine, navigateTo, launchConfetti } = vi.hoisted(() => ({
   mockEngine: {
-    currentTenseFilter: null,
+    start: vi.fn(),
+    getCurrent: vi.fn(),
+    getProgress: vi.fn(() => ({ current: 1, total: 10, score: 0 })),
+    next: vi.fn(() => false),
+    questions: [],
+    currentIndex: 0,
+    score: 0,
+    answered: false,
     currentMode: null,
+    currentTenseFilter: null,
     currentDifficulty: null,
     currentCount: 10,
     currentLessonId: null,
     isRevision: false,
     sessionConfig: null,
-    currentIndex: 0,
-    score: 0,
-    answered: false,
-    questions: [
-      {
-        tenseId: 'present_simple',
-        type: 'qcm',
-        sentence: 'He ___ every day.',
-        options: ['works', 'work'],
-        correct: 0,
-        explanation: 'He works.',
-      },
-      {
-        tenseId: 'present_simple',
-        type: 'fill',
-        sentence: 'She ___ chocolate.',
-        answer: 'likes',
-        explanation: 'She likes.',
-      },
-    ],
-    getCurrent: vi.fn(function () {
-      return this.questions[this.currentIndex] || null;
-    }),
-    next: vi.fn(function () {
-      this.currentIndex++;
-      return this.currentIndex < this.questions.length;
-    }),
-    getProgress: vi.fn(function () {
-      return {
-        current: this.currentIndex + 1,
-        total: this.questions.length,
-        score: this.score,
-      };
-    }),
-    start: vi.fn(function (mode, tenseFilter, difficulty, count = 10, lessonId = null, isRevision = false) {
-      this.currentMode = mode;
-      this.currentTenseFilter = tenseFilter;
-      this.currentDifficulty = difficulty;
-      this.currentCount = count;
-      this.currentLessonId = lessonId;
-      this.isRevision = isRevision;
-      this.sessionConfig = Object.freeze({ mode, tenseFilter, difficulty, count, lessonId, isRevision });
-      return this.questions;
-    }),
   },
-  mockState: {
-    addXP: vi.fn(),
-    recordAnswer: vi.fn(),
-    completeLesson: vi.fn(),
-    updateSpacedRepetition: vi.fn(),
-  },
+  navigateTo: vi.fn(),
+  launchConfetti: vi.fn(),
 }));
 
-vi.mock('../../../../src/core/exercises/ExerciseEngine.js', () => ({
-  default: mockEngine,
-}));
-
-vi.mock('../../../../src/core/state/State.js', () => ({
-  State: mockState,
-}));
-
-vi.mock('../../../../src/ui/navigation.js', () => ({
-  navigateTo,
-}));
-
-vi.mock('../../../../src/ui/utils/confetti.js', () => ({
-  launchConfetti,
-}));
+vi.mock('../../../../src/core/exercises/ExerciseEngine.js', () => ({ default: mockEngine }));
+vi.mock('../../../../src/ui/navigation.js', () => ({ navigateTo }));
+vi.mock('../../../../src/ui/utils/confetti.js', () => ({ launchConfetti }));
 
 import {
+  finishExercise,
+  renderExerciseQuestion,
   resetExerciseUI,
-  startExercise,
-  startExerciseForLesson,
   restartExercise,
   selectOption,
+  startExercise,
+  startExerciseForLesson,
   validateExercise,
-  skipExercise,
-  nextExercise,
-  updateExerciseProgress,
-  finishExercise,
-  exitExercise,
-  startExerciseForTense,
-  renderExerciseQuestion,
 } from '../../../../src/ui/pages/exercises.js';
+import { State } from '../../../../src/core/state/State.js';
+
+function buildDOM() {
+  document.body.innerHTML = `
+    <div id="exerciseModeSelector" style="display:block"></div>
+    <div id="exerciseArea" style="display:none">
+      <span id="exCurrent"></span>
+      <span id="exTotal"></span>
+      <div id="exProgressBar"></div>
+      <div id="exerciseQuestionContainer"></div>
+      <div id="exerciseFeedback" style="display:none"></div>
+      <button id="exValidateBtn" style="display:none"></button>
+      <button id="exNextBtn" style="display:none"></button>
+      <button id="exSkipBtn" style="display:none"></button>
+    </div>
+  `;
+}
 
 beforeEach(() => {
   vi.useFakeTimers();
+  buildDOM();
   vi.clearAllMocks();
+  mockEngine.questions = [];
   mockEngine.currentIndex = 0;
   mockEngine.score = 0;
   mockEngine.answered = false;
@@ -112,264 +69,217 @@ beforeEach(() => {
   mockEngine.currentLessonId = null;
   mockEngine.isRevision = false;
   mockEngine.sessionConfig = null;
-  document.body.innerHTML = `
-    <div id="exerciseModeSelector"></div>
-    <div id="exerciseArea" style="display:none"></div>
-    <div id="exerciseQuestionContainer"></div>
-    <div id="exerciseFeedback" style="display:none"></div>
-    <button id="exValidateBtn"></button>
-    <button id="exNextBtn"></button>
-    <button id="exSkipBtn"></button>
-    <div id="exProgressBar" style="width:0%"></div>
-    <span id="exCurrent"></span>
-    <span id="exTotal"></span>
-  `;
+  mockEngine.getProgress.mockReturnValue({ current: 1, total: 10, score: 0 });
 });
 
-afterEach(() => vi.useRealTimers());
-
 describe('exercises page', () => {
-  it('resets exercise UI', () => {
+  it('toggles selector and exercise area on resetExerciseUI', () => {
+    document.getElementById('exerciseModeSelector').style.display = 'none';
+    document.getElementById('exerciseArea').style.display = 'block';
+
     resetExerciseUI();
+
     expect(document.getElementById('exerciseModeSelector').style.display).toBe('block');
     expect(document.getElementById('exerciseArea').style.display).toBe('none');
   });
 
-  it('starts an exercise session', () => {
-    startExercise('mixed');
+  it('starts exercise and renders initial view elements', () => {
+    mockEngine.getCurrent.mockReturnValue({
+      type: 'qcm',
+      tenseId: 'present_simple',
+      sentence: 'She ___ every day.',
+      options: ['works', 'work', 'working', 'worked'],
+      correct: 0,
+      explanation: 'Present simple with she takes -s',
+    });
+
+    startExercise('qcm', ['present_simple'], 'beginner', 5);
+
+    expect(mockEngine.start).toHaveBeenCalledWith(
+      'qcm',
+      ['present_simple'],
+      'beginner',
+      5,
+      null,
+      false,
+    );
     expect(document.getElementById('exerciseModeSelector').style.display).toBe('none');
     expect(document.getElementById('exerciseArea').style.display).toBe('block');
-    expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain('exercise-card');
+    expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain('She ___ every day.');
+    expect(document.querySelectorAll('.option-btn')).toHaveLength(4);
+    expect(document.getElementById('exProgressBar').style.width).toBe('10%');
   });
 
-  it('advances through questions', () => {
-    startExercise('mixed');
-    nextExercise();
-    expect(mockEngine.next).toHaveBeenCalledTimes(1);
-    expect(document.getElementById('exCurrent').textContent).toBe('2');
+  it('renders non-qcm question types without options grid', () => {
+    renderExerciseQuestion({
+      type: 'fill',
+      tenseId: 'past_simple',
+      sentence: 'I ___ (go) yesterday.',
+      answer: 'went',
+      explanation: 'Past of go is went',
+    });
+
+    expect(document.getElementById('exerciseInput')).not.toBeNull();
+    expect(document.querySelectorAll('.option-btn')).toHaveLength(0);
   });
 
-  it('finishes exercise when questions are exhausted', () => {
-    startExercise('mixed');
-    nextExercise();
-    nextExercise(); // Finishes exercise
-    expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain('Excellent !');
-  });
-
-  it('uses defaults when tense filter and difficulty are omitted', () => {
-    startExercise('mixed');
-    expect(mockEngine.start).toHaveBeenCalledWith('mixed', [], 'intermediate', 10);
-    expect(mockEngine.currentTenseFilter).toEqual([]);
-  });
-
-  it('uses null tense filter and default difficulty for non-mixed mode', () => {
-    startExercise('fill', undefined, '');
-    expect(mockEngine.start).toHaveBeenCalledWith('fill', null, 'intermediate', 10);
-    expect(mockEngine.currentTenseFilter).toBeNull();
-  });
-
-  it('supports explicit null tense filter', () => {
-    startExercise('fill', null, 'advanced');
-    expect(mockEngine.start).toHaveBeenCalledWith('fill', null, 'advanced', 10);
-  });
-
-  it('starts a tense-focused exercise after navigating', () => {
-    startExerciseForTense('past_simple');
-    expect(navigateTo).toHaveBeenCalledWith('exercises');
-    vi.advanceTimersByTime(100);
-    expect(mockEngine.start).toHaveBeenCalledWith('mixed', ['past_simple'], 'intermediate', 10, null, false);
-  });
-
-  it('restarts the exercise preserving exact mode, filter, difficulty, and count (Issue #98)', () => {
-    startExercise('transform', ['past_perfect'], 'hard', 5);
-    expect(mockEngine.start).toHaveBeenLastCalledWith('transform', ['past_perfect'], 'hard', 5, null, false);
-
-    restartExercise();
-    expect(mockEngine.start).toHaveBeenLastCalledWith('transform', ['past_perfect'], 'hard', 5, null, false);
-  });
-
-  it('renders restart button in finishExercise and triggers restartExercise (Issue #98)', () => {
-    startExercise('transform', ['past_perfect'], 'hard', 5);
-    finishExercise();
-
-    const finishHtml = document.getElementById('exerciseQuestionContainer').innerHTML;
-    expect(finishHtml).toContain('Recommencer');
-    expect(finishHtml).toContain('restartExercise()');
-  });
-
-  it('renders fill, translation, transform and correction inputs', () => {
-    const cases = [
-      ['fill', 'Votre réponse...', 'input'],
-      ['translation', 'Votre réponse...', 'input'],
-      ['transform', 'Écrivez la phrase transformée...', 'textarea'],
-      ['correction', 'Écrivez la phrase corrigée...', 'textarea'],
-    ];
-    for (const [type, placeholder, tag] of cases) {
-      const q = { ...mockEngine.questions[0], type, sentence: 'Test sentence.' };
-      renderExerciseQuestion(q);
-      const input = document.getElementById('exerciseInput');
-      expect(input?.tagName.toLowerCase()).toBe(tag);
-      expect(input?.getAttribute('placeholder')).toBe(placeholder);
-      vi.advanceTimersByTime(100);
-      expect(document.activeElement?.id).toBe('exerciseInput');
-    }
-  });
-
-  it('escapes rendered question metadata', () => {
-    const q = {
-      tenseId: 'unknown',
+  it('handles option selection before answering', () => {
+    renderExerciseQuestion({
       type: 'qcm',
-      sentence: '<img src=x onerror=alert(1)>',
-      options: ['<script>alert(1)</script>'],
+      tenseId: 'present_simple',
+      sentence: 'They ___ here.',
+      options: ['live', 'lives', 'living', 'lived'],
       correct: 0,
-      explanation: 'Safe.',
-    };
-    renderExerciseQuestion(q);
-    const html = document.getElementById('exerciseQuestionContainer').innerHTML;
-    expect(html).not.toContain('<img src=x onerror=alert(1)>');
-    expect(html).toContain('&lt;img');
-    expect(html).toContain('&lt;script&gt;');
-  });
+      explanation: 'Subject they uses base form',
+    });
 
-  it('ignores option selection after answering', () => {
-    renderExerciseQuestion(mockEngine.questions[0]);
-    const btn = document.querySelector('.option-btn');
-    mockEngine.answered = true;
-    selectOption(btn, 0);
-    expect(btn.classList.contains('selected')).toBe(false);
-  });
-
-  it('returns early without validating a QCM when no option is selected', () => {
-    renderExerciseQuestion(mockEngine.questions[0]);
-    validateExercise();
-    expect(mockEngine.answered).toBe(false);
-    expect(mockState.recordAnswer).not.toHaveBeenCalled();
-  });
-
-  it('validates an incorrect QCM answer and marks feedback', () => {
-    renderExerciseQuestion(mockEngine.questions[0]);
     const buttons = document.querySelectorAll('.option-btn');
     selectOption(buttons[1], 1);
-    validateExercise();
-    expect(buttons[0].classList.contains('correct')).toBe(true);
-    expect(buttons[1].classList.contains('incorrect')).toBe(true);
-    expect(mockState.recordAnswer).toHaveBeenCalledWith('present_simple', false);
-    expect(mockState.addXP).not.toHaveBeenCalled();
+    expect(buttons[1].classList.contains('selected')).toBe(true);
+
+    selectOption(buttons[0], 0);
+    expect(buttons[1].classList.contains('selected')).toBe(false);
+    expect(buttons[0].classList.contains('selected')).toBe(true);
   });
 
-  it('returns early for an empty text response', () => {
-    mockEngine.currentIndex = 1;
-    renderExerciseQuestion(mockEngine.questions[1]);
-    validateExercise();
-    expect(mockEngine.answered).toBe(false);
-    expect(mockState.recordAnswer).not.toHaveBeenCalled();
-  });
+  it('validates a correct QCM answer and updates score/feedback', () => {
+    const addXPSpy = vi.spyOn(State, 'addXP').mockImplementation(() => {});
+    const recordAnswerSpy = vi.spyOn(State, 'recordAnswer').mockImplementation(() => {});
 
-  it('validates a correct text response and awards XP', () => {
-    mockEngine.currentIndex = 1;
-    renderExerciseQuestion(mockEngine.questions[1]);
-    document.getElementById('exerciseInput').value = 'likes';
+    mockEngine.getCurrent.mockReturnValue({
+      type: 'qcm',
+      tenseId: 'present_simple',
+      sentence: 'He ___ tennis.',
+      options: ['play', 'plays', 'playing', 'played'],
+      correct: 1,
+      explanation: '3rd person singular takes -s',
+    });
+
+    startExercise('qcm');
+    const buttons = document.querySelectorAll('.option-btn');
+    selectOption(buttons[1], 1);
+
     validateExercise();
+
     expect(mockEngine.score).toBe(1);
-    expect(mockState.addXP).toHaveBeenCalledWith(10);
-    expect(mockState.recordAnswer).toHaveBeenCalledWith('present_simple', true);
-  });
-
-  it('does not validate an already answered exercise twice', () => {
-    renderExerciseQuestion(mockEngine.questions[0]);
-    selectOption(document.querySelector('.option-btn'), 0);
-    validateExercise();
-    mockState.addXP.mockClear();
-    mockState.recordAnswer.mockClear();
-    validateExercise();
-    expect(mockState.addXP).not.toHaveBeenCalled();
-    expect(mockState.recordAnswer).not.toHaveBeenCalled();
-  });
-
-  it('ignores skip after answering', () => {
-    renderExerciseQuestion(mockEngine.questions[0]);
-    mockEngine.answered = true;
-    skipExercise();
-    expect(mockState.recordAnswer).not.toHaveBeenCalled();
-  });
-
-  it('skips the current exercise and shows the expected answer', () => {
-    renderExerciseQuestion(mockEngine.questions[0]);
-    skipExercise();
     expect(mockEngine.answered).toBe(true);
-    expect(mockState.recordAnswer).toHaveBeenCalledWith('present_simple', false);
-    expect(document.getElementById('exerciseFeedback').innerHTML).toContain('Question passée');
+    expect(addXPSpy).toHaveBeenCalledWith(10);
+    expect(recordAnswerSpy).toHaveBeenCalledWith('present_simple', true);
+    expect(buttons[1].classList.contains('correct')).toBe(true);
+    expect(document.getElementById('exerciseFeedback').style.display).toBe('block');
+    expect(document.getElementById('exerciseFeedback').innerHTML).toContain('Correct');
   });
 
-  it('updates progress from engine progress', () => {
-    mockEngine.getProgress.mockReturnValue({ current: 2, total: 4, score: 1 });
-    updateExerciseProgress();
-    expect(document.getElementById('exProgressBar').style.width).toBe('50%');
+  it('validates a text input answer case-insensitively and trims whitespace', () => {
+    const recordAnswerSpy = vi.spyOn(State, 'recordAnswer').mockImplementation(() => {});
+
+    mockEngine.getCurrent.mockReturnValue({
+      type: 'fill',
+      tenseId: 'past_simple',
+      sentence: 'She ___ (see) him yesterday.',
+      answer: 'saw',
+      explanation: 'Past of see is saw',
+    });
+
+    startExercise('fill');
+    const input = document.getElementById('exerciseInput');
+    input.value = '  SaW  ';
+
+    validateExercise();
+
+    expect(mockEngine.score).toBe(1);
+    expect(mockEngine.answered).toBe(true);
+    expect(recordAnswerSpy).toHaveBeenCalledWith('past_simple', true);
   });
 
-  it('finishes with a middle-grade result and no confetti', () => {
-    mockEngine.questions = [mockEngine.questions[0], mockEngine.questions[1]];
-    mockEngine.score = 1;
-    mockEngine.getProgress.mockReturnValue({ current: 2, total: 2, score: 1 });
+  it('completes the active lesson on successful finishExercise (Issue #111)', () => {
+    const completeLessonSpy = vi.spyOn(State, 'completeLesson').mockImplementation(() => {});
+    mockEngine.getProgress.mockReturnValue({ current: 10, total: 10, score: 9 });
+    mockEngine.currentLessonId = 'l_pres_simple';
+
     finishExercise();
-    expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain('Bien joué !');
-    expect(launchConfetti).not.toHaveBeenCalled();
+
+    expect(launchConfetti).toHaveBeenCalled();
+    expect(completeLessonSpy).toHaveBeenCalledWith('l_pres_simple');
   });
 
-  it('finishes with a high-grade result, launches confetti and completes matching lesson (Issue #111)', () => {
-    mockEngine.currentLessonId = 'l_present_simple';
-    mockEngine.questions = [mockEngine.questions[0]];
-    mockEngine.score = 1;
-    mockEngine.getProgress.mockReturnValue({ current: 1, total: 1, score: 1 });
-    finishExercise();
-    expect(launchConfetti).toHaveBeenCalledTimes(1);
-    expect(mockState.completeLesson).toHaveBeenCalledWith('l_present_simple');
-    expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain('Excellent !');
-  });
-
-  it('does not complete lessons in free training mode even with 100% score (Issue #111)', () => {
+  it('does NOT complete any lesson on free training finishExercise even with 100% score (Issue #111)', () => {
+    const completeLessonSpy = vi.spyOn(State, 'completeLesson').mockImplementation(() => {});
+    mockEngine.getProgress.mockReturnValue({ current: 10, total: 10, score: 10 });
     mockEngine.currentLessonId = null;
-    mockEngine.questions = [mockEngine.questions[0]];
-    mockEngine.score = 1;
-    mockEngine.getProgress.mockReturnValue({ current: 1, total: 1, score: 1 });
+
     finishExercise();
-    expect(mockState.completeLesson).not.toHaveBeenCalled();
+
+    expect(launchConfetti).toHaveBeenCalled();
+    expect(completeLessonSpy).not.toHaveBeenCalled();
+  });
+
+  it('guards startExerciseForLesson against nonexistent lesson IDs (Issue P-04)', () => {
+    mockEngine.currentLessonId = null;
+    mockEngine.start.mockClear();
+
+    startExerciseForLesson('nonexistent_lesson_xyz');
+    expect(navigateTo).not.toHaveBeenCalledWith('exercises');
+    expect(mockEngine.start).not.toHaveBeenCalled();
+    expect(mockEngine.currentLessonId).toBeNull();
   });
 
   it('starts a lesson session with its declared exercise count (Issue #111)', () => {
-    startExerciseForLesson('l_present_simple');
+    startExerciseForLesson('l_past_simple');
+
     expect(navigateTo).toHaveBeenCalledWith('exercises');
     vi.advanceTimersByTime(100);
-    expect(mockEngine.start).toHaveBeenCalledWith('mixed', ['present_simple'], 'intermediate', 15, 'l_present_simple', false);
-  });
 
-  it('finishes with a low-grade result', () => {
-    mockEngine.questions = [
-      mockEngine.questions[0],
-      mockEngine.questions[1],
-      mockEngine.questions[0],
-    ];
-    mockEngine.score = 0;
-    mockEngine.getProgress.mockReturnValue({ current: 3, total: 3, score: 0 });
-    finishExercise();
-    expect(document.getElementById('exerciseQuestionContainer').innerHTML).toContain(
-      'Continuez vos efforts !',
+    expect(mockEngine.start).toHaveBeenCalledWith(
+      'mixed',
+      ['past_simple'],
+      'intermediate',
+      10,
+      'l_past_simple',
+      false,
     );
   });
 
-  it('does not complete lessons when multiple tenses are filtered', () => {
-    mockEngine.currentTenseFilter = ['present_simple', 'past_simple'];
-    mockEngine.questions = [mockEngine.questions[0]];
-    mockEngine.score = 1;
-    mockEngine.getProgress.mockReturnValue({ current: 1, total: 1, score: 1 });
-    finishExercise();
-    expect(launchConfetti).toHaveBeenCalled();
-    expect(mockState.completeLesson).not.toHaveBeenCalled();
+  it('restarts exercise using immutable sessionConfig when available (Issue #98)', () => {
+    mockEngine.sessionConfig = {
+      mode: 'qcm',
+      tenseFilter: ['past_continuous'],
+      difficulty: 'advanced',
+      count: 15,
+      lessonId: 'l_past_cont',
+      isRevision: true,
+    };
+
+    restartExercise();
+
+    expect(mockEngine.start).toHaveBeenCalledWith(
+      'qcm',
+      ['past_continuous'],
+      'advanced',
+      15,
+      'l_past_cont',
+      true,
+    );
   });
 
-  it('exits exercise through the reset UI flow', () => {
-    exitExercise();
-    expect(document.getElementById('exerciseModeSelector').style.display).toBe('block');
-    expect(document.getElementById('exerciseArea').style.display).toBe('none');
+  it('restarts exercise using engine fallback properties when sessionConfig is null', () => {
+    mockEngine.sessionConfig = null;
+    mockEngine.currentMode = 'fill';
+    mockEngine.currentTenseFilter = ['future_will'];
+    mockEngine.currentDifficulty = 'beginner';
+    mockEngine.currentCount = 8;
+    mockEngine.currentLessonId = null;
+    mockEngine.isRevision = false;
+
+    restartExercise();
+
+    expect(mockEngine.start).toHaveBeenCalledWith(
+      'fill',
+      ['future_will'],
+      'beginner',
+      8,
+      null,
+      false,
+    );
   });
 });

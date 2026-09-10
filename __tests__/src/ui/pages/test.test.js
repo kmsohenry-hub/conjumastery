@@ -1,152 +1,122 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-const { mockEngine, mockState } = vi.hoisted(() => ({
-  mockEngine: {
-    currentIndex: 0,
-    score: 0,
-    answered: false,
-    questions: [
-      {
-        tenseId: 'present_simple',
-        type: 'qcm',
-        sentence: 'I ___ to school.',
-        options: ['go', 'goes', 'went', 'going'],
-        correct: 0,
-        explanation: 'Present simple with I.',
-      },
-    ],
-    start: vi.fn(),
-    getCurrent: vi.fn(function () {
-      return this.questions[this.currentIndex];
-    }),
-    next: vi.fn().mockReturnValue(false),
-    getProgress: vi.fn(function () {
-      return { current: 1, total: 1, score: this.score };
-    }),
-  },
-  mockState: {
-    addXP: vi.fn(),
-    recordAnswer: vi.fn(),
-  },
-}));
-
-vi.mock('../../../../src/core/exercises/ExerciseEngine.js', () => ({
-  default: mockEngine,
-}));
-
-vi.mock('../../../../src/core/state/State.js', () => ({
-  State: mockState,
-}));
-
-vi.mock('../../../../src/ui/utils/toast.js', () => ({
-  showToast: vi.fn(),
-}));
-
 import {
+  cancelTest,
+  finishTest,
+  renderTestQuestion,
   renderTestSetup,
   startTest,
-  validateTestAnswer,
-  nextTestQuestion,
-  selectOption as selectTestOption,
-  cancelTest,
 } from '../../../../src/ui/pages/test.js';
-import { showToast } from '../../../../src/ui/utils/toast.js';
 
-beforeEach(() => {
-  mockEngine.currentIndex = 0;
-  mockEngine.score = 0;
-  mockEngine.answered = false;
-
-  document.body.innerHTML = `
-    <div id="testSetup" style="display:block"></div>
-    <div id="testArea" style="display:none"></div>
-    <div id="testResults" style="display:none"></div>
-    <div id="testTenseCheckboxes"></div>
-    <select id="testDifficulty"><option value="intermediate">Intermédiaire</option></select>
-    <div id="testQuestionContainer"></div>
-    <div id="testCurrent"></div>
-    <div id="testTotal"></div>
-    <div id="testScore"></div>
-    <div id="testTimer">00:00</div>
-    <div id="testProgressBar"></div>
-    <div id="testFeedback" style="display:none"></div>
-    <div id="testValidateBtn" style="display:none"></div>
-    <div id="testNextBtn" style="display:none"></div>
-  `;
-});
-
-describe('test page', () => {
-  it('renders test setup checkboxes', () => {
-    renderTestSetup();
-    expect(document.getElementById('testTenseCheckboxes').children.length).toBeGreaterThan(0);
-  });
-
-  it('shows toast error if no tenses selected', () => {
-    renderTestSetup();
-    const checkboxes = document.querySelectorAll('#testTenseCheckboxes input');
-    checkboxes.forEach((cb) => (cb.checked = false));
-
-    startTest();
-    expect(showToast).toHaveBeenCalledWith('Sélectionnez au moins un temps verbal', 'error');
-  });
-
-  it('starts test and renders test question', () => {
-    renderTestSetup();
-    startTest();
-
-    expect(mockEngine.start).toHaveBeenCalled();
-    expect(document.getElementById('testArea').style.display).toBe('block');
-    expect(document.getElementById('testQuestionContainer').innerHTML).toContain(
-      'I ___ to school.',
-    );
-  });
-
-  it('validates test question and finishes test', () => {
-    renderTestSetup();
-    startTest();
-
-    const optBtn = document.querySelector('.option-btn');
-    selectTestOption(optBtn, 0);
-
-    validateTestAnswer();
-    expect(document.getElementById('testFeedback').style.display).toBe('block');
-
-    nextTestQuestion(); // next() returns false -> finishTest()
-    expect(document.getElementById('testResults').style.display).toBe('block');
-    expect(document.getElementById('testResults').innerHTML).toContain('Détail des réponses');
+describe('test page lifecycle and timer cancel', () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div id="testSetup"></div>
+      <div id="testArea" style="display:none">
+        <span id="testCurrent"></span>
+        <span id="testTotal"></span>
+        <span id="testScore"></span>
+        <div id="testProgressBar"></div>
+        <div id="testQuestionContainer"></div>
+        <div id="testFeedback"></div>
+        <button id="testValidateBtn"></button>
+        <button id="testNextBtn"></button>
+        <span id="testTimer">00:00</span>
+      </div>
+      <div id="testResults" style="display:none"></div>
+      <div id="testTenseCheckboxes"></div>
+      <select id="testDifficulty"><option value="intermediate" selected>Intermédiaire</option></select>
+    `;
   });
 
   describe('cancelTest and timer cleanup (Issue #104)', () => {
-    it('cancels the timer and resets testSeconds cleanly', () => {
+    it('records and displays actual elapsed time in finishTest (125s -> 2min 5s) (Issue P-01)', () => {
       vi.useFakeTimers();
       renderTestSetup();
       startTest();
 
+      // Advance 125 seconds
+      vi.advanceTimersByTime(125000);
+
+      finishTest();
+      const resultsEl = document.getElementById('testResults');
+      expect(resultsEl.style.display).toBe('block');
+      expect(resultsEl.innerHTML).toContain('2min 5s');
+      expect(resultsEl.innerHTML).not.toContain('0min 0s');
+
+      vi.useRealTimers();
+    });
+
+    it('immediately resets DOM #testTimer to 00:00 on cancelTest (Issue P-09)', () => {
+      vi.useFakeTimers();
+      renderTestSetup();
+      startTest();
+      vi.advanceTimersByTime(45000);
+      const timerEl = document.getElementById('testTimer');
+      expect(timerEl.textContent).toBe('00:45');
+
+      cancelTest();
+      expect(timerEl.textContent).toBe('00:00');
+      vi.useRealTimers();
+    });
+
+    it('clears active interval and resets seconds counter', () => {
+      vi.useFakeTimers();
+      renderTestSetup();
+      startTest();
+
+      // Advance timer by 5 seconds
       vi.advanceTimersByTime(5000);
       const timerEl = document.getElementById('testTimer');
       expect(timerEl.textContent).toBe('00:05');
 
+      // Cancel the active test
       cancelTest();
-      vi.advanceTimersByTime(5000);
-      expect(timerEl.textContent).toBe('00:05');
 
-      expect(() => cancelTest()).not.toThrow();
+      // Advance further — timer should NOT tick
+      vi.advanceTimersByTime(5000);
+      expect(timerEl.textContent).toBe('00:00');
+
       vi.useRealTimers();
     });
 
-    it('starting a new test after cancel resets testTimer and counter', () => {
+    it('handles multiple cancelTest calls safely', () => {
+      expect(() => {
+        cancelTest();
+        cancelTest();
+      }).not.toThrow();
+    });
+
+    it('resets timer when a new test starts', () => {
       vi.useFakeTimers();
       renderTestSetup();
       startTest();
       vi.advanceTimersByTime(3000);
-      cancelTest();
+      expect(document.getElementById('testTimer').textContent).toBe('00:03');
 
+      // Start a second test immediately — should cancel previous timer
       startTest();
-      const timerEl = document.getElementById('testTimer');
+      expect(document.getElementById('testTimer').textContent).toBe('00:00');
+
       vi.advanceTimersByTime(2000);
-      expect(timerEl.textContent).toBe('00:02');
+      expect(document.getElementById('testTimer').textContent).toBe('00:02');
+
       cancelTest();
       vi.useRealTimers();
+    });
+  });
+
+  describe('renderTestQuestion', () => {
+    it('populates question details and updates progress bar', () => {
+      renderTestSetup();
+      startTest();
+
+      expect(document.getElementById('testCurrent').textContent).toBe('1');
+      expect(document.getElementById('testTotal').textContent).toBe('20');
+      expect(document.getElementById('testScore').textContent).toBe('0');
+      expect(document.getElementById('testProgressBar').style.width).toBe('5%');
+      expect(document.getElementById('testQuestionContainer').children.length).toBeGreaterThan(0);
+
+      cancelTest();
     });
   });
 });

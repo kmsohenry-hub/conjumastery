@@ -60,4 +60,34 @@ describe('CSP Hardening and Event Delegation (Issue #116)', () => {
     menuToggle.click();
     expect(document.getElementById('sidebar').classList.contains('open')).toBe(true);
   });
+
+  it('ensures nav-items and mode-cards have role="button" and tabindex="0" for keyboard accessibility (P-06)', () => {
+    const navItems = document.querySelectorAll('.sidebar .nav-item');
+    expect(navItems.length).toBeGreaterThan(0);
+    navItems.forEach((item) => {
+      expect(item.getAttribute('role')).toBe('button');
+      expect(item.getAttribute('tabindex')).toBe('0');
+    });
+
+    const modeCards = document.querySelectorAll('.mode-card');
+    expect(modeCards.length).toBeGreaterThan(0);
+    modeCards.forEach((card) => {
+      expect(card.getAttribute('role')).toBe('button');
+      expect(card.getAttribute('tabindex')).toBe('0');
+    });
+  });
+
+  it('uses aria-current="page" on active nav item and removes it on inactive items (P-07)', () => {
+    navigateTo('lessons');
+    const activeItem = document.querySelector('.sidebar .nav-item.active');
+    expect(activeItem).toBeTruthy();
+    expect(activeItem.getAttribute('aria-current')).toBe('page');
+    expect(activeItem.hasAttribute('aria-selected')).toBe(false);
+
+    const inactiveItems = document.querySelectorAll('.sidebar .nav-item:not(.active)');
+    inactiveItems.forEach((item) => {
+      expect(item.hasAttribute('aria-current')).toBe(false);
+      expect(item.hasAttribute('aria-selected')).toBe(false);
+    });
+  });
 });
