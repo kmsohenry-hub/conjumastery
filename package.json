@@ -3,6 +3,9 @@
   "version": "2.0.0",
   "description": "Application web interactive pour apprendre et réviser la conjugaison de l'anglais britannique",
   "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -18,7 +21,6 @@
   },
   "keywords": [
     "english",
-    "conjugation",
     "learning",
     "education",
     "british-english"
