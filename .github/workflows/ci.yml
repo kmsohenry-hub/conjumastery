@@ -1,3 +1,4 @@
+# Production quality gate: immutable lockfile, npm audit, unit/E2E, coverage and asset budgets.
 name: CI
 
 on:
