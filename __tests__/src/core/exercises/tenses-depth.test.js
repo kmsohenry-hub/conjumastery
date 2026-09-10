@@ -78,7 +78,8 @@ describe('18 tenses: generated fill questions', () => {
       expect(question.answer).toEqual(expect.any(String));
       expect(question.answer.trim()).not.toBe('');
       expect(question.sentence).toContain('___');
-      expect(question.explanation).toContain(tenseId === 'present_simple' ? 'Présent' : APP_DATA.tensesById[tenseId].nameFR);
+      const tenseName = APP_DATA.tensesById[tenseId].nameFR;
+      expect(question.explanation).toContain(tenseName);
     } finally {
       restore.mockRestore();
     }
@@ -87,16 +88,24 @@ describe('18 tenses: generated fill questions', () => {
   test('checks the hardest irregular auxiliary/participle combinations explicitly', () => {
     const restore = cleanRandom();
     try {
-      expect(generateFill(APP_DATA.tensesById.present_perfect, 'She', 'go', true).answer).toBe('has gone');
-      expect(generateFill(APP_DATA.tensesById.past_perfect, 'She', 'go', true).answer).toBe('had gone');
-      expect(generateFill(APP_DATA.tensesById.future_perfect, 'She', 'go', true).answer).toBe('will have gone');
-      expect(generateFill(APP_DATA.tensesById.conditional_3, 'She', 'go', true).answer).toBe('gone');
-      expect(generateFill(APP_DATA.tensesById.present_perfect_continuous, 'She', 'go', true).answer).toBe(
-        'has been going',
+      expect(
+        generateFill(APP_DATA.tensesById.present_perfect, 'She', 'go', true).answer,
+      ).toBe('has gone');
+      expect(generateFill(APP_DATA.tensesById.past_perfect, 'She', 'go', true).answer).toBe(
+        'had gone',
       );
-      expect(generateFill(APP_DATA.tensesById.future_perfect_continuous, 'She', 'go', true).answer).toBe(
-        'will have been going',
+      expect(generateFill(APP_DATA.tensesById.future_perfect, 'She', 'go', true).answer).toBe(
+        'will have gone',
       );
+      expect(generateFill(APP_DATA.tensesById.conditional_3, 'She', 'go', true).answer).toBe(
+        'gone',
+      );
+      expect(
+        generateFill(APP_DATA.tensesById.present_perfect_continuous, 'She', 'go', true).answer,
+      ).toBe('has been going');
+      expect(
+        generateFill(APP_DATA.tensesById.future_perfect_continuous, 'She', 'go', true).answer,
+      ).toBe('will have been going');
     } finally {
       restore.mockRestore();
     }
@@ -134,7 +143,7 @@ describe('18 tenses: affirmative/negative/interrogative transformations', () => 
 
   test('covers the special be behaviour across present, past and conditionals', () => {
     const cases = [
-      ['present_simple', 0, "If She"],
+      ['present_simple', 0, 'If She'],
       ['past_simple', 0, "She wasn't"],
       ['conditional_1', 0, "If She isn't"],
       ['conditional_2', 0, "If She weren't"],
@@ -175,10 +184,20 @@ describe('18 tenses: correction and translation contracts', () => {
 
 describe('18 tenses: generated session integrity', () => {
   test('revision mode traverses all 18 tenses without dropping any', () => {
-    const questions = generateQuestions('fill', APP_DATA.tenses.map((tense) => tense.id), 'intermediate', 36, true);
+    const questions = generateQuestions(
+      'fill',
+      APP_DATA.tenses.map((tense) => tense.id),
+      'intermediate',
+      36,
+      true,
+    );
     expect(questions).toHaveLength(36);
-    expect(questions.slice(0, 18).map((q) => q.tenseId)).toEqual(APP_DATA.tenses.map((tense) => tense.id));
-    expect(questions.slice(18).map((q) => q.tenseId)).toEqual(APP_DATA.tenses.map((tense) => tense.id));
+    expect(questions.slice(0, 18).map((q) => q.tenseId)).toEqual(
+      APP_DATA.tenses.map((tense) => tense.id),
+    );
+    expect(questions.slice(18).map((q) => q.tenseId)).toEqual(
+      APP_DATA.tenses.map((tense) => tense.id),
+    );
   });
 
   test('each tense supports every non-special exercise mode', () => {
@@ -187,7 +206,13 @@ describe('18 tenses: generated session integrity', () => {
       for (const mode of modes) {
         const restore = cleanRandom(0.99);
         try {
-          const q = generateSingleQuestion(mode, APP_DATA.tensesById[tenseId], ['She'], ['go'], 'intermediate');
+          const q = generateSingleQuestion(
+            mode,
+            APP_DATA.tensesById[tenseId],
+            ['She'],
+            ['go'],
+            'intermediate',
+          );
           expect(q).not.toBeNull();
           expect(q.tenseId).toBe(tenseId);
           expect(q.type).toBe(mode);
