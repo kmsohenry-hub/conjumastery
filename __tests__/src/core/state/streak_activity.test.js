@@ -22,28 +22,27 @@ describe('Streak Activity Decoupling & UI Synchronization (Issues #106, #102)', 
     expect(State.data.lastActiveDate).toBeNull();
   });
 
-  it('does not increment streak upon opening the app on consecutive day without learning activity (Issue #106)', () => {
+  it('does not increment streak upon opening the app on a consecutive day without learning activity (Issue #106)', () => {
     vi.setSystemTime(new Date('2026-09-11T09:00:00'));
     const yesterday = new Date('2026-09-10T15:00:00').toDateString();
     State.data = { ...defaultState, daysStreak: 3, lastActiveDate: yesterday };
 
-    State.init();
-    expect(State.data.daysStreak).toBe(0);
+    State.syncStreakOnLoad();
+    expect(State.data.daysStreak).toBe(3);
     expect(State.data.lastActiveDate).toBe(yesterday);
   });
 
   it('does not double increment when reloading on the same day', () => {
     vi.setSystemTime(new Date('2026-09-10T10:00:00'));
     const today = new Date('2026-09-10T10:00:00').toDateString();
-    const persisted = { ...defaultState, daysStreak: 2, lastActiveDate: today };
-    localStorage.setItem('conjumaster_data', JSON.stringify(persisted));
+    State.data = { ...defaultState, daysStreak: 2, lastActiveDate: today };
 
-    State.init();
+    State.syncStreakOnLoad();
     expect(State.data.daysStreak).toBe(2);
     expect(State.data.lastActiveDate).toBe(today);
 
     vi.setSystemTime(new Date('2026-09-10T22:00:00'));
-    State.init();
+    State.syncStreakOnLoad();
     expect(State.data.daysStreak).toBe(2);
     expect(State.data.lastActiveDate).toBe(today);
   });
@@ -53,7 +52,7 @@ describe('Streak Activity Decoupling & UI Synchronization (Issues #106, #102)', 
     const fourDaysAgo = new Date('2026-09-11T12:00:00').toDateString();
     State.data = { ...defaultState, daysStreak: 5, lastActiveDate: fourDaysAgo };
 
-    State.init();
+    State.syncStreakOnLoad();
     expect(State.data.daysStreak).toBe(0);
   });
 
