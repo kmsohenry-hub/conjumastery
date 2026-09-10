@@ -64,7 +64,7 @@ describe('state coverage', () => {
   });
 });
 
-it('initializes State from persisted data and starts a first-day streak when needed', () => {
+it('initializes State from persisted data without creating passive learning activity', () => {
   localStorage.setItem(
     'conjumaster_data',
     JSON.stringify({
@@ -74,13 +74,29 @@ it('initializes State from persisted data and starts a first-day streak when nee
       lastActiveDate: null,
     }),
   );
-  const realToday = new Date('2026-09-02T12:00:00').getTime();
-  vi.setSystemTime(realToday);
+  vi.setSystemTime(new Date('2026-09-02T12:00:00').getTime());
   expect(() => State.init()).not.toThrow();
   expect(State.data.xp).toBe(42);
+  expect(State.data.daysStreak).toBe(0);
+  expect(State.data.lastActiveDate).toBeNull();
+
   localStorage.clear();
   State.init();
-  expect(State.data.daysStreak).toBeGreaterThanOrEqual(1);
+  expect(State.data.daysStreak).toBe(0);
+});
+
+it('starts a new streak on actual learning activity after a gap', () => {
+  const yesterday = new Date('2026-08-31T12:00:00').toDateString();
+  localStorage.setItem(
+    'conjumaster_data',
+    JSON.stringify({ ...defaultState, daysStreak: 7, lastActiveDate: yesterday }),
+  );
+  vi.setSystemTime(new Date('2026-09-03T12:00:00'));
+  State.init();
+  expect(State.data.daysStreak).toBe(0);
+  State.addXP(10);
+  expect(State.data.daysStreak).toBe(1);
+  expect(State.data.lastActiveDate).toBe(new Date('2026-09-03T12:00:00').toDateString());
 });
 
 it('sorts multiple weak points by ascending accuracy', () => {
@@ -96,21 +112,6 @@ it('sorts multiple weak points by ascending accuracy', () => {
     { tenseId: 'a', accuracy: 0.2, total: 5, errors: 4 },
     { tenseId: 'b', accuracy: 0.4, total: 5, errors: 3 },
   ]);
-});
-
-it('covers new streak after a gap and favorite no-op guards', () => {
-  const yesterday = new Date('2026-08-31T12:00:00').toDateString();
-  localStorage.setItem(
-    'conjumaster_data',
-    JSON.stringify({ ...defaultState, daysStreak: 7, lastActiveDate: yesterday }),
-  );
-  vi.setSystemTime(new Date('2026-09-03T12:00:00'));
-  State.init();
-  expect(State.data.daysStreak).toBe(1);
-  expect(State.data.lastActiveDate).toBe(new Date('2026-09-03T12:00:00').toDateString());
-  State.addFavorite('x');
-  State.addFavorite('x');
-  State.removeFavorite('missing');
 });
 
 it('ignores a future last-active date without resetting it', () => {
