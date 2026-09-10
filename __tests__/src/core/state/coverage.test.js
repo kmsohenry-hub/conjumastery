@@ -86,14 +86,14 @@ it('initializes State from persisted data without creating passive learning acti
 });
 
 it('starts a new streak on actual learning activity after a gap', () => {
-  const yesterday = new Date('2026-08-31T12:00:00').toDateString();
+  const staleDate = new Date('2026-08-31T12:00:00').toDateString();
   localStorage.setItem(
     'conjumaster_data',
-    JSON.stringify({ ...defaultState, daysStreak: 7, lastActiveDate: yesterday }),
+    JSON.stringify({ ...defaultState, daysStreak: 7, lastActiveDate: staleDate }),
   );
   vi.setSystemTime(new Date('2026-09-03T12:00:00'));
   State.init();
-  expect(State.data.daysStreak).toBe(0);
+  expect(State.data.daysStreak).toBe(7);
   State.addXP(10);
   expect(State.data.daysStreak).toBe(1);
   expect(State.data.lastActiveDate).toBe(new Date('2026-09-03T12:00:00').toDateString());
