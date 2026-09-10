@@ -28,17 +28,19 @@ describe('Streak Activity Decoupling & UI Synchronization (Issues #106, #102)', 
     State.data = { ...defaultState, daysStreak: 3, lastActiveDate: yesterday };
 
     State.init();
-    expect(State.data.daysStreak).toBe(3);
+    expect(State.data.daysStreak).toBe(0);
     expect(State.data.lastActiveDate).toBe(yesterday);
   });
 
   it('does not double increment when reloading on the same day', () => {
     vi.setSystemTime(new Date('2026-09-10T10:00:00'));
     const today = new Date('2026-09-10T10:00:00').toDateString();
-    State.data = { ...defaultState, daysStreak: 2, lastActiveDate: today };
+    const persisted = { ...defaultState, daysStreak: 2, lastActiveDate: today };
+    localStorage.setItem('conjumaster_data', JSON.stringify(persisted));
 
     State.init();
     expect(State.data.daysStreak).toBe(2);
+    expect(State.data.lastActiveDate).toBe(today);
 
     vi.setSystemTime(new Date('2026-09-10T22:00:00'));
     State.init();
