@@ -14,14 +14,52 @@ export function resetExerciseUI() {
   document.getElementById('exerciseArea').style.display = 'none';
 }
 
-export function startExercise(mode, tenseFilter, difficulty) {
-  if (tenseFilter === undefined || tenseFilter === null) {
-    tenseFilter = mode === 'mixed' ? [] : null;
+export function restartExercise() {
+  const cfg = ExerciseEngine.sessionConfig;
+  if (cfg) {
+    startExercise(cfg.mode, cfg.tenseFilter, cfg.difficulty, cfg.count);
+  } else {
+    startExercise(
+      ExerciseEngine.currentMode || 'mixed',
+      ExerciseEngine.currentTenseFilter,
+      ExerciseEngine.currentDifficulty || 'intermediate',
+      ExerciseEngine.currentCount || 10,
+    );
   }
-  if (!difficulty) difficulty = 'intermediate';
+}
 
-  ExerciseEngine.currentTenseFilter = tenseFilter;
-  ExerciseEngine.start(mode, tenseFilter, difficulty);
+export function startExercise(mode, tenseFilter, difficulty, count) {
+  const cfg = ExerciseEngine.sessionConfig;
+  const resolvedMode = mode ?? cfg?.mode ?? ExerciseEngine.currentMode ?? 'mixed';
+
+  let resolvedTenseFilter = tenseFilter;
+  if (resolvedTenseFilter === undefined || resolvedTenseFilter === null) {
+    if (
+      cfg &&
+      (mode === undefined || mode === cfg.mode) &&
+      cfg.tenseFilter !== undefined
+    ) {
+      resolvedTenseFilter = cfg.tenseFilter;
+    } else if (
+      ExerciseEngine.currentTenseFilter !== undefined &&
+      (mode === undefined || mode === ExerciseEngine.currentMode)
+    ) {
+      resolvedTenseFilter = ExerciseEngine.currentTenseFilter;
+    } else {
+      resolvedTenseFilter = resolvedMode === 'mixed' ? [] : null;
+    }
+  }
+
+  const resolvedDifficulty =
+    difficulty ||
+    (cfg && (mode === undefined || mode === cfg.mode) ? cfg.difficulty : 'intermediate');
+
+  const resolvedCount =
+    count ||
+    (cfg && (mode === undefined || mode === cfg.mode) ? cfg.count : 10);
+
+  ExerciseEngine.currentTenseFilter = resolvedTenseFilter;
+  ExerciseEngine.start(resolvedMode, resolvedTenseFilter, resolvedDifficulty, resolvedCount);
 
   document.getElementById('exerciseModeSelector').style.display = 'none';
   document.getElementById('exerciseArea').style.display = 'block';
@@ -41,6 +79,7 @@ export function startExerciseForTense(tenseId) {
 }
 
 export function renderExerciseQuestion(q) {
+  if (!q) return;
   const container = document.getElementById('exerciseQuestionContainer');
   document.getElementById('exCurrent').textContent = ExerciseEngine.currentIndex + 1;
   document.getElementById('exTotal').textContent = ExerciseEngine.questions.length;
@@ -149,6 +188,8 @@ export function skipExercise() {
   ExerciseEngine.answered = true;
   const q = ExerciseEngine.getCurrent();
   State.recordAnswer(q.tenseId, false);
+  State.updateSpacedRepetition(q.tenseId, false);
+
   const feedbackEl = document.getElementById('exerciseFeedback');
   feedbackEl.style.display = 'block';
   const safeAnswer = escapeHtml(q.answer || q.options[q.correct]);
@@ -198,7 +239,7 @@ export function finishExercise() {
       <p style="font-size:1.2rem;color:var(--text-light);margin-bottom:20px">${p.score} / ${p.total} bonnes réponses (${pct}%)</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="resetExerciseUI()">🏠 Retour</button>
-        <button class="btn btn-secondary" onclick="startExercise(ExerciseEngine.currentMode)">🔄 Recommencer</button>
+        <button class="btn btn-secondary" onclick="restartExercise()">🔄 Recommencer</button>
       </div>
     </div>`;
 
@@ -223,4 +264,8 @@ export function finishExercise() {
 
 export function exitExercise() {
   resetExerciseUI();
+}
+
+if (typeof window !== 'undefined') {
+  window.restartExercise = restartExercise;
 }

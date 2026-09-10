@@ -12,6 +12,10 @@ import { generateQuestions } from './generator.js';
 const ExerciseEngine = {
   currentExercise: null,
   currentMode: null,
+  currentTenseFilter: null,
+  currentDifficulty: null,
+  currentCount: 10,
+  sessionConfig: null,
   questions: [],
   currentIndex: 0,
   score: 0,
@@ -29,8 +33,8 @@ const ExerciseEngine = {
     return getRegularPast(verb);
   },
 
-  getPresentSimpleForm(verb, is3rdSing) {
-    return getPresentSimpleForm(verb, is3rdSing);
+  getPresentSimpleForm(verb, is3rdSing, subject = null) {
+    return getPresentSimpleForm(verb, is3rdSing, subject);
   },
 
   getIngForm(verb) {
@@ -45,7 +49,17 @@ const ExerciseEngine = {
     return generateQuestions(mode, tenseFilter, difficulty, count);
   },
 
-  start(mode, tenseFilter, difficulty, count = 10) {
+  start(mode = 'mixed', tenseFilter = null, difficulty = 'intermediate', count = 10) {
+    this.currentMode = mode;
+    this.currentTenseFilter = tenseFilter;
+    this.currentDifficulty = difficulty;
+    this.currentCount = count;
+    this.sessionConfig = Object.freeze({
+      mode,
+      tenseFilter: Array.isArray(tenseFilter) ? Object.freeze([...tenseFilter]) : tenseFilter,
+      difficulty,
+      count,
+    });
     this.questions = generateQuestions(mode, tenseFilter, difficulty, count);
     this.currentIndex = 0;
     this.score = 0;
