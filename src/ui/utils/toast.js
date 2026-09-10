@@ -1,6 +1,12 @@
 export function showToast(message, type = 'info', options = {}) {
-  const container = document.getElementById('toastContainer');
-  if (!container) return null;
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.setAttribute('aria-live', 'polite');
+    container.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(container);
+  }
 
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
