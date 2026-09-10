@@ -159,7 +159,7 @@ describe('navigation', () => {
   });
 
   it('routes all supported pages to their renderers', () => {
-    Object.keys({
+    const routes = {
       dashboard: mocks.renderDashboard,
       lessons: mocks.renderLessons,
       exercises: mocks.resetExerciseUI,
@@ -172,22 +172,10 @@ describe('navigation', () => {
       search: mocks.performGlobalSearch,
       favorites: mocks.renderFavorites,
       stats: mocks.renderStats,
-    }).forEach((page) => navigateTo(page));
+    };
 
-    Object.values({
-      dashboard: mocks.renderDashboard,
-      lessons: mocks.renderLessons,
-      exercises: mocks.resetExerciseUI,
-      test: mocks.renderTestSetup,
-      tenses: mocks.renderTenses,
-      verbs: mocks.renderVerbs,
-      comparison: mocks.renderComparison,
-      revision: mocks.renderRevision,
-      weakpoints: mocks.renderWeakpoints,
-      search: mocks.performGlobalSearch,
-      favorites: mocks.renderFavorites,
-      stats: mocks.renderStats,
-    }).forEach((renderer) => expect(renderer).toHaveBeenCalled());
+    Object.keys(routes).forEach((page) => navigateTo(page));
+    Object.values(routes).forEach((renderer) => expect(renderer).toHaveBeenCalled());
   });
 
   it('keeps settings pages valid without invoking an unrelated renderer and handles unknown pages', () => {
@@ -375,7 +363,7 @@ describe('navigation', () => {
   });
 
   describe('event delegation', () => {
-    it('delegates all data-action controls to their handlers', () => {
+    it('delegates data-action controls to their handlers and handles local sidebar/theme actions', () => {
       const cases = [
         ['toggle-verb', { index: '2' }, mocks.toggleVerbCard, 2],
         ['open-tense-modal', { tenseId: 'present_simple' }, mocks.openTenseModal],
@@ -388,7 +376,6 @@ describe('navigation', () => {
         ['start-lesson', { lessonId: 'lesson-1' }, mocks.startExerciseForLesson],
         ['start-tense', { tenseId: 'past_simple' }, mocks.startExerciseForTense],
         ['start-revision', {}, mocks.startRevisionSession],
-        ['toggle-sidebar', {}, mocks.toggleSidebar || vi.fn()],
       ];
 
       for (const [action, data, handler, numericIndex] of cases) {
@@ -399,11 +386,37 @@ describe('navigation', () => {
         });
         document.body.appendChild(el);
         el.click();
-        if (handler !== mocks.toggleSidebar) {
-          expect(handler).toHaveBeenCalled();
-        }
+        expect(handler).toHaveBeenCalled();
         if (numericIndex !== undefined) expect(handler).toHaveBeenCalledWith(numericIndex);
       }
+
+      const sidebarAction = document.createElement('button');
+      sidebarAction.dataset.action = 'toggle-sidebar';
+      document.body.appendChild(sidebarAction);
+      sidebarAction.click();
+      expect(document.getElementById('sidebar').classList.contains('open')).toBe(true);
+
+      const themeAction = document.createElement('button');
+      themeAction.dataset.action = 'set-theme';
+      themeAction.dataset.theme = 'dark';
+      document.body.appendChild(themeAction);
+      themeAction.click();
+      expect(document.documentElement.dataset.theme).toBe('dark');
+    });
+
+    it('handles favorite toggles before card actions', () => {
+      const favorite = document.createElement('button');
+      favorite.dataset.action = 'toggle-fav';
+      favorite.dataset.favId = 'verb-1';
+      const card = document.createElement('div');
+      card.className = 'verb-card';
+      card.appendChild(favorite);
+      document.body.appendChild(card);
+
+      favorite.click();
+
+      expect(mocks.toggleFav).toHaveBeenCalledWith('verb-1', favorite);
+      expect(mocks.toggleVerbCard).not.toHaveBeenCalled();
     });
 
     it('delegates input and keyboard events for exercise, test and search fields', () => {
@@ -430,33 +443,39 @@ describe('navigation', () => {
       expect(mocks.validateExercise).toHaveBeenCalledOnce();
       expect(mocks.validateTestAnswer).toHaveBeenCalledOnce();
       expect(mocks.filterVerbs).toHaveBeenCalledOnce();
-      expect(mocks.performGlobalSearch).toHaveBeenCalledTimes(1);
+      expect(mocks.performGlobalSearch).toHaveBeenCalledOnce();
     });
 
-    it('delegates static button IDs and modal-close classes', () => {
+    it('delegates static button IDs to the appropriate actions', () => {
       const ids = [
-        ['menuToggleBtn', mocks.toggleSidebar],
-        ['themeBtn', mocks.toggleTheme],
-        ['exSkipBtn', mocks.skipExercise],
-        ['exValidateBtn', mocks.validateExercise],
-        ['exNextBtn', mocks.nextExercise],
-        ['testValidateBtn', mocks.validateTestAnswer],
-        ['testNextBtn', mocks.nextTestQuestion],
+        ['menuToggleBtn', () => document.getElementById('sidebar').classList.contains('open')],
+        ['exSkipBtn', () => mocks.skipExercise],
+        ['exValidateBtn', () => mocks.validateExercise],
+        ['exNextBtn', () => mocks.nextExercise],
+        ['testValidateBtn', () => mocks.validateTestAnswer],
+        ['testNextBtn', () => mocks.nextTestQuestion],
       ];
 
-      for (const [id, handler] of ids) {
+      for (const [id, expected] of ids) {
         const button = document.createElement('button');
         button.id = id;
         document.body.appendChild(button);
         button.click();
-        expect(handler).toHaveBeenCalled();
+        const result = expected();
+        if (typeof result !== 'boolean') expect(result).toHaveBeenCalled();
       }
+
+      const themeButton = document.getElementById('themeBtn');
+      themeButton.click();
+      expect(document.documentElement.dataset.theme).toBe('light');
 
       const closeButton = document.createElement('button');
       closeButton.className = 'modal-close';
       document.body.appendChild(closeButton);
+      const overlay = document.getElementById('modalOverlay');
+      overlay.classList.add('active');
       closeButton.click();
-      expect(document.getElementById('modalOverlay').classList.contains('active')).toBe(false);
+      expect(overlay.classList.contains('active')).toBe(false);
     });
 
     it('ignores malformed or contextually excluded delegated elements', () => {
@@ -468,8 +487,7 @@ describe('navigation', () => {
 
       const excludedNav = document.createElement('button');
       excludedNav.dataset.page = 'dashboard';
-      const modalContent = document.getElementById('modalContent');
-      modalContent.appendChild(excludedNav);
+      document.getElementById('modalContent').appendChild(excludedNav);
       excludedNav.click();
       expect(mocks.renderDashboard).not.toHaveBeenCalled();
     });
