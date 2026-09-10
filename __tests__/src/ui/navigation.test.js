@@ -41,7 +41,9 @@ vi.mock('../../../src/ui/pages/stats.js', () => ({ renderStats: renderers.stats 
 
 import {
   closeModal,
+  closeModalDirect,
   navigateTo,
+  openModal,
   setTheme,
   toggleSidebar,
   toggleTheme,
@@ -50,7 +52,14 @@ import {
 function buildShell() {
   document.body.innerHTML = `
     <aside id="sidebar"></aside><div id="sidebarOverlay"></div><button id="themeBtn"></button>
-    <div id="pageTitle"></div><div id="modalOverlay"></div>
+    <div id="pageTitle"></div>
+    <div id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div id="modalContent">
+        <div id="modalTitle">Titre de la leçon</div>
+        <button id="modalBtnFirst" class="modal-close">✕</button>
+        <button id="modalBtnSecond" class="btn">Valider</button>
+      </div>
+    </div>
     ${[
       'dashboard',
       'lessons',
@@ -73,6 +82,7 @@ function buildShell() {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
   buildShell();
   Object.values(renderers).forEach((fn) => fn.mockClear());
   cancelTest.mockClear();
@@ -134,5 +144,111 @@ describe('navigation', () => {
     expect(overlay.classList.contains('active')).toBe(true);
     closeModal({ target: overlay });
     expect(overlay.classList.contains('active')).toBe(false);
+  });
+
+  it('handles keyboard navigation with Enter and Space on interactive elements', () => {
+    const card = document.createElement('div');
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    const clickSpy = vi.fn();
+    card.addEventListener('click', clickSpy);
+    document.body.appendChild(card);
+
+    card.focus();
+    const { KeyboardEvent } = window;
+    card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+
+    card.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    expect(clickSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('closes modal on Escape keypress', () => {
+    const overlay = document.getElementById('modalOverlay');
+    overlay.classList.add('active');
+
+    const { KeyboardEvent } = window;
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(overlay.classList.contains('active')).toBe(false);
+  });
+
+  it('saves and restores focus when opening and closing modal', () => {
+    const initialButton = document.createElement('button');
+    document.body.appendChild(initialButton);
+    initialButton.focus();
+    expect(document.activeElement).toBe(initialButton);
+
+    openModal();
+    const overlay = document.getElementById('modalOverlay');
+    expect(overlay.classList.contains('active')).toBe(true);
+
+    vi.advanceTimersByTime(100);
+    const closeBtn = document.getElementById('modalBtnFirst');
+    expect(document.activeElement).toBe(closeBtn);
+
+    closeModalDirect();
+    expect(overlay.classList.contains('active')).toBe(false);
+    expect(document.activeElement).toBe(initialButton);
+  });
+
+  describe('modal focus trap and accessibility (Issue #115)', () => {
+    it('declares dialog semantics and modal attributes on overlay', () => {
+      const modal = document.getElementById('modalOverlay');
+      expect(modal.getAttribute('role')).toBe('dialog');
+      expect(modal.getAttribute('aria-modal')).toBe('true');
+      expect(modal.getAttribute('aria-labelledby')).toBe('modalTitle');
+    });
+
+    it('traps focus inside the modal on Tab (cycles from last to first)', () => {
+      openModal();
+      const modal = document.getElementById('modalOverlay');
+      const first = document.getElementById('modalBtnFirst');
+      const last = document.getElementById('modalBtnSecond');
+
+      last.focus();
+      expect(document.activeElement).toBe(last);
+
+      // Tab from last button should wrap to first button
+      const { KeyboardEvent } = window;
+      const tabEvent = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      window.dispatchEvent(tabEvent);
+
+      expect(document.activeElement).toBe(first);
+      closeModalDirect();
+    });
+
+    it('traps focus inside the modal on Shift+Tab (cycles from first to last)', () => {
+      openModal();
+      const modal = document.getElementById('modalOverlay');
+      const first = document.getElementById('modalBtnFirst');
+      const last = document.getElementById('modalBtnSecond');
+
+      first.focus();
+      expect(document.activeElement).toBe(first);
+
+      // Shift+Tab from first button should wrap to last button
+      const { KeyboardEvent } = window;
+      const shiftTabEvent = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
+      window.dispatchEvent(shiftTabEvent);
+
+      expect(document.activeElement).toBe(last);
+      closeModalDirect();
+    });
+
+    it('restores focus to the triggering element when closed via Escape', () => {
+      const trigger = document.createElement('button');
+      document.body.appendChild(trigger);
+      trigger.focus();
+      expect(document.activeElement).toBe(trigger);
+
+      openModal();
+      const modal = document.getElementById('modalOverlay');
+      expect(modal.classList.contains('active')).toBe(true);
+
+      const { KeyboardEvent } = window;
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(modal.classList.contains('active')).toBe(false);
+      expect(document.activeElement).toBe(trigger);
+    });
   });
 });
