@@ -7,7 +7,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
     />
     <title>ConjuMaster UK — Maîtrisez la conjugaison anglaise</title>
     <link
@@ -114,7 +114,6 @@
         </div>
       </header>
 
-      <!-- ==================== DASHBOARD ==================== -->
       <div class="page active" id="page-dashboard">
         <div class="section-title">Bienvenue sur ConjuMaster 🇬🇧</div>
         <div class="section-subtitle">Maîtrisez la conjugaison anglaise, temps par temps.</div>
@@ -167,391 +166,185 @@
         </div>
       </div>
 
-      <!-- ==================== LESSONS ==================== -->
       <div class="page" id="page-lessons">
         <div class="section-title">📚 Parcours d'apprentissage</div>
         <div class="section-subtitle">Progressez module par module, du débutant à l'avancé.</div>
-
         <div class="tabs" id="lessonTabs"></div>
         <div id="lessonContent"></div>
       </div>
 
-      <!-- ==================== EXERCISES ==================== -->
       <div class="page" id="page-exercises">
         <div class="section-title">🎮 Exercices interactifs</div>
         <div class="section-subtitle">Pratiquez avec des exercices générés dynamiquement.</div>
-
         <div id="exerciseModeSelector">
           <div class="mode-cards">
-            <div class="mode-card" data-mode="qcm" role="button" tabindex="0">
-              <div class="mode-icon">🅰️</div>
-              <h3>QCM intelligent</h3>
-              <p>Choisissez la bonne forme verbale parmi 4 options</p>
-            </div>
-            <div class="mode-card" data-mode="fill" role="button" tabindex="0">
-              <div class="mode-icon">✏️</div>
-              <h3>Phrases à compléter</h3>
-              <p>Écrivez la forme correcte du verbe</p>
-            </div>
-            <div class="mode-card" data-mode="transform" role="button" tabindex="0">
-              <div class="mode-icon">🔄</div>
-              <h3>Transformation</h3>
-              <p>Affirmatif → Négatif → Interrogatif</p>
-            </div>
-            <div class="mode-card" data-mode="correction" role="button" tabindex="0">
-              <div class="mode-icon">🔍</div>
-              <h3>Correction d'erreurs</h3>
-              <p>Trouvez et corrigez l'erreur dans la phrase</p>
-            </div>
-            <div class="mode-card" data-mode="translation" role="button" tabindex="0">
-              <div class="mode-icon">🌍</div>
-              <h3>Traduction FR → EN</h3>
-              <p>Traduisez des phrases en conjuguant correctement</p>
-            </div>
-            <div class="mode-card" data-mode="mixed" role="button" tabindex="0">
-              <div class="mode-icon">🎲</div>
-              <h3>Mode mixte</h3>
-              <p>Tous les types d'exercices mélangés</p>
-            </div>
+            <div class="mode-card" data-mode="qcm" role="button" tabindex="0"><div class="mode-icon">🅰️</div><h3>QCM intelligent</h3><p>Choisissez la bonne forme verbale parmi 4 options</p></div>
+            <div class="mode-card" data-mode="fill" role="button" tabindex="0"><div class="mode-icon">✏️</div><h3>Phrases à compléter</h3><p>Écrivez la forme correcte du verbe</p></div>
+            <div class="mode-card" data-mode="transform" role="button" tabindex="0"><div class="mode-icon">🔄</div><h3>Transformation</h3><p>Affirmatif → Négatif → Interrogatif</p></div>
+            <div class="mode-card" data-mode="correction" role="button" tabindex="0"><div class="mode-icon">🔍</div><h3>Correction d'erreurs</h3><p>Trouvez et corrigez l'erreur dans la phrase</p></div>
+            <div class="mode-card" data-mode="translation" role="button" tabindex="0"><div class="mode-icon">🌍</div><h3>Traduction FR → EN</h3><p>Traduisez des phrases en conjuguant correctement</p></div>
+            <div class="mode-card" data-mode="mixed" role="button" tabindex="0"><div class="mode-icon">🎲</div><h3>Mode mixte</h3><p>Tous les types d'exercices mélangés</p></div>
           </div>
         </div>
-
         <div id="exerciseArea" style="display: none">
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 20px;
-            "
-          >
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px">
             <div>
               <span class="level-badge level-beginner" id="exDifficulty">Débutant</span>
-              <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-light)"
-                >Question <span id="exCurrent">1</span> / <span id="exTotal">10</span></span
-              >
+              <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-light)">Question <span id="exCurrent">1</span> / <span id="exTotal">10</span></span>
             </div>
             <button class="btn btn-outline btn-sm" id="exExitBtn" data-action="exit-exercise">✕ Quitter</button>
           </div>
-          <div class="progress-bar" style="margin-bottom: 24px">
-            <div class="progress-fill" id="exProgressBar" style="width: 0%"></div>
-          </div>
+          <div class="progress-bar" style="margin-bottom: 24px"><div class="progress-fill" id="exProgressBar" style="width: 0%"></div></div>
           <div id="exerciseQuestionContainer"></div>
           <div id="exerciseFeedback" style="display: none"></div>
           <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end">
-            <button class="btn btn-outline" id="exSkipBtn" data-action="skip-exercise">
-              Passer ⏭️
-            </button>
-            <button class="btn btn-primary" id="exValidateBtn" data-action="validate-exercise">
-              Valider ✓
-            </button>
-            <button
-              class="btn btn-primary"
-              id="exNextBtn"
-              data-action="next-exercise"
-              style="display: none"
-            >
-              Suivant →
-            </button>
+            <button class="btn btn-outline" id="exSkipBtn" data-action="skip-exercise">Passer ⏭️</button>
+            <button class="btn btn-primary" id="exValidateBtn" data-action="validate-exercise">Valider ✓</button>
+            <button class="btn btn-primary" id="exNextBtn" data-action="next-exercise" style="display: none">Suivant →</button>
           </div>
         </div>
       </div>
 
-      <!-- ==================== TEST MODE ==================== -->
       <div class="page" id="page-test">
         <div class="section-title">🧪 Mode Test</div>
-        <div class="section-subtitle">
-          Évaluez votre niveau avec un test complet de 20 questions.
-        </div>
-
+        <div class="section-subtitle">Évaluez votre niveau avec un test complet de 20 questions.</div>
         <div id="testSetup">
           <div class="card" style="max-width: 600px; margin: 0 auto">
             <h3 style="margin-bottom: 16px">Configuration du test</h3>
             <div class="input-group">
-              <label>Temps verbaux à inclure</label>
+              <label for="testTenseCheckboxes">Temps verbaux à inclure</label>
               <div style="display: flex; flex-wrap: wrap; gap: 8px" id="testTenseCheckboxes"></div>
             </div>
             <div class="input-group">
-              <label>Difficulté</label>
+              <label for="testDifficulty">Difficulté</label>
               <select class="select" id="testDifficulty">
                 <option value="beginner">Débutant</option>
                 <option value="intermediate" selected>Intermédiaire</option>
                 <option value="advanced">Avancé</option>
               </select>
             </div>
-            <button
-              class="btn btn-primary btn-lg btn-block"
-              id="startTestBtn"
-              data-action="start-test"
-              style="margin-top: 12px"
-            >
-              🚀 Commencer le test
-            </button>
+            <button class="btn btn-primary btn-lg btn-block" id="startTestBtn" data-action="start-test" style="margin-top: 12px">🚀 Commencer le test</button>
           </div>
         </div>
-
         <div id="testArea" style="display: none">
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 20px;
-            "
-          >
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px">
             <div>
               <span style="font-weight: 700">Test en cours</span>
-              <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-light)"
-                >Question <span id="testCurrent">1</span> / <span id="testTotal">20</span></span
-              >
+              <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-light)">Question <span id="testCurrent">1</span> / <span id="testTotal">20</span></span>
             </div>
             <div style="display: flex; gap: 12px; align-items: center">
               <span style="font-size: 0.85rem">⏱️ <span id="testTimer">00:00</span></span>
               <span style="font-size: 0.85rem">✅ <span id="testScore">0</span></span>
             </div>
           </div>
-          <div class="progress-bar" style="margin-bottom: 24px">
-            <div class="progress-fill" id="testProgressBar" style="width: 0%"></div>
-          </div>
+          <div class="progress-bar" style="margin-bottom: 24px"><div class="progress-fill" id="testProgressBar" style="width: 0%"></div></div>
           <div id="testQuestionContainer"></div>
           <div id="testFeedback" style="display: none"></div>
           <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end">
-            <button
-              class="btn btn-primary"
-              id="testValidateBtn"
-              data-action="validate-test"
-            >
-              Valider ✓
-            </button>
-            <button
-              class="btn btn-primary"
-              id="testNextBtn"
-              data-action="next-test"
-              style="display: none"
-            >
-              Suivant →
-            </button>
+            <button class="btn btn-primary" id="testValidateBtn" data-action="validate-test">Valider ✓</button>
+            <button class="btn btn-primary" id="testNextBtn" data-action="next-test" style="display: none">Suivant →</button>
           </div>
         </div>
-
         <div id="testResults" style="display: none"></div>
       </div>
 
-      <!-- ==================== TENSES ==================== -->
       <div class="page" id="page-tenses">
         <div class="section-title">⏱️ Les 18 Temps Verbaux Anglais</div>
-        <div class="section-subtitle">
-          Guide de référence complet avec structures, usages et règles du livre de Murphy.
-        </div>
-
+        <div class="section-subtitle">Guide de référence complet avec structures, usages et règles du livre de Murphy.</div>
         <div class="tabs" id="tenseCategoryTabs"></div>
         <div id="tenseContent"></div>
       </div>
 
-      <!-- ==================== IRREGULAR VERBS ==================== -->
       <div class="page" id="page-verbs">
         <div class="section-title">📘 Verbes Irréguliers</div>
-        <div class="section-subtitle">
-          Recherchez et apprenez les formes irrégulières (Base, Past, Past Participle).
-        </div>
-
-        <div class="verb-search-container">
-          <span class="search-icon">🔍</span>
-          <input
-            class="input"
-            type="text"
-            id="verbSearch"
-            placeholder="Rechercher un verbe (anglais ou français)..."
-          />
-        </div>
-
+        <div class="section-subtitle">Recherchez et apprenez les formes irrégulières (Base, Past, Past Participle).</div>
+        <div class="verb-search-container"><span class="search-icon">🔍</span><input class="input" type="text" id="verbSearch" placeholder="Rechercher un verbe (anglais ou français)..." /></div>
         <div id="verbsList"></div>
       </div>
 
-      <!-- ==================== COMPARISON ==================== -->
       <div class="page" id="page-comparison">
         <div class="section-title">📊 Tableaux Comparatifs des Temps</div>
-        <div class="section-subtitle">
-          Comprenez les nuances entre les temps souvent confondus.
-        </div>
-
+        <div class="section-subtitle">Comprenez les nuances entre les temps souvent confondus.</div>
         <div class="tabs" id="comparisonTabs"></div>
         <div id="comparisonContent"></div>
       </div>
 
-      <!-- ==================== REVISION ==================== -->
       <div class="page" id="page-revision">
         <div class="section-title">🔄 Répétition Espacée</div>
-        <div class="section-subtitle">
-          Révisez intelligemment au moment optimal pour ancrer les règles dans votre mémoire à long
-          terme.
-        </div>
-
+        <div class="section-subtitle">Révisez intelligemment au moment optimal pour ancrer les règles dans votre mémoire à long terme.</div>
         <div id="revisionContent"></div>
       </div>
 
-      <!-- ==================== WEAK POINTS ==================== -->
       <div class="page" id="page-weakpoints">
         <div class="section-title">🎯 Vos Points Faibles</div>
-        <div class="section-subtitle">
-          Identifiez les temps qui vous posent le plus de difficultés pour progresser plus vite.
-        </div>
-
+        <div class="section-subtitle">Identifiez les temps qui vous posent le plus de difficultés pour progresser plus vite.</div>
         <div id="weakpointsContent"></div>
       </div>
 
-      <!-- ==================== SEARCH ==================== -->
       <div class="page" id="page-search">
         <div class="section-title">🔍 Recherche Globale</div>
-        <div class="section-subtitle">
-          Recherchez dans toutes les leçons, temps, verbes et règles.
-        </div>
-
-        <div class="input-group">
-          <input
-            class="input"
-            type="text"
-            id="globalSearchInput"
-            placeholder="Tapez un mot-clé (ex: since, yet, conditionnel, be, went)..."
-          />
-        </div>
-
+        <div class="section-subtitle">Recherchez dans toutes les leçons, temps, verbes et règles.</div>
+        <div class="input-group"><input class="input" type="text" id="globalSearchInput" placeholder="Tapez un mot-clé (ex: since, yet, conditionnel, be, went)..." /></div>
         <div id="searchResults"></div>
       </div>
 
-      <!-- ==================== FAVORITES ==================== -->
       <div class="page" id="page-favorites">
         <div class="section-title">⭐ Vos Favoris</div>
         <div class="section-subtitle">Accédez rapidement à vos règles et verbes favoris.</div>
-
         <div id="favoritesContent"></div>
       </div>
 
-      <!-- ==================== STATS ==================== -->
       <div class="page" id="page-stats">
         <div class="section-title">📈 Statistiques Détaillées</div>
         <div class="section-subtitle">Visualisez votre progression globale et par temps verbal.</div>
-
         <div id="statsContent"></div>
       </div>
 
-      <!-- ==================== SETTINGS ==================== -->
       <div class="page" id="page-settings">
         <div class="section-title">⚙️ Paramètres</div>
         <div class="section-subtitle">Personnalisez votre expérience d'apprentissage.</div>
-
         <div class="card" style="max-width: 600px">
           <h3 style="margin-bottom: 20px">Préférences</h3>
-
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              padding: 16px 0;
-              border-bottom: 1px solid var(--border);
-            "
-          >
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border)">
             <div>
               <div style="font-weight: 600">Thème sombre</div>
-              <div style="font-size: 0.85rem; color: var(--text-light)">
-                Activer le mode sombre pour moins de fatigue visuelle
-              </div>
+              <div style="font-size: 0.85rem; color: var(--text-light)">Activer le mode sombre pour moins de fatigue visuelle</div>
             </div>
             <div style="display: flex; gap: 8px">
               <button class="btn btn-outline" id="lightModeBtn" data-action="set-theme" data-theme="light">Clair</button>
               <button class="btn btn-outline" id="darkModeBtn" data-action="set-theme" data-theme="dark">Sombre</button>
             </div>
           </div>
-
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              padding: 16px 0;
-              border-bottom: 1px solid var(--border);
-            "
-          >
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border)">
             <div>
               <div style="font-weight: 600">Rappels quotidiens</div>
-              <div style="font-size: 0.85rem; color: var(--text-light)">
-                Recevoir une notification pour maintenir votre série
-              </div>
+              <div style="font-size: 0.85rem; color: var(--text-light)">Recevoir une notification pour maintenir votre série</div>
             </div>
-            <button
-              class="btn btn-outline btn-sm"
-              id="notificationToggleBtn"
-              data-action="toggle-notifications"
-            >
-              Activer
-            </button>
+            <button class="btn btn-outline btn-sm" id="notificationToggleBtn" data-action="toggle-notifications">Activer</button>
           </div>
-
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              padding: 16px 0;
-              border-bottom: 1px solid var(--border);
-            "
-          >
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border)">
             <div>
               <div style="font-weight: 600">Sauvegarde des données</div>
-              <div style="font-size: 0.85rem; color: var(--text-light)">
-                Exporter ou importer votre progression
-              </div>
+              <div style="font-size: 0.85rem; color: var(--text-light)">Exporter ou importer votre progression</div>
             </div>
             <div style="display: flex; gap: 8px">
               <button class="btn btn-outline btn-sm" id="exportDataBtn" data-action="export-data">Exporter</button>
-              <button
-                class="btn btn-outline btn-sm"
-                id="importDataBtn"
-                data-action="import-data-click"
-              >
-                Importer
-              </button>
-              <input
-                type="file"
-                id="importFile"
-                accept=".json"
-                style="display: none"
-              />
+              <button class="btn btn-outline btn-sm" id="importDataBtn" data-action="import-data-click">Importer</button>
+              <input type="file" id="importFile" accept=".json" style="display: none" />
             </div>
           </div>
-
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              padding: 16px 0;
-            "
-          >
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0">
             <div>
               <div style="font-weight: 600; color: var(--danger)">Réinitialiser la progression</div>
-              <div style="font-size: 0.85rem; color: var(--text-light)">
-                Effacer toutes les données et recommencer à zéro
-              </div>
+              <div style="font-size: 0.85rem; color: var(--text-light)">Effacer toutes les données et recommencer à zéro</div>
             </div>
-            <button class="btn btn-outline btn-sm" id="resetProgressBtn" data-action="reset-progress" style="color: var(--danger)">
-              Réinitialiser
-            </button>
+            <button class="btn btn-outline btn-sm" id="resetProgressBtn" data-action="reset-progress" style="color: var(--danger)">Réinitialiser</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- MODAL -->
-    <div
-      class="modal-overlay"
-      id="modalOverlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modalTitle"
-      aria-label="Contenu de la leçon"
-    >
+    <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-label="Contenu de la leçon">
       <div class="modal" id="modalContent"></div>
     </div>
 

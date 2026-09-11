@@ -580,7 +580,14 @@ export function generateSingleQuestion(mode, tense, subjects, verbs, difficulty)
   }
 }
 
-export function generateQuestions(mode, tenseFilter, difficulty, count = 10, isRevision = false, lessonId = null) {
+export function generateQuestions(
+  mode,
+  tenseFilter,
+  difficulty,
+  count = 10,
+  isRevision = false,
+  lessonId = null,
+) {
   if (lessonId === 'l_passive') {
     return Array.from({ length: count }, () => generatePassiveQuestion());
   }

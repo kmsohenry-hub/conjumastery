@@ -152,6 +152,8 @@ describe('getPresentSimpleForm and getConjugation robustness', () => {
     expect(getConjugation(APP_DATA.verbsByBase, 'be', 'past_simple', 'She', true)).toBe('was');
     expect(getConjugation(APP_DATA.verbsByBase, 'be', 'past_simple', 'They', false)).toBe('were');
     expect(getConjugation(APP_DATA.verbsByBase, 'have', 'present_simple', 'She', true)).toBe('has');
-    expect(getConjugation(APP_DATA.verbsByBase, 'have', 'present_simple', 'They', false)).toBe('have');
+    expect(getConjugation(APP_DATA.verbsByBase, 'have', 'present_simple', 'They', false)).toBe(
+      'have',
+    );
   });
 });

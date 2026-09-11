@@ -17,6 +17,7 @@ import {
   renderLessons,
   showModule,
   openLesson,
+  openTenseModal,
   renderTimeline,
 } from '../../../../src/ui/pages/lessons.js';
 
@@ -46,6 +47,19 @@ describe('lessons page', () => {
     openLesson('l_present_simple', 'present_simple');
     expect(document.getElementById('modalContent').innerHTML).toContain('Present Simple');
     expect(document.getElementById('modalOverlay').classList.contains('active')).toBe(true);
+  });
+
+  it('opens tense modal through the exported helper', () => {
+    openTenseModal({
+      id: 'present_simple',
+      nameEN: 'Present Simple',
+      nameFR: 'Présent simple',
+      level: 'beginner',
+      usage: 'Habitudes',
+      structure: 'Subject + base verb',
+      examples: { affirmative: 'I work.', negative: "I don't work.", interrogative: 'Do I work?' },
+    });
+    expect(document.getElementById('modalContent').innerHTML).toContain('Present Simple');
   });
 
   it('opens special modals for passive and reported speech', () => {

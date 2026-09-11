@@ -1,26 +1,49 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { initEventDelegation, navigateTo } from '../../../src/ui/navigation.js';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { navigateTo } from '../../../src/ui/navigation.js';
 
 describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-02)', () => {
   let indexHtmlContent;
 
-  beforeEach(() => {
+  beforeAll(() => {
     indexHtmlContent = fs.readFileSync('index.html', 'utf8');
     document.body.innerHTML = indexHtmlContent.match(/<body[^>]*>([\s\S]*)<\/body>/i)[1];
-    initEventDelegation();
   });
 
-  it('verifies that CSP script-src strictly enforces self and prohibits unsafe-inline', () => {
-    const cspMatch = indexHtmlContent.match(
-      /<meta[^>]*http-equiv=["']Content-Security-Policy["'][^>]*content=["']([^"']+)["']/i,
-    );
-    expect(cspMatch).toBeTruthy();
+  beforeEach(() => {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('sidebarOverlay')?.classList.remove('active');
+  });
 
-    const csp = cspMatch[1];
+  it('enforces strict script and scoped style CSP directives', () => {
+    const cspTag = indexHtmlContent.match(
+      /<meta\b[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/i,
+    )?.[0];
+    const csp = cspTag?.match(/content\s*=\s*"([^"]*)"/i)?.[1];
+
+    expect(csp).toBeTruthy();
     expect(csp).toContain("script-src 'self'");
     expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
+    expect(csp).toContain("style-src 'self'");
+    expect(csp).not.toMatch(/style-src\s+[^;]*'unsafe-inline'/);
+    expect(csp).toContain("style-src-elem 'self'");
+    expect(csp).toContain("style-src-attr 'unsafe-inline'");
+  });
+
+  it('uses aria-current="page" on active nav item and removes it on inactive items (P-07)', () => {
+    navigateTo('lessons');
+    const activeItem = document.querySelector('.sidebar .nav-item.active');
+    expect(activeItem).toBeTruthy();
+    expect(activeItem.getAttribute('aria-current')).toBe('page');
+    expect(activeItem.hasAttribute('aria-selected')).toBe(false);
+
+    const inactiveItems = document.querySelectorAll('.sidebar .nav-item:not(.active)');
+    inactiveItems.forEach((item) => {
+      expect(item.hasAttribute('aria-current')).toBe(false);
+      expect(item.hasAttribute('aria-selected')).toBe(false);
+    });
   });
 
   it('verifies that index.html contains ZERO inline on... handlers', () => {
@@ -56,13 +79,13 @@ describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-
     expect(lessonsPage.classList.contains('active')).toBe(true);
   });
 
-  it('delegates clicks on mode cards to startExercise', () => {
-    window.startExercise = vi.fn();
+  it('delegates clicks on mode cards to the application exercise handler', () => {
     const qcmCard = document.querySelector('[data-mode="qcm"]');
     expect(qcmCard).toBeTruthy();
 
     qcmCard.click();
-    expect(window.startExercise).toHaveBeenCalledWith('qcm');
+    expect(document.getElementById('exerciseModeSelector')?.style.display).toBe('none');
+    expect(document.getElementById('exerciseArea')?.style.display).toBe('block');
   });
 
   it('delegates clicks on theme toggle button', () => {
@@ -94,20 +117,6 @@ describe('CSP Strict Enforcement & Global Zero Inline Handlers (AUDIT-01, AUDIT-
     modeCards.forEach((card) => {
       expect(card.getAttribute('role')).toBe('button');
       expect(card.getAttribute('tabindex')).toBe('0');
-    });
-  });
-
-  it('uses aria-current="page" on active nav item and removes it on inactive items (P-07)', () => {
-    navigateTo('lessons');
-    const activeItem = document.querySelector('.sidebar .nav-item.active');
-    expect(activeItem).toBeTruthy();
-    expect(activeItem.getAttribute('aria-current')).toBe('page');
-    expect(activeItem.hasAttribute('aria-selected')).toBe(false);
-
-    const inactiveItems = document.querySelectorAll('.sidebar .nav-item:not(.active)');
-    inactiveItems.forEach((item) => {
-      expect(item.hasAttribute('aria-current')).toBe(false);
-      expect(item.hasAttribute('aria-selected')).toBe(false);
     });
   });
 });

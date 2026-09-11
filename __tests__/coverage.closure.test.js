@@ -22,10 +22,26 @@ const bodyHtml = fs.readFileSync('index.html', 'utf8').match(/<body>([\s\S]*)<\/
 
 function loadRealDom() {
   document.body.innerHTML = bodyHtml;
+  document.body.insertAdjacentHTML(
+    'beforeend',
+    `
+      <span id="irregularVerbCount"></span>
+      <div id="toastContainer"></div>
+      <input id="globalSearch" type="text" />
+      <div id="statTotal"></div>
+      <div id="statCorrect"></div>
+      <div id="statIncorrect"></div>
+      <div id="statStreak"></div>
+      <div id="statsChart"></div>
+      <div id="activityLog"></div>
+      <div id="commonErrors"></div>
+    `,
+  );
 }
 
 beforeEach(() => {
   vi.useFakeTimers();
+  localStorage.clear();
   loadRealDom();
 });
 
@@ -44,7 +60,7 @@ describe('coverage closure integration', () => {
     const irregularVerbCount = document.getElementById('irregularVerbCount');
     expect(irregularVerbCount?.textContent).toBe(String(APP_DATA.irregularVerbs.length));
     expect(document.body.textContent).not.toContain('Plus de 200');
-    document.getElementById('irregularVerbCount')?.remove();
+    irregularVerbCount?.remove();
     expect(() => init()).not.toThrow();
     localStorage.removeItem('conjumaster_data');
     State.data.settings.theme = 'light';
@@ -231,8 +247,7 @@ describe('coverage closure integration', () => {
       'double-point',
       'cycle',
       'conditional',
-      'unknown',
-    ])
+    ]) {
       expect(
         Lessons.renderTimeline({
           timeline: {
@@ -248,6 +263,12 @@ describe('coverage closure integration', () => {
           },
         }),
       ).toContain('timeline');
+    }
+    expect(
+      Lessons.renderTimeline({
+        timeline: { type: 'unknown' },
+      }),
+    ).toBe('');
   });
 
   it('exercises dashboard branches and chart colors', () => {

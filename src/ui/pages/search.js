@@ -2,7 +2,13 @@ import { APP_DATA } from '../../data/index.js';
 import { escapeHtml } from '../../../src/core/security.js';
 
 export function performGlobalSearch() {
-  const query = (document.getElementById('globalSearchInput')?.value || document.getElementById('globalSearch')?.value || '').toLowerCase().trim();
+  const query = (
+    document.getElementById('globalSearchInput')?.value ||
+    document.getElementById('globalSearch')?.value ||
+    ''
+  )
+    .toLowerCase()
+    .trim();
   const container = document.getElementById('searchResults');
 
   if (!query) {
