@@ -346,27 +346,33 @@ function exportData() {
   showToast('📤 Données exportées avec succès', 'success');
 }
 
+export function handleImportFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = validateImportedState(JSON.parse(ev.target.result));
+      State.data = data;
+      State.save();
+      updateUI();
+      showToast('📥 Données importées avec succès', 'success');
+    } catch {
+      showToast('❌ Fichier invalide', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
 function importData() {
+  const fileInput = document.getElementById('importFile');
+  if (fileInput) {
+    fileInput.click();
+    return;
+  }
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.json';
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const data = validateImportedState(JSON.parse(ev.target.result));
-        State.data = data;
-        State.save();
-        updateUI();
-        showToast('📥 Données importées avec succès', 'success');
-      } catch {
-        showToast('❌ Fichier invalide', 'error');
-      }
-    };
-    reader.readAsText(file);
-  };
+  input.onchange = (e) => handleImportFile(e.target.files?.[0]);
   input.click();
 }
 
@@ -426,6 +432,14 @@ export function init() {
   const irregularVerbCount = document.getElementById('irregularVerbCount');
   if (irregularVerbCount) {
     irregularVerbCount.textContent = String(APP_DATA.irregularVerbs.length);
+  }
+  const importFileInput = document.getElementById('importFile');
+  if (importFileInput && !importFileInput.dataset.bound) {
+    importFileInput.dataset.bound = 'true';
+    importFileInput.addEventListener('change', (e) => {
+      handleImportFile(e.target.files?.[0]);
+      e.target.value = '';
+    });
   }
   NotificationManager.init();
   window.addEventListener('conjumaster:save-error', () => {
@@ -496,6 +510,7 @@ window.setTheme = setTheme;
 window.resetProgress = resetProgress;
 window.importData = importData;
 window.exportData = exportData;
+window.handleImportFile = handleImportFile;
 window.closeModalDirect = closeModalDirect;
 
 // Start the app

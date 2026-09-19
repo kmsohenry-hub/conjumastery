@@ -195,7 +195,7 @@ export function finishTest() {
   const mins = Math.floor(elapsedSeconds / 60);
   const secs = elapsedSeconds % 60;
 
-  let levelRecommendation = '';
+  let levelRecommendation;
   if (pct >= 80) levelRecommendation = 'Niveau recommandé : 🌳 Avancé';
   else if (pct >= 50) levelRecommendation = 'Niveau recommandé : 🌿 Intermédiaire';
   else levelRecommendation = 'Niveau recommandé : 🌱 Débutant';

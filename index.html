@@ -101,7 +101,7 @@
     <div class="main-content">
       <header class="app-header">
         <div class="header-left">
-          <button class="menu-toggle" id="menuToggleBtn" data-action="toggle-sidebar">☰</button>
+          <button class="menu-toggle" id="menuToggleBtn" data-action="toggle-sidebar" aria-label="Menu" aria-expanded="false" aria-controls="sidebar">☰</button>
           <h1 class="header-title" id="pageTitle">Tableau de bord</h1>
         </div>
         <div class="header-right">
@@ -110,7 +110,7 @@
           </div>
           <div class="header-stat">⭐ <span id="headerXP">0</span> XP</div>
           <div class="header-stat">🏆 <span id="headerLevel">1</span></div>
-          <button class="theme-toggle" id="themeBtn" data-action="toggle-theme">🌙</button>
+          <button class="theme-toggle" id="themeBtn" data-action="toggle-theme" aria-label="Changer de thème">🌙</button>
         </div>
       </header>
 
@@ -344,7 +344,7 @@
       </div>
     </div>
 
-    <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-label="Contenu de la leçon">
+    <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-label="Contenu de la leçon" aria-hidden="true">
       <div class="modal" id="modalContent"></div>
     </div>
 

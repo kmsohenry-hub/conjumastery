@@ -4,8 +4,6 @@ import { openModal } from '../navigation.js';
 
 export function renderLessons() {
   const tabs = document.getElementById('lessonTabs');
-  const content = document.getElementById('lessonContent');
-  const completed = State.data.completedLessons;
 
   tabs.innerHTML = APP_DATA.modules
     .map(
@@ -174,7 +172,7 @@ export function openPassiveModal(lessonId = 'l_passive') {
       <h4>💡 Nuances</h4>
       <p>${info.nuances}</p>
     </div>
-    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="l_passive">🎯 Commencer la leçon</button></div>`;
+    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${lessonId}">🎯 Commencer la leçon</button></div>`;
   openModal();
 }
 
@@ -205,7 +203,7 @@ export function openReportedModal(lessonId = 'l_reported') {
         ${info.timeChanges.map((t) => `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`).join('')}
       </table>
     </div>
-    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="l_reported">🎯 Commencer la leçon</button></div>`;
+    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${lessonId}">🎯 Commencer la leçon</button></div>`;
   openModal();
 }
 
@@ -213,7 +211,7 @@ export function renderTimeline(tense) {
   const tl = tense.timeline;
   if (!tl) return '';
 
-  let visual = '';
+  let visual;
   switch (tl.type) {
     case 'point':
       visual = `

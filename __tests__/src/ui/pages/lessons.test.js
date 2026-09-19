@@ -87,5 +87,50 @@ describe('lessons page', () => {
       timeline: { type: 'conditional', condition: 10, result: 50 },
     });
     expect(conditional).toContain('Condition');
+
+    const arrow = renderTimeline({
+      timeline: { type: 'arrow', start: 20, end: 80, label: 'Continuous' },
+    });
+    expect(arrow).toContain('Continuous');
+
+    const cycle = renderTimeline({
+      timeline: { type: 'cycle' },
+    });
+    expect(cycle).toContain('timeline-cycle');
+
+    const unknown = renderTimeline({ timeline: { type: 'unsupported' } });
+    expect(unknown).toBe('');
+
+    const noTimeline = renderTimeline({});
+    expect(noTimeline).toBe('');
+  });
+
+  it('renders tense modal with signal words and common mistakes', () => {
+    openTenseModal(
+      {
+        id: 'past_simple',
+        nameEN: 'Past Simple',
+        nameFR: 'Passé simple',
+        level: 'beginner',
+        usage: ['Action passée'],
+        structure: 'Subject + V2',
+        examples: { affirmative: 'I went.' },
+        signalWords: ['yesterday', 'ago'],
+        commonMistakes: [{ wrong: 'I did went', right: 'I went', note: 'Never use did with V2' }],
+      },
+      'l_past_simple',
+    );
+
+    const modalHtml = document.getElementById('modalContent').innerHTML;
+    expect(modalHtml).toContain('yesterday');
+    expect(modalHtml).toContain('I did went');
+    expect(modalHtml).toContain('data-lesson-id="l_past_simple"');
+  });
+
+  it('switches tabs visually when a button is passed to showModule', () => {
+    renderLessons();
+    const btn = document.querySelectorAll('#lessonTabs .tab')[1];
+    showModule(1, btn);
+    expect(btn.classList.contains('active')).toBe(true);
   });
 });

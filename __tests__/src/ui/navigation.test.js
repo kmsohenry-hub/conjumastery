@@ -9,6 +9,7 @@ const { mocks } = vi.hoisted(() => {
     'showModule',
     'resetExerciseUI',
     'restartExercise',
+    'startExercise',
     'startExerciseForLesson',
     'startExerciseForTense',
     'selectOption',
@@ -49,6 +50,7 @@ vi.mock('../../../src/ui/pages/lessons.js', () => ({
 vi.mock('../../../src/ui/pages/exercises.js', () => ({
   resetExerciseUI: mocks.resetExerciseUI,
   restartExercise: mocks.restartExercise,
+  startExercise: mocks.startExercise,
   startExerciseForLesson: mocks.startExerciseForLesson,
   startExerciseForTense: mocks.startExerciseForTense,
   selectOption: mocks.selectOption,
@@ -148,7 +150,7 @@ describe('navigation', () => {
       favorites: 'renderFavorites',
       stats: 'renderStats',
     };
-    for (const [page, mockName] of Object.entries(routes)) navigateTo(page);
+    for (const page of Object.keys(routes)) navigateTo(page);
     for (const mockName of Object.values(routes)) expect(mocks[mockName]).toHaveBeenCalled();
   });
 
@@ -253,6 +255,18 @@ describe('navigation', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(document.getElementById('modalOverlay').classList.contains('active')).toBe(false);
     expect(document.activeElement).toBe(trigger);
+
+    // Empty focusable elements branch
+    openModal();
+    document.getElementById('modalContent').innerHTML = '<div>No buttons</div>';
+    const emptyEvent = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      bubbles: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(emptyEvent);
+    expect(emptyEvent.defaultPrevented).toBe(true);
+    closeModalDirect();
   });
 
   it('delegates action and keyboard events through data contracts', () => {
@@ -268,6 +282,15 @@ describe('navigation', () => {
       ['start-lesson', { lessonId: 'lesson-1' }, 'startExerciseForLesson'],
       ['start-tense', { tenseId: 'past_simple' }, 'startExerciseForTense'],
       ['start-revision', {}, 'startRevisionSession'],
+      ['exit-exercise', {}, 'exitExercise'],
+      ['skip-exercise', {}, 'skipExercise'],
+      ['validate-exercise', {}, 'validateExercise'],
+      ['next-exercise', {}, 'nextExercise'],
+      ['restart-exercise', {}, 'restartExercise'],
+      ['reset-exercise-ui', {}, 'resetExerciseUI'],
+      ['start-test', {}, 'startTest'],
+      ['validate-test', {}, 'validateTestAnswer'],
+      ['next-test', {}, 'nextTestQuestion'],
     ];
     for (const [action, data, mockName] of cases) {
       const el = document.createElement('button');
@@ -279,6 +302,159 @@ describe('navigation', () => {
       el.click();
       expect(mocks[mockName]).toHaveBeenCalled();
     }
+
+    // new-test action
+    const setupEl = document.createElement('div');
+    setupEl.id = 'testSetup';
+    setupEl.style.display = 'none';
+    const resultsEl = document.createElement('div');
+    resultsEl.id = 'testResults';
+    resultsEl.style.display = 'block';
+    document.body.appendChild(setupEl);
+    document.body.appendChild(resultsEl);
+
+    const newTestBtn = document.createElement('button');
+    newTestBtn.dataset.action = 'new-test';
+    document.body.appendChild(newTestBtn);
+    newTestBtn.click();
+    expect(mocks.renderTestSetup).toHaveBeenCalled();
+    expect(setupEl.style.display).toBe('block');
+    expect(resultsEl.style.display).toBe('none');
+
+    // set-theme and toggle-theme actions
+    const setThemeBtn = document.createElement('button');
+    setThemeBtn.dataset.action = 'set-theme';
+    setThemeBtn.dataset.theme = 'dark';
+    document.body.appendChild(setThemeBtn);
+    setThemeBtn.click();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+
+    const toggleThemeBtn = document.createElement('button');
+    toggleThemeBtn.dataset.action = 'toggle-theme';
+    document.body.appendChild(toggleThemeBtn);
+    toggleThemeBtn.click();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+
+    // toggle-sidebar action
+    const toggleSidebarBtn = document.createElement('button');
+    toggleSidebarBtn.dataset.action = 'toggle-sidebar';
+    document.body.appendChild(toggleSidebarBtn);
+    toggleSidebarBtn.click();
+    expect(document.getElementById('sidebar').classList.contains('open')).toBe(true);
+
+    // close-modal action
+    const modalOverlay = document.getElementById('modalOverlay');
+    modalOverlay.classList.add('active');
+    const closeModalBtn = document.createElement('button');
+    closeModalBtn.dataset.action = 'close-modal';
+    document.body.appendChild(closeModalBtn);
+    closeModalBtn.click();
+    expect(modalOverlay.classList.contains('active')).toBe(false);
+
+    // NotificationManager toggle action
+    window.NotificationManager = { toggle: vi.fn() };
+    const notifBtn = document.createElement('button');
+    notifBtn.dataset.action = 'toggle-notifications';
+    document.body.appendChild(notifBtn);
+    notifBtn.click();
+    expect(window.NotificationManager.toggle).toHaveBeenCalled();
+
+    // export-data action
+    window.exportData = vi.fn();
+    const exportBtn = document.createElement('button');
+    exportBtn.dataset.action = 'export-data';
+    document.body.appendChild(exportBtn);
+    exportBtn.click();
+    expect(window.exportData).toHaveBeenCalled();
+
+    // import-data-click action
+    const importInput = document.createElement('input');
+    importInput.type = 'file';
+    importInput.id = 'importFile';
+    const inputClickSpy = vi.fn();
+    importInput.addEventListener('click', inputClickSpy);
+    document.body.appendChild(importInput);
+    const importBtn = document.createElement('button');
+    importBtn.dataset.action = 'import-data-click';
+    document.body.appendChild(importBtn);
+    importBtn.click();
+    expect(inputClickSpy).toHaveBeenCalled();
+
+    // reset-progress action with window.confirmReset and fallback window.resetProgress
+    window.confirmReset = vi.fn();
+    const resetBtn = document.createElement('button');
+    resetBtn.dataset.action = 'reset-progress';
+    document.body.appendChild(resetBtn);
+    resetBtn.click();
+    expect(window.confirmReset).toHaveBeenCalled();
+
+    delete window.confirmReset;
+    window.resetProgress = vi.fn();
+    resetBtn.click();
+    expect(window.resetProgress).toHaveBeenCalled();
+
+    // Mode cards delegation
+    const modeCard = document.createElement('div');
+    modeCard.dataset.mode = 'qcm';
+    document.body.appendChild(modeCard);
+    modeCard.click();
+    expect(mocks.startExercise).toHaveBeenCalledWith('qcm');
+
+    // Toggle favorite delegation
+    const favBtn = document.createElement('button');
+    favBtn.dataset.action = 'toggle-fav';
+    favBtn.dataset.favId = 'verb_go';
+    document.body.appendChild(favBtn);
+    favBtn.click();
+    expect(mocks.toggleFav).toHaveBeenCalledWith('verb_go', favBtn);
+
+    // Direct modal overlay click
+    modalOverlay.classList.add('active');
+    modalOverlay.dispatchEvent(new Event('click', { bubbles: true }));
+    expect(modalOverlay.classList.contains('active')).toBe(false);
+
+    // Static button IDs
+    const staticButtons = [
+      [
+        'menuToggleBtn',
+        () => expect(document.getElementById('sidebar').classList.contains('open')).toBe(false),
+      ],
+      ['themeBtn', () => expect(document.documentElement.getAttribute('data-theme')).toBe('dark')],
+      ['exSkipBtn', () => expect(mocks.skipExercise).toHaveBeenCalled()],
+      ['exValidateBtn', () => expect(mocks.validateExercise).toHaveBeenCalled()],
+      ['exNextBtn', () => expect(mocks.nextExercise).toHaveBeenCalled()],
+      ['testValidateBtn', () => expect(mocks.validateTestAnswer).toHaveBeenCalled()],
+      ['testNextBtn', () => expect(mocks.nextTestQuestion).toHaveBeenCalled()],
+    ];
+    for (const [id, assertFn] of staticButtons) {
+      const b = document.createElement('button');
+      b.id = id;
+      document.body.appendChild(b);
+      b.click();
+      assertFn();
+    }
+
+    // Modal close class
+    modalOverlay.classList.add('active');
+    const modalCloseBtn = document.createElement('button');
+    modalCloseBtn.className = 'modal-close';
+    document.body.appendChild(modalCloseBtn);
+    modalCloseBtn.click();
+    expect(modalOverlay.classList.contains('active')).toBe(false);
+
+    // Input delegation
+    const verbSearch = document.createElement('input');
+    verbSearch.id = 'verbSearch';
+    document.body.appendChild(verbSearch);
+    verbSearch.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(mocks.filterVerbs).toHaveBeenCalled();
+
+    const globalSearchInput = document.createElement('input');
+    globalSearchInput.id = 'globalSearchInput';
+    document.body.appendChild(globalSearchInput);
+    globalSearchInput.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(mocks.performGlobalSearch).toHaveBeenCalled();
+
     const input = document.createElement('input');
     input.id = 'exerciseInput';
     document.body.appendChild(input);
