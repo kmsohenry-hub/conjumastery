@@ -1,6 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
 import { APP_DATA } from '../../../../src/data/index.js';
-import { generateQuestions, generateTransform } from '../../../../src/core/exercises/generator.js';
+import {
+  generateQuestions,
+  generateTransform,
+  generateFill,
+  generateSingleQuestion,
+} from '../../../../src/core/exercises/generator.js';
 
 describe('generator core distribution', () => {
   test('revision mode cycles deterministically across the requested review queue (Issue #107)', () => {
@@ -26,6 +31,28 @@ describe('generator core distribution', () => {
 
     expect(questions).toHaveLength(3);
     expect(questions.every((q) => q.tenseId === 'past_continuous')).toBe(true);
+  });
+
+  test('generateFill handles future_going_to with subject I correctly in dynamic fallback', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    const tense = APP_DATA.tensesById.future_going_to;
+    const q = generateFill(tense, 'I', 'work', false);
+    expect(q.answer).toBe('am going to work');
+    Math.random.mockRestore();
+  });
+
+  test('generateTransform handles fallback tenses gracefully', () => {
+    const customTense = { id: 'unknown_tense', nameFR: 'Temps Custom' };
+    const q = generateTransform(customTense, 'They', 'play', false);
+    expect(q.type).toBe('transform');
+    expect(q.answer).toMatch(/didn't play|Did they play/);
+  });
+
+  test('generateSingleQuestion handles unknown mode by falling back to QCM', () => {
+    const tense = APP_DATA.tensesById.present_simple;
+    const q = generateSingleQuestion('unknown_mode', tense, ['She'], ['write'], 'beginner');
+    expect(q.type).toBe('qcm');
+    expect(q.options).toHaveLength(4);
   });
 });
 

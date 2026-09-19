@@ -101,6 +101,15 @@ describe('coverage closure integration', () => {
     ExerciseEngine.getProgress();
     ExerciseEngine.currentIndex = oldIndex;
     ExerciseEngine.questions = oldQuestions;
+
+    const importInput = document.getElementById('importFile');
+    if (importInput) {
+      const validFile = new Blob([JSON.stringify({ xp: 200, level: 3 })], {
+        type: 'application/json',
+      });
+      Object.defineProperty(importInput, 'files', { value: [validFile], configurable: true });
+      importInput.dispatchEvent(new Event('change'));
+    }
   });
 
   it('exercises navigation guards and keyboard branches', () => {

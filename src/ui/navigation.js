@@ -130,8 +130,14 @@ export function navigateTo(page) {
 }
 
 export function toggleSidebar() {
-  document.getElementById('sidebar')?.classList.toggle('open');
-  document.getElementById('sidebarOverlay')?.classList.toggle('active');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  const isOpen = sidebar?.classList.toggle('open') ?? false;
+  sidebarOverlay?.classList.toggle('active');
+  const menuBtn = document.getElementById('menuToggleBtn');
+  if (menuBtn) {
+    menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
 }
 
 export function toggleTheme() {
@@ -154,6 +160,7 @@ export function openModal() {
   const overlay = document.getElementById('modalOverlay');
   if (overlay) {
     overlay.classList.add('active');
+    overlay.setAttribute('aria-hidden', 'false');
     setTimeout(() => {
       const focusable = overlay.querySelector(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
@@ -174,6 +181,7 @@ export function closeModalDirect() {
   const overlay = document.getElementById('modalOverlay');
   if (overlay) {
     overlay.classList.remove('active');
+    overlay.setAttribute('aria-hidden', 'true');
   }
   if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
     _previousActiveElement.focus();

@@ -1,6 +1,5 @@
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
-import { openTenseModal } from './tenses.js';
 
 export function renderFavorites() {
   const container = document.getElementById('favoritesContent');
