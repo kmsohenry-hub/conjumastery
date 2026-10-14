@@ -1,3 +1,4 @@
+import { escapeHtml } from '../../core/security.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
 
@@ -29,13 +30,13 @@ export function renderWeakpoints() {
             <div style="font-size:0.7rem;color:var(--text-light)">précision</div>
           </div>
           <div style="flex:1">
-            <div style="font-weight:700">${tense ? tense.nameFR : w.tenseId}</div>
+            <div style="font-weight:700">${escapeHtml(tense ? tense.nameFR : w.tenseId)}</div>
             <div style="font-size:0.8rem;color:var(--text-light)">${w.total} exercices • ${w.errors} erreurs</div>
             <div class="progress-bar" style="height:6px;margin-top:6px">
               <div class="progress-fill ${accuracy < 50 ? 'warning' : 'success'}" style="width:${accuracy}%"></div>
             </div>
           </div>
-          <button class="btn btn-primary btn-sm" data-action="start-tense" data-tense-id="${w.tenseId}">🎯 Pratiquer</button>
+          <button class="btn btn-primary btn-sm" data-action="start-tense" data-tense-id="${escapeHtml(w.tenseId)}">🎯 Pratiquer</button>
         </div>`;
         })
         .join('')}

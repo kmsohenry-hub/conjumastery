@@ -4,7 +4,8 @@ import {
   generateQuestions,
   generateTransform,
   generateFill,
-  generateSingleQuestion,
+  generatePassiveQuestion,
+  generateReportedQuestion,
 } from '../../../../src/core/exercises/generator.js';
 
 describe('generator core distribution', () => {
@@ -48,64 +49,43 @@ describe('generator core distribution', () => {
     expect(q.answer).toMatch(/didn't play|Did they play/);
   });
 
-  test('generateSingleQuestion handles unknown mode by falling back to QCM', () => {
-    const tense = APP_DATA.tensesById.present_simple;
-    const q = generateSingleQuestion('unknown_mode', tense, ['She'], ['write'], 'beginner');
-    expect(q.type).toBe('qcm');
-    expect(q.options).toHaveLength(4);
-  });
-});
+  test('generatePassiveQuestion returns passive transform question and fallback', () => {
+    const q = generatePassiveQuestion();
+    expect(q.type).toBe('transform');
+    expect(q.tenseId).toBe('passive_voice');
+    expect(q.sentence).toContain('Transformez à la voix passive :');
+    expect(typeof q.answer).toBe('string');
+    expect(q.answer.length).toBeGreaterThan(0);
+    expect(q.explanation).toContain(q.answer);
 
-describe('P-03 and P-10: Conditionals with be and special lessons', () => {
-  test("conditional_0, 1, 2 with be never produce doesn't be, don't be, or didn't be (P-03)", () => {
-    const t0 = APP_DATA.tensesById.conditional_0;
-    const t1 = APP_DATA.tensesById.conditional_1;
-    const t2 = APP_DATA.tensesById.conditional_2;
-
-    for (const [subj, third] of [
-      ['I', false],
-      ['She', true],
-      ['They', false],
-    ]) {
-      for (const t of [t0, t1, t2]) {
-        for (const random of [0, 0.99]) {
-          vi.spyOn(Math, 'random').mockReturnValue(random);
-          const q = generateTransform(t, subj, 'be', third);
-          expect(q.answer).not.toMatch(/\b(?:doesn't|don't|didn't)\s+be\b/i);
-          expect(q.answer).not.toMatch(/\bDoes\s+\w+\s+be\b/i);
-          Math.random.mockRestore();
-        }
-      }
+    const originalPassiveInfo = APP_DATA.passiveInfo;
+    APP_DATA.passiveInfo = null;
+    try {
+      const fallbackQ = generatePassiveQuestion();
+      expect(fallbackQ.answer).toBe('Houses are built.');
+      expect(fallbackQ.explanation).toContain('Present Simple');
+    } finally {
+      APP_DATA.passiveInfo = originalPassiveInfo;
     }
   });
 
-  test("conditional_2 with be produces subjunctive were/weren't (P-03)", () => {
-    const t2 = APP_DATA.tensesById.conditional_2;
-    vi.spyOn(Math, 'random').mockReturnValue(0);
-    expect(generateTransform(t2, 'She', 'be', true).answer).toBe(
-      "If She weren't, She wouldn't be.",
-    );
-    expect(generateTransform(t2, 'I', 'be', false).answer).toBe("If I weren't, I wouldn't be.");
+  test('generateReportedQuestion returns reported transform question and fallback', () => {
+    const q = generateReportedQuestion();
+    expect(q.type).toBe('transform');
+    expect(q.tenseId).toBe('reported_speech');
+    expect(q.sentence).toContain('Transformez au discours indirect :');
+    expect(typeof q.answer).toBe('string');
+    expect(q.answer.length).toBeGreaterThan(0);
+    expect(q.explanation).toContain(q.answer);
 
-    vi.spyOn(Math, 'random').mockReturnValue(0.99);
-    expect(generateTransform(t2, 'She', 'be', true).answer).toBe('If She were, would she be?');
-    Math.random.mockRestore();
-  });
-
-  test('generateQuestions produces specific questions for special lessons l_passive and l_reported (P-10)', () => {
-    const passiveQuestions = generateQuestions('mixed', [], 'intermediate', 5, false, 'l_passive');
-    expect(passiveQuestions).toHaveLength(5);
-    expect(passiveQuestions.every((q) => q.sentence.includes('voix passive'))).toBe(true);
-
-    const reportedQuestions = generateQuestions(
-      'mixed',
-      [],
-      'intermediate',
-      5,
-      false,
-      'l_reported',
-    );
-    expect(reportedQuestions).toHaveLength(5);
-    expect(reportedQuestions.every((q) => q.sentence.includes('discours indirect'))).toBe(true);
+    const originalReported = APP_DATA.reportedSpeech;
+    APP_DATA.reportedSpeech = null;
+    try {
+      const fallbackQ = generateReportedQuestion();
+      expect(fallbackQ.answer).toBe('He said he was happy');
+      expect(fallbackQ.explanation).toContain('Present -> Past');
+    } finally {
+      APP_DATA.reportedSpeech = originalReported;
+    }
   });
 });

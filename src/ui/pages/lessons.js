@@ -1,4 +1,5 @@
 import { APP_DATA } from '../../data/index.js';
+import { escapeHtml } from '../../core/security.js';
 import { State } from '../../core/state/State.js';
 import { openModal } from '../navigation.js';
 
@@ -9,7 +10,7 @@ export function renderLessons() {
     .map(
       (m, i) => `
     <button class="tab ${i === 0 ? 'active' : ''}" data-action="show-module" data-index="${i}">
-      ${m.name}
+      ${escapeHtml(m.name)}
     </button>`,
     )
     .join('');
@@ -23,7 +24,7 @@ export function showModule(index, btn) {
     btn.classList.add('active');
   }
   const mod = APP_DATA.modules[index];
-  const completed = State.data.completedLessons;
+  const completed = new Set(State.data.completedLessons);
   const content = document.getElementById('lessonContent');
 
   if (!mod || !content) return;
@@ -36,7 +37,7 @@ export function showModule(index, btn) {
     <div class="card-grid">
       ${mod.lessons
         .map((l) => {
-          const isDone = completed.includes(l.id);
+          const isDone = completed.has(l.id);
           const tense = l.tenseId ? APP_DATA.tensesById[l.tenseId] : null;
           return `
         <div class="card lesson-card ${isDone ? 'completed' : ''}" role="button" tabindex="0" data-action="open-lesson" data-lesson-id="${l.id}" data-tense-id="${l.tenseId || ''}">

@@ -1,3 +1,4 @@
+import { escapeHtml } from '../../core/security.js';
 import { APP_DATA } from '../../data/index.js';
 import { State } from '../../core/state/State.js';
 
@@ -28,7 +29,7 @@ export function filterVerbs() {
       return `<div class="verb-card" id="verb-card-${i}" data-action="toggle-verb" data-index="${i}" role="button" tabindex="0" aria-expanded="false">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <span class="verb-base">${v.base}</span>
+          <span class="verb-base">${escapeHtml(v.base)}</span>
           <span style="font-weight:600;color:var(--accent)">${v.past}</span>
           <span style="font-weight:600;color:var(--secondary)">${v.pp}</span>
           <span style="color:var(--text-light);margin-left:8px;font-size:0.85rem">${v.meaning}</span>
