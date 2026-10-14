@@ -31,8 +31,8 @@ export function showModule(index, btn) {
 
   content.innerHTML = `
     <div style="margin-bottom:20px">
-      <h3>${escapeHtml(mod.name)}</h3>
-      <p style="color:var(--text-light)">${escapeHtml(mod.description || '')}</p>
+      <h3>${mod.name}</h3>
+      <p style="color:var(--text-light)">${mod.description || ''}</p>
     </div>
     <div class="card-grid">
       ${mod.lessons
@@ -40,18 +40,18 @@ export function showModule(index, btn) {
           const isDone = completed.has(l.id);
           const tense = l.tenseId ? APP_DATA.tensesById[l.tenseId] : null;
           return `
-          <div class="card lesson-card ${isDone ? 'completed' : ''}" role="button" tabindex="0" data-action="open-lesson" data-lesson-id="${l.id}" data-tense-id="${l.tenseId || ''}">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-              <span class="tag ${isDone ? 'tag-green' : 'tag-blue'}">${isDone ? '✓ Terminé' : l.level || mod.level || ''}</span>
-              <span style="font-size:0.8rem;color:var(--text-light)">${l.exercises} exercices</span>
-            </div>
-            <h3 style="margin-bottom:8px">${l.title}</h3>
-            <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:12px">${l.desc}</p>
-            ${tense ? `<p style="font-size:0.85rem;color:var(--primary);font-family:monospace">${tense.structure}</p>` : ''}
-            <div class="progress-bar" style="margin-top:12px">
-              <div class="fill" style="width:${isDone ? '100%' : '0%'}"></div>
-            </div>
-          </div>`;
+        <div class="card lesson-card ${isDone ? 'completed' : ''}" role="button" tabindex="0" data-action="open-lesson" data-lesson-id="${l.id}" data-tense-id="${l.tenseId || ''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+            <span class="tag ${isDone ? 'tag-green' : 'tag-blue'}">${isDone ? '✓ Terminé' : l.level || mod.level || ''}</span>
+            <span style="font-size:0.8rem;color:var(--text-light)">${l.exercises} exercices</span>
+          </div>
+          <h3 style="margin-bottom:8px">${l.title}</h3>
+          <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:12px">${l.desc}</p>
+          ${tense ? `<p style="font-size:0.85rem;color:var(--primary);font-family:monospace">${tense.structure}</p>` : ''}
+          <div class="progress-bar" style="margin-top:12px">
+            <div class="fill" style="width:${isDone ? '100%' : '0%'}"></div>
+          </div>
+        </div>`;
         })
         .join('')}
     </div>`;
@@ -87,14 +87,14 @@ function renderTenseModal(tense, lessonId) {
       </div>
       <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
-
+    
     <div class="explain-block">
       <h4>📝 Utilisation</h4>
-      <p>${Array.isArray(tense.usage) ? tense.usage.join(', ') : tense.usage || ''}</p>
+      <p>${Array.isArray(tense.usage) ? tense.usage.join(',') : tense.usage || ''}</p>
     </div>
 
     <div class="explain-block">
-      <h4>🏗 Structure</h4>
+      <h4>🏗️ Structure</h4>
       <p><code>${tense.structure || ''}</code></p>
     </div>
 
@@ -149,7 +149,6 @@ export function openPassiveModal(lessonId = 'l_passive') {
   const modal = document.getElementById('modalContent');
   const info = APP_DATA.passiveInfo;
   if (!modal || !info) return;
-
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Voix Passive</div>
@@ -160,7 +159,7 @@ export function openPassiveModal(lessonId = 'l_passive') {
       <p>${info.explanation}</p>
     </div>
     <div class="explain-block">
-      <h4>🏗 Structure</h4>
+      <h4>🏗️ Structure</h4>
       <p><code>${info.structure}</code></p>
     </div>
     <h4 style="margin:16px 0 12px">📖 Exemples</h4>
@@ -182,7 +181,6 @@ export function openReportedModal(lessonId = 'l_reported') {
   const modal = document.getElementById('modalContent');
   const info = APP_DATA.reportedSpeech;
   if (!modal || !info) return;
-
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Discours Indirect (Reported Speech)</div>
@@ -192,52 +190,147 @@ export function openReportedModal(lessonId = 'l_reported') {
       <h4>📝 Explication</h4>
       <p>${info.explanation}</p>
     </div>
-    <div class="explain-block">
-      <h4>🏗 Structure</h4>
-      <p><code>${info.structure}</code></p>
-    </div>
-    <h4 style="margin:16px 0 12px">📖 Règles de concordance des temps (Backshift)</h4>
+    <h4 style="margin:16px 0 12px">🔄 Concordance des temps</h4>
     <div class="table-wrapper">
       <table class="data-table">
-        <tr><th>Discours Direct</th><th>Discours Indirect</th></tr>
-        ${info.rules.map((r) => `<tr><td>${r.direct}</td><td><strong>${r.reported}</strong></td></tr>`).join('')}
+        <tr><th>Discours direct</th><th>Discours indirect</th><th>Exemple</th></tr>
+        ${info.rules.map((r) => `<tr><td>${r.direct}</td><td><strong>${r.reported}</strong></td><td><em>${r.example}</em></td></tr>`).join('')}
       </table>
     </div>
-    <h4 style="margin:16px 0 12px">🔄 Changements de pronoms & expressions de temps</h4>
+    <h4 style="margin:16px 0 12px">📅 Changements de temps/mots</h4>
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Direct</th><th>Indirect</th></tr>
-        ${info.timeChanges.map((t) => `<tr><td>${t.direct}</td><td>${t.reported}</td></tr>`).join('')}
+        ${info.timeChanges.map((t) => `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`).join('')}
       </table>
     </div>
     <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${lessonId}">🎯 Commencer la leçon</button></div>`;
   openModal();
 }
 
-function renderTimeline(tense) {
-  if (!tense || !tense.timeline) return '';
+export function renderTimeline(tense) {
+  const tl = tense.timeline;
+  if (!tl) return '';
 
-  const positionMap = {
-    past: '20%',
-    present: '50%',
-    future: '80%',
-    all: '50%',
-  };
-
-  const pos = positionMap[tense.timeline.position] || '50%';
-
-  return `
-    <div class="explain-block">
-      <h4>⏱ Frise Chronologique</h4>
-      <div class="timeline-container">
-        <div class="timeline-axis"></div>
-        <div class="timeline-point past">Passe</div>
-        <div class="timeline-point present">Present</div>
-        <div class="timeline-point future">Futur</div>
-        <div class="timeline-marker" style="left: ${pos}" title="${tense.timeline.label || ''}">
-          <span class="timeline-tooltip">${tense.timeline.label || tense.nameEN}</span>
+  let visual;
+  switch (tl.type) {
+    case 'point':
+      visual = `
+        <div class="timeline-axis">
+          <div class="axis-past">Passé</div>
+          <div class="axis-now">Maintenant</div>
+          <div class="axis-future">Futur</div>
         </div>
-      </div>
-      <p style="font-size:0.85rem;color:var(--text-light);margin-top:8px;text-align:center">${tense.timeline.description || ''}</p>
-    </div>`;
+        <div class="timeline-visual">
+          <div class="timeline-now-line" style="left:50%"></div>
+          <div class="timeline-point" style="left:${tl.position}%" title="${tl.label}">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">${tl.label}</span>
+          </div>
+        </div>`;
+      break;
+
+    case 'range':
+      visual = `
+        <div class="timeline-axis">
+          <div class="axis-past">Passé</div>
+          <div class="axis-now">Maintenant</div>
+          <div class="axis-future">Futur</div>
+        </div>
+        <div class="timeline-visual">
+          <div class="timeline-now-line" style="left:50%"></div>
+          <div class="timeline-range" style="left:${tl.start}%;width:${tl.end - tl.start}%">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">${tl.label}</span>
+          </div>
+        </div>`;
+      break;
+
+    case 'dots':
+      visual = `
+        <div class="timeline-axis">
+          <div class="axis-past">Passé</div>
+          <div class="axis-now">Maintenant</div>
+          <div class="axis-future">Futur</div>
+        </div>
+        <div class="timeline-visual">
+          <div class="timeline-now-line" style="left:50%"></div>
+          ${tl.positions
+            .map(
+              (pos) => `
+            <div class="timeline-point" style="left:${pos}%">
+              <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">●</span>
+            </div>`,
+            )
+            .join('')}
+        </div>`;
+      break;
+
+    case 'double-point':
+      visual = `
+        <div class="timeline-axis">
+          <div class="axis-past">Passé</div>
+          <div class="axis-now">Maintenant</div>
+          <div class="axis-future">Futur</div>
+        </div>
+        <div class="timeline-visual">
+          <div class="timeline-now-line" style="left:50%"></div>
+          <div class="timeline-point" style="left:${tl.first}%">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">1er événement</span>
+          </div>
+          <div class="timeline-point" style="left:${tl.second}%">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">2e événement</span>
+          </div>
+        </div>`;
+      break;
+
+    case 'arrow':
+      visual = `
+        <div class="timeline-axis">
+          <div class="axis-past">Passé</div>
+          <div class="axis-now">Maintenant</div>
+          <div class="axis-future">Futur</div>
+        </div>
+        <div class="timeline-visual">
+          <div class="timeline-now-line" style="left:50%"></div>
+          <div class="timeline-arrow" style="left:${tl.start}%;width:${tl.end - tl.start}%">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">${tl.label || '→'}</span>
+          </div>
+        </div>`;
+      break;
+
+    case 'cycle':
+      visual = `
+        <div class="timeline-axis">
+          <div class="axis-past">Passé</div>
+          <div class="axis-now">Maintenant</div>
+          <div class="axis-future">Futur</div>
+        </div>
+        <div class="timeline-visual">
+          <div class="timeline-now-line" style="left:50%"></div>
+          <div class="timeline-cycle">↻</div>
+        </div>`;
+      break;
+
+    case 'conditional':
+      visual = `
+        <div class="timeline-axis">
+          <div class="axis-past">Passé</div>
+          <div class="axis-now">Maintenant</div>
+          <div class="axis-future">Futur</div>
+        </div>
+        <div class="timeline-visual">
+          <div class="timeline-now-line" style="left:50%"></div>
+          <div class="timeline-point" style="left:${tl.condition}%">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">Condition</span>
+          </div>
+          <div class="timeline-point" style="left:${tl.result}%">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">Résultat</span>
+          </div>
+        </div>`;
+      break;
+
+    default:
+      return '';
+  }
+
+  return `<div class="timeline-container">${visual}<div class="timeline-desc">${tl.description || ''}</div></div>`;
 }
