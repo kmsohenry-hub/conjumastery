@@ -13,7 +13,7 @@ permissions:
 jobs:
   quality:
     name: Lint, test & build (Node ${{ matrix.node }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: Audit npm dependencies
-        run: npm audit --audit-level=moderate
+        run: npm audit --omit=dev --audit-level=moderate
 
       - name: Run ESLint
         run: npm run lint
@@ -41,7 +41,7 @@ jobs:
         run: npm run format:check
 
       - name: Run unit tests
-        run: npm test
+        run: npm run test
 
       - name: Run coverage (blocking quality gate)
         run: npm run test:coverage
@@ -63,7 +63,7 @@ jobs:
 
   e2e:
     name: End-to-end tests (Node 24)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: quality
     steps:
       - name: Checkout code
