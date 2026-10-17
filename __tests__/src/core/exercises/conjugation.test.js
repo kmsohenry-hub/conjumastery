@@ -122,9 +122,10 @@ describe('shouldDoubleFinalConsonant', () => {
     expect(shouldDoubleFinalConsonant('snow')).toBe(false);
   });
 
-  test('returns false for verbs shorter than 3 chars', () => {
+  test('returns false for verbs shorter than 3 chars or without vowels', () => {
     expect(shouldDoubleFinalConsonant('do')).toBe(false);
     expect(shouldDoubleFinalConsonant('go')).toBe(false);
+    expect(shouldDoubleFinalConsonant('brr')).toBe(false);
   });
 });
 

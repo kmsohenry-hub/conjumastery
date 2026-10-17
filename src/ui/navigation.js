@@ -151,6 +151,18 @@ export function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   const themeBtn = document.getElementById('themeBtn');
   if (themeBtn) themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  const lightBtn = document.getElementById('lightModeBtn');
+  const darkBtn = document.getElementById('darkModeBtn');
+  if (lightBtn) {
+    lightBtn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+    lightBtn.classList.toggle('btn-primary', theme === 'light');
+    lightBtn.classList.toggle('btn-outline', theme !== 'light');
+  }
+  if (darkBtn) {
+    darkBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+    darkBtn.classList.toggle('btn-primary', theme === 'dark');
+    darkBtn.classList.toggle('btn-outline', theme !== 'dark');
+  }
   State.data.settings.theme = theme;
   State.save();
 }

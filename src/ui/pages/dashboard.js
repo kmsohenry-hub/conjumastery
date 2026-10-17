@@ -25,6 +25,8 @@ export function renderDashboardNextLesson(completedLessons) {
 
   if (incompleteLessons.length > 0) {
     const next = incompleteLessons[0];
+    const durationLabel =
+      next.duration || `${Math.max(5, Math.round((next.exercises || 10) * 0.8))} min`;
     nextLessonEl.innerHTML = `
       <div class="lesson-card" data-page="lessons" role="button" tabindex="0">
         <div class="lesson-icon" style="background:${next.module.color}20;color:${next.module.color}">${next.module.icon}</div>
@@ -33,7 +35,7 @@ export function renderDashboardNextLesson(completedLessons) {
           <div class="lesson-desc">${next.desc}</div>
           <div class="lesson-meta">
             <span>📚 ${next.exercises} exercices</span>
-            <span>⏱️ ${next.duration}</span>
+            <span>⏱️ ${durationLabel}</span>
           </div>
         </div>
       </div>`;
@@ -54,7 +56,7 @@ export function renderDashboardRevisionQueue(queue) {
         <span class="ri-icon">📖</span>
         <div class="ri-info">
           <div class="ri-title">${tense ? tense.nameFR : q.tenseId}</div>
-          <div class="ri-meta">Prochaine révision : maintenant • ${q.interval}j d'intervalle</div>
+          <div class="ri-meta">Prochaine révision : maintenant • ${q.interval}min d'intervalle</div>
         </div>
         <span class="ri-priority ${q.errors > 3 ? 'priority-high' : q.errors > 1 ? 'priority-medium' : 'priority-low'}">
           ${q.errors > 3 ? 'Urgent' : q.errors > 1 ? 'Moyen' : 'Faible'}
@@ -88,14 +90,15 @@ export function renderDashboardChart() {
   for (let i = 0; i < tenses.length; i++) {
     const t = tenses[i];
     const s = stats[t.id];
-    const accuracy = s ? Math.round((s.correct / s.total) * 100) : 0;
-    const height = s ? Math.max(accuracy, 5) : 5;
+    const hasAttempts = Boolean(s && s.total > 0);
+    const accuracy = hasAttempts ? Math.round((s.correct / s.total) * 100) : 0;
+    const height = hasAttempts ? Math.max(accuracy, 5) : 5;
     const color =
       accuracy >= 70
         ? 'var(--success)'
         : accuracy >= 40
           ? 'var(--warning)'
-          : s
+          : hasAttempts
             ? 'var(--danger)'
             : 'var(--border)';
 
@@ -104,7 +107,7 @@ export function renderDashboardChart() {
 
     const barValue = document.createElement('div');
     barValue.className = 'bar-value';
-    barValue.textContent = s ? accuracy + '%' : '—';
+    barValue.textContent = hasAttempts ? accuracy + '%' : '—';
 
     const bar = document.createElement('div');
     bar.className = 'bar';

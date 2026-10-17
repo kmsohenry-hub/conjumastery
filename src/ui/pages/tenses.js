@@ -1,6 +1,9 @@
 import { APP_DATA } from '../../data/index.js';
-import { openModal } from '../navigation.js';
-import { escapeHtml } from '../../../src/core/security.js';
+import { State } from '../../core/state/State.js';
+import { escapeHtml } from '../../core/security.js';
+import { openTenseModal } from './lessons.js';
+
+export { openTenseModal };
 
 export function renderTenses() {
   const categories = [
@@ -33,8 +36,9 @@ export function showTenseCategory(category, tabEl) {
   const contentEl = document.getElementById('tenseContent');
   contentEl.innerHTML = `<div class="grid" style="gap:16px">
     ${tenses
-      .map(
-        (t) => `
+      .map((t) => {
+        const isFav = typeof State?.isFavorite === 'function' ? State.isFavorite(t.id) : false;
+        return `
       <div class="lesson-card" data-action="open-tense-modal" data-tense-id="${t.id}" role="button" tabindex="0">
         <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">${t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
         <div class="lesson-info">
@@ -45,8 +49,9 @@ export function showTenseCategory(category, tabEl) {
             <span><code>${t.structure}</code></span>
           </div>
         </div>
-      </div>`,
-      )
+        <button class="fav-btn ${isFav ? 'active' : ''}" data-action="toggle-fav" data-fav-id="${t.id}" aria-label="Favori">${isFav ? '★' : '☆'}</button>
+      </div>`;
+      })
       .join('')}
   </div>`;
 }
@@ -106,45 +111,4 @@ export function showComparison(category, tabEl) {
       </div>`,
       )
       .join('')}`;
-}
-
-export function openTenseModal(tense) {
-  if (!tense) return;
-  const modal = document.getElementById('modalContent');
-  const signalWords = tense.signalWords || [];
-  const commonMistakes = tense.commonMistakes || [];
-
-  modal.innerHTML = `
-    <div class="modal-header">
-      <div>
-        <div class="modal-title" id="modalTitle">${tense.nameEN}</div>
-        <div style="color:var(--text-light);font-size:0.9rem">${tense.nameFR} • ${tense.level}</div>
-      </div>
-      <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
-    </div>
-    <div class="explain-block">
-      <h4>📝 Utilisation</h4>
-      <p>${tense.usage}</p>
-    </div>
-    <div class="explain-block">
-      <h4>🏗️ Structure</h4>
-      <p><code>${tense.structure}</code></p>
-    </div>
-    <h4 style="margin:20px 0 12px">📖 Exemples par type de phrase</h4>
-    <div class="table-wrapper">
-      <table class="data-table">
-        <tr><th>Type</th><th>Exemple</th></tr>
-        <tr><td><strong>Affirmatif</strong></td><td>${tense.examples.affirmative}</td></tr>
-        <tr><td><strong>Négatif</strong></td><td>${tense.examples.negative}</td></tr>
-        <tr><td><strong>Interrogatif</strong></td><td>${tense.examples.interrogative}</td></tr>
-      </table>
-    </div>
-    ${signalWords.length > 0 ? `<h4 style="margin:20px 0 12px">🔑 Mots-clés / Marqueurs temporels</h4><div class="signal-words">${signalWords.map((w) => `<span class="signal-tag">${w}</span>`).join('')}</div>` : ''}
-    ${commonMistakes.length > 0 ? `<h4 style="margin:20px 0 12px">⚠️ Erreurs fréquentes à éviter</h4>${commonMistakes.map((e) => `<div class="mistake-item"><span class="wrong">${e.wrong}</span> → <span class="right">${e.right}</span><br><small style="color:var(--text-light)">${e.note}</small></div>`).join('')}` : ''}
-    <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-      <button class="btn btn-primary" data-action="start-tense" data-tense-id="${tense.id}">🎮 Entraînement libre</button>
-      <button class="btn btn-outline" data-page="comparison">📊 Voir le comparatif</button>
-    </div>`;
-
-  openModal();
 }

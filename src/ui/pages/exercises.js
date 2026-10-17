@@ -3,13 +3,21 @@ import { answerMatches } from '../../core/exercises/validation.js';
 import ExerciseEngine from '../../core/exercises/ExerciseEngine.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
-import { escapeHtml } from '../../../src/core/security.js';
+import { escapeHtml } from '../../core/security.js';
 import { launchConfetti } from '../utils/confetti.js';
 
 let selectedOptionIndex = -1;
 let currentOptionButtons = [];
 
+const DIFFICULTY_LABELS = {
+  beginner: 'Débutant',
+  intermediate: 'Intermédiaire',
+  advanced: 'Avancé',
+};
+
 export function resetExerciseUI() {
+  selectedOptionIndex = -1;
+  currentOptionButtons = [];
   document.getElementById('exerciseModeSelector').style.display = 'block';
   document.getElementById('exerciseArea').style.display = 'none';
 }
@@ -73,6 +81,7 @@ export function startExercise(
   const resolvedCount =
     count || (cfg && (mode === undefined || mode === cfg.mode) ? cfg.count : 10);
 
+  selectedOptionIndex = -1;
   ExerciseEngine.currentTenseFilter = resolvedTenseFilter;
   ExerciseEngine.currentLessonId = resolvedLessonId;
   ExerciseEngine.isRevision = resolvedIsRevision;
@@ -84,6 +93,12 @@ export function startExercise(
     resolvedLessonId,
     resolvedIsRevision,
   );
+
+  const diffEl = document.getElementById('exDifficulty');
+  if (diffEl) {
+    diffEl.textContent = DIFFICULTY_LABELS[resolvedDifficulty] || DIFFICULTY_LABELS.intermediate;
+    diffEl.className = `level-badge level-${DIFFICULTY_LABELS[resolvedDifficulty] ? resolvedDifficulty : 'intermediate'}`;
+  }
 
   document.getElementById('exerciseModeSelector').style.display = 'none';
   document.getElementById('exerciseArea').style.display = 'block';
@@ -129,6 +144,7 @@ export function startExerciseForTense(tenseId) {
 
 export function renderExerciseQuestion(q) {
   if (!q) return;
+  selectedOptionIndex = -1;
   const container = document.getElementById('exerciseQuestionContainer');
   document.getElementById('exCurrent').textContent = ExerciseEngine.currentIndex + 1;
   document.getElementById('exTotal').textContent = ExerciseEngine.questions.length;

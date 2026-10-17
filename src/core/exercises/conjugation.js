@@ -134,7 +134,9 @@ export function shouldDoubleFinalConsonant(verb) {
   if (VOWELS.includes(beforePrevious)) return false;
 
   // Estimate syllable count via vowel groups
-  const syllableCount = verb.match(/[aeiou]+/g).length;
+  const vowelGroups = verb.match(/[aeiou]+/g);
+  if (!vowelGroups) return false;
+  const syllableCount = vowelGroups.length;
 
   // Monosyllable CVC → always double
   if (syllableCount <= 1) return true;

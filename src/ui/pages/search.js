@@ -1,5 +1,5 @@
 import { APP_DATA } from '../../data/index.js';
-import { escapeHtml } from '../../../src/core/security.js';
+import { escapeHtml } from '../../core/security.js';
 
 export function performGlobalSearch() {
   const query = (

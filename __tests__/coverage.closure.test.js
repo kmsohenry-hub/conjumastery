@@ -22,21 +22,7 @@ const bodyHtml = fs.readFileSync('index.html', 'utf8').match(/<body>([\s\S]*)<\/
 
 function loadRealDom() {
   document.body.innerHTML = bodyHtml;
-  document.body.insertAdjacentHTML(
-    'beforeend',
-    `
-      <span id="irregularVerbCount"></span>
-      <div id="toastContainer"></div>
-      <input id="globalSearch" type="text" />
-      <div id="statTotal"></div>
-      <div id="statCorrect"></div>
-      <div id="statIncorrect"></div>
-      <div id="statStreak"></div>
-      <div id="statsChart"></div>
-      <div id="activityLog"></div>
-      <div id="commonErrors"></div>
-    `,
-  );
+  document.body.insertAdjacentHTML('beforeend', `<input id="globalSearch" type="text" />`);
 }
 
 beforeEach(() => {

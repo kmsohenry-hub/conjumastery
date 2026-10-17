@@ -12,6 +12,7 @@ export const modules = [
         title: 'Present Simple',
         desc: 'Habitudes, vérités générales, routines',
         exercises: 15,
+        duration: '12 min',
       },
       {
         id: 'l_present_continuous',
@@ -19,6 +20,7 @@ export const modules = [
         title: 'Present Continuous',
         desc: 'Actions en cours, situations temporaires',
         exercises: 15,
+        duration: '12 min',
       },
       {
         id: 'l_past_simple',
@@ -26,6 +28,7 @@ export const modules = [
         title: 'Past Simple',
         desc: 'Actions terminées dans le passé',
         exercises: 20,
+        duration: '15 min',
       },
       {
         id: 'l_future_will',
@@ -33,6 +36,7 @@ export const modules = [
         title: 'Future Simple (will)',
         desc: 'Décisions spontanées, prédictions',
         exercises: 15,
+        duration: '12 min',
       },
       {
         id: 'l_future_going_to',
@@ -40,6 +44,7 @@ export const modules = [
         title: 'Going to',
         desc: 'Intentions et plans',
         exercises: 12,
+        duration: '10 min',
       },
     ],
   },
@@ -56,6 +61,7 @@ export const modules = [
         title: 'Present Perfect',
         desc: 'Lien passé-présent, expériences',
         exercises: 20,
+        duration: '15 min',
       },
       {
         id: 'l_past_continuous',
@@ -63,6 +69,7 @@ export const modules = [
         title: 'Past Continuous',
         desc: 'Actions longues dans le passé',
         exercises: 15,
+        duration: '12 min',
       },
       {
         id: 'l_zero_cond',
@@ -70,6 +77,7 @@ export const modules = [
         title: 'Zero Conditional',
         desc: 'Vérités générales et causes',
         exercises: 10,
+        duration: '8 min',
       },
       {
         id: 'l_first_cond',
@@ -77,6 +85,7 @@ export const modules = [
         title: 'First Conditional',
         desc: 'Situations réelles et probables',
         exercises: 15,
+        duration: '12 min',
       },
       {
         id: 'l_second_cond',
@@ -84,6 +93,7 @@ export const modules = [
         title: 'Second Conditional',
         desc: 'Situations hypothétiques',
         exercises: 15,
+        duration: '12 min',
       },
     ],
   },
@@ -100,6 +110,7 @@ export const modules = [
         title: 'Present Perfect Continuous',
         desc: "Durée jusqu'au présent",
         exercises: 15,
+        duration: '12 min',
       },
       {
         id: 'l_past_perfect',
@@ -107,6 +118,7 @@ export const modules = [
         title: 'Past Perfect',
         desc: 'Le passé du passé',
         exercises: 15,
+        duration: '12 min',
       },
       {
         id: 'l_past_perfect_cont',
@@ -114,6 +126,7 @@ export const modules = [
         title: 'Past Perfect Continuous',
         desc: 'Durée avant un point passé',
         exercises: 12,
+        duration: '10 min',
       },
       {
         id: 'l_third_cond',
@@ -121,6 +134,7 @@ export const modules = [
         title: 'Third Conditional',
         desc: 'Regrets et situations irréelles passées',
         exercises: 15,
+        duration: '12 min',
       },
       {
         id: 'l_mixed_cond',
@@ -128,6 +142,7 @@ export const modules = [
         title: 'Mixed Conditionals',
         desc: 'Conditions à temps croisés',
         exercises: 12,
+        duration: '10 min',
       },
     ],
   },
@@ -144,6 +159,7 @@ export const modules = [
         title: 'Future Continuous',
         desc: 'Actions en cours dans le futur',
         exercises: 12,
+        duration: '10 min',
       },
       {
         id: 'l_future_perfect',
@@ -151,6 +167,7 @@ export const modules = [
         title: 'Future Perfect',
         desc: 'Actions terminées avant un futur',
         exercises: 12,
+        duration: '10 min',
       },
       {
         id: 'l_future_perfect_cont',
@@ -158,6 +175,7 @@ export const modules = [
         title: 'Future Perfect Continuous',
         desc: "Durée jusqu'à un futur",
         exercises: 10,
+        duration: '8 min',
       },
       {
         id: 'l_passive',
@@ -165,6 +183,7 @@ export const modules = [
         title: 'Voix Passive',
         desc: 'Formation et usage de la passive',
         exercises: 15,
+        duration: '12 min',
       },
       {
         id: 'l_reported',
@@ -172,6 +191,7 @@ export const modules = [
         title: 'Discours Indirect',
         desc: 'Reported speech et concordance des temps',
         exercises: 15,
+        duration: '12 min',
       },
     ],
   },
