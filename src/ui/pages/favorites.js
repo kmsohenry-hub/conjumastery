@@ -43,9 +43,18 @@ export function renderFavorites() {
 export function toggleFav(item, btn) {
   if (State.isFavorite(item)) {
     State.removeFavorite(item);
-    if (btn) btn.classList.remove('active');
+    if (btn) {
+      btn.classList.remove('active');
+      btn.textContent = '☆';
+    }
   } else {
     State.addFavorite(item);
-    if (btn) btn.classList.add('active');
+    if (btn) {
+      btn.classList.add('active');
+      btn.textContent = '★';
+    }
+  }
+  if (document.getElementById('page-favorites')?.classList.contains('active')) {
+    renderFavorites();
   }
 }

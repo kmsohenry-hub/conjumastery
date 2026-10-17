@@ -68,7 +68,15 @@ export function getPresentSimpleForm(verb, is3rdSing, subject = null) {
 
 export function getIngForm(verb) {
   if (verb.endsWith('ie')) return `${verb.slice(0, -2)}ying`;
-  if (verb.endsWith('e') && verb !== 'be') return `${verb.slice(0, -1)}ing`;
+  if (
+    verb.endsWith('e') &&
+    verb !== 'be' &&
+    !verb.endsWith('ee') &&
+    !verb.endsWith('ye') &&
+    !verb.endsWith('oe')
+  ) {
+    return `${verb.slice(0, -1)}ing`;
+  }
   if (shouldDoubleFinalConsonant(verb)) return `${verb}${verb[verb.length - 1]}ing`;
   return `${verb}ing`;
 }
@@ -134,7 +142,9 @@ export function shouldDoubleFinalConsonant(verb) {
   if (VOWELS.includes(beforePrevious)) return false;
 
   // Estimate syllable count via vowel groups
-  const syllableCount = verb.match(/[aeiou]+/g).length;
+  const vowelGroups = verb.match(/[aeiou]+/g);
+  if (!vowelGroups) return false;
+  const syllableCount = vowelGroups.length;
 
   // Monosyllable CVC → always double
   if (syllableCount <= 1) return true;

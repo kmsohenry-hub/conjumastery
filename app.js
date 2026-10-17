@@ -71,130 +71,10 @@ import { State } from './src/core/state/State.js';
 import { defaultState } from './src/core/state/store.js';
 
 // ============================================================
-// 3. EXERCISE ENGINE
+// 2. EXERCISE ENGINE & IMPORT VALIDATION
 // ============================================================
 
-const ExerciseEngine = {
-  get currentExercise() {
-    return ExerciseEngineObj.currentExercise;
-  },
-  set currentExercise(v) {
-    ExerciseEngineObj.currentExercise = v;
-  },
-  get currentMode() {
-    return ExerciseEngineObj.currentMode;
-  },
-  set currentMode(v) {
-    ExerciseEngineObj.currentMode = v;
-  },
-  get questions() {
-    return ExerciseEngineObj.questions;
-  },
-  set questions(v) {
-    ExerciseEngineObj.questions = v;
-  },
-  get currentIndex() {
-    return ExerciseEngineObj.currentIndex;
-  },
-  set currentIndex(v) {
-    ExerciseEngineObj.currentIndex = v;
-  },
-  get score() {
-    return ExerciseEngineObj.score;
-  },
-  set score(v) {
-    ExerciseEngineObj.score = v;
-  },
-  get answered() {
-    return ExerciseEngineObj.answered;
-  },
-  set answered(v) {
-    ExerciseEngineObj.answered = v;
-  },
-
-  getAllIrregularForms: (verb) => ExerciseEngineObj.getAllIrregularForms(verb),
-  getIrregularForms: (verb) => ExerciseEngineObj.getIrregularForms(verb),
-  getRegularPast: (verb) => ExerciseEngineObj.getRegularPast(verb),
-  getPresentSimpleForm: (verb, is3rdSing) =>
-    ExerciseEngineObj.getPresentSimpleForm(verb, is3rdSing),
-  getIngForm: (verb) => ExerciseEngineObj.getIngForm(verb),
-  getConjugation: (verb, tenseId, subject, is3rdSing) =>
-    ExerciseEngineObj.getConjugation(verb, tenseId, subject, is3rdSing),
-  generateQuestions: (mode, tenseFilter, difficulty, count = 10) =>
-    ExerciseEngineObj.generateQuestions(mode, tenseFilter, difficulty, count),
-  start: (mode, tenseFilter, difficulty, count = 10) =>
-    ExerciseEngineObj.start(mode, tenseFilter, difficulty, count),
-  getCurrent: () => ExerciseEngineObj.getCurrent(),
-  next: () => ExerciseEngineObj.next(),
-  isComplete: () => ExerciseEngineObj.isComplete(),
-  getProgress: () => ExerciseEngineObj.getProgress(),
-};
-
-// ============================================================
-// 4. UI CONTROLLER
-// ============================================================
-
-// ============================================================
-// 5. PAGE RENDERERS
-// ============================================================
-
-// ============================================================
-// 6. EXERCISE UI
-// ============================================================
-
-/**
- * Compare la réponse utilisateur à la réponse attendue.
- * Accepte plusieurs variantes séparées par "/" dans la réponse attendue
- * (utile pour BrE/AmE : "learnt/learned", "dreamt/dreamed", etc.).
- */
-
-// ============================================================
-// 7. TEST MODE
-// ============================================================
-
-// ============================================================
-// 8. TENSES REFERENCE PAGE
-// ============================================================
-
-// ============================================================
-// 9. VERBS DICTIONARY
-// ============================================================
-
-// ============================================================
-// 10. COMPARISON TABLE
-// ============================================================
-
-// ============================================================
-// 11. REVISION PAGE
-// ============================================================
-
-// ============================================================
-// 12. WEAKPOINTS PAGE
-// ============================================================
-
-// ============================================================
-// 13. SEARCH
-// ============================================================
-
-// ============================================================
-// 14. FAVORITES
-// ============================================================
-
-// ============================================================
-// 15. STATS PAGE
-// ============================================================
-
-// ============================================================
-// 16. MODAL
-// ============================================================
-
-// ============================================================
-// 17. TOAST NOTIFICATIONS
-// ============================================================
-
-// ============================================================
-// 18. CONFETTI
-// ============================================================
+const ExerciseEngine = ExerciseEngineObj;
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -396,7 +276,7 @@ function updateUI() {
   document.getElementById('headerXP').textContent = d.xp;
   document.getElementById('headerLevel').textContent = d.level;
   document.getElementById('sidebarLevel').textContent = d.level;
-  const displayXP = d.xp - (d.level - 1) * 100;
+  const displayXP = Math.max(0, Math.min(100, d.xp - (d.level - 1) * 100));
   document.getElementById('sidebarXP').textContent = `${displayXP} / 100 XP`;
   document.getElementById('sidebarXPBar').style.width = `${displayXP}%`;
   document.getElementById('streakCount').textContent = d.daysStreak;
@@ -420,11 +300,7 @@ function updateUI() {
 }
 
 // ============================================================
-// 21. NOTIFICATIONS
-// ============================================================
-
-// ============================================================
-// 22. INITIALIZATION
+// 4. INITIALIZATION
 // ============================================================
 
 export function init() {
@@ -449,9 +325,7 @@ export function init() {
   navigateTo('dashboard');
 
   // Apply saved theme
-  if (State.data.settings.theme === 'dark') {
-    setTheme('dark');
-  }
+  setTheme(State.data.settings.theme === 'dark' ? 'dark' : 'light');
 }
 
 window.APP_DATA = APP_DATA;
@@ -550,5 +424,3 @@ export {
   answerMatches,
   normalizeAnswer,
 };
-
-window.closeModalDirect = closeModalDirect;

@@ -88,4 +88,13 @@ describe('favorites page DOM and event delegation (AUDIT-01, 02, 03, 04)', () =>
     renderFavorites();
     expect(document.getElementById('favoritesContent').innerHTML).toContain('Aucun favori');
   });
+
+  it('re-renders favorites list when toggleFav is called while #page-favorites is active', () => {
+    document.body.innerHTML =
+      '<div id="page-favorites" class="page active"><div id="favoritesContent"></div></div>';
+    renderFavorites();
+    const btn = document.querySelector('.fav-btn[data-fav-id="verb_go"]');
+    toggleFav('verb_go', btn);
+    expect(document.querySelector('.fav-btn[data-fav-id="verb_go"]')).toBeNull();
+  });
 });
