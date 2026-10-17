@@ -21,8 +21,11 @@ describe('getIngForm', () => {
     expect(getIngForm('drive')).toBe('driving');
   });
 
-  test('preserves "e" for verb "be"', () => {
+  test('preserves "e" for verb "be" and verbs ending in -ee/-ye/-oe', () => {
     expect(getIngForm('be')).toBe('being');
+    expect(getIngForm('see')).toBe('seeing');
+    expect(getIngForm('flee')).toBe('fleeing');
+    expect(getIngForm('agree')).toBe('agreeing');
   });
 
   test('handles general verbs with -ing suffix', () => {

@@ -68,7 +68,15 @@ export function getPresentSimpleForm(verb, is3rdSing, subject = null) {
 
 export function getIngForm(verb) {
   if (verb.endsWith('ie')) return `${verb.slice(0, -2)}ying`;
-  if (verb.endsWith('e') && verb !== 'be') return `${verb.slice(0, -1)}ing`;
+  if (
+    verb.endsWith('e') &&
+    verb !== 'be' &&
+    !verb.endsWith('ee') &&
+    !verb.endsWith('ye') &&
+    !verb.endsWith('oe')
+  ) {
+    return `${verb.slice(0, -1)}ing`;
+  }
   if (shouldDoubleFinalConsonant(verb)) return `${verb}${verb[verb.length - 1]}ing`;
   return `${verb}ing`;
 }
