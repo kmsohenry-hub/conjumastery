@@ -53,8 +53,21 @@ describe('showToast resilience', () => {
     const toast = showToast('Impossible à afficher');
 
     expect(toast).not.toBeNull();
-    expect(document.getElementById('toastContainer')).toBeTruthy();
-    expect(document.getElementById('toastContainer')).toContain(toast);
+    const container = document.getElementById('toastContainer');
+    expect(container).toBeTruthy();
+    expect(container.classList.contains('toast-container')).toBe(true);
+    expect(container).toContain(toast);
+  });
+
+  it('deduplicates identical active toasts so repeated locked clicks do not stack', () => {
+    const first = showToast('🔒 Cours verrouillé', 'warning');
+    const second = showToast('🔒 Cours verrouillé', 'warning');
+
+    const toasts = document.querySelectorAll('#toastContainer .toast');
+    expect(toasts.length).toBe(1);
+    expect(toasts[0]).toBe(second);
+    expect(first.isConnected).toBe(false);
+    expect(second.getAttribute('role')).toBe('alert');
   });
 });
 

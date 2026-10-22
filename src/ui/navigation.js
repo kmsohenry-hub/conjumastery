@@ -36,16 +36,31 @@ import { renderStats } from './pages/stats.js';
 import { State } from '../core/state/State.js';
 import { APP_DATA } from '../data/index.js';
 import { showToast } from './utils/toast.js';
-import { getPreviousLesson, UNLOCK_THRESHOLD } from '../core/progression.js';
+import { getOrderedLessons, getPreviousLesson, UNLOCK_THRESHOLD } from '../core/progression.js';
 
 let _cachedPages = null;
 let _cachedNavItems = null;
 let _previousActiveElement = null;
 
+function syncMainContentInertState() {
+  const mainContent = document.querySelector('.main-content');
+  if (!mainContent) return;
+  const isSidebarOpen = document.getElementById('sidebar')?.classList?.contains('open') ?? false;
+  const isModalOpen =
+    document.getElementById('modalOverlay')?.classList?.contains('active') ?? false;
+
+  if (isSidebarOpen || isModalOpen) {
+    mainContent.setAttribute('inert', '');
+    mainContent.setAttribute('aria-hidden', 'true');
+  } else {
+    mainContent.removeAttribute('inert');
+    mainContent.removeAttribute('aria-hidden');
+  }
+}
+
 export function setSidebarOpenState(isOpen) {
   const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebarOverlay');
-  const mainContent = document.querySelector('.main-content');
   const menuBtn = document.getElementById('menuToggleBtn');
 
   if (sidebar) sidebar.classList.toggle('open', isOpen);
@@ -53,19 +68,26 @@ export function setSidebarOpenState(isOpen) {
   document.body?.classList?.toggle('sidebar-open', isOpen);
   document.documentElement?.classList?.toggle('sidebar-open', isOpen);
 
-  if (mainContent) {
-    if (isOpen) {
-      mainContent.setAttribute('inert', '');
-      mainContent.setAttribute('aria-hidden', 'true');
-    } else {
-      mainContent.removeAttribute('inert');
-      mainContent.removeAttribute('aria-hidden');
-    }
-  }
+  syncMainContentInertState();
 
   if (menuBtn) {
     menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   }
+}
+
+export function setModalOpenState(isOpen) {
+  const overlay = document.getElementById('modalOverlay');
+  const modalContent = document.getElementById('modalContent');
+  if (overlay) {
+    overlay.classList.toggle('active', isOpen);
+    overlay.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+  }
+  if (isOpen && modalContent) {
+    modalContent.scrollTop = 0;
+  }
+  document.body?.classList?.toggle('modal-open', isOpen);
+  document.documentElement?.classList?.toggle('modal-open', isOpen);
+  syncMainContentInertState();
 }
 
 export function navigateTo(page) {
@@ -158,6 +180,14 @@ export function navigateTo(page) {
   ) {
     setSidebarOpenState(false);
   }
+
+  // Close active modal if navigating away
+  if (
+    document.body?.classList?.contains('modal-open') ||
+    document.getElementById('modalOverlay')?.classList?.contains('active')
+  ) {
+    setModalOpenState(false);
+  }
 }
 
 export function toggleSidebar() {
@@ -197,8 +227,7 @@ export function openModal() {
   _previousActiveElement = document.activeElement;
   const overlay = document.getElementById('modalOverlay');
   if (overlay) {
-    overlay.classList.add('active');
-    overlay.setAttribute('aria-hidden', 'false');
+    setModalOpenState(true);
     setTimeout(() => {
       const focusable = overlay.querySelector(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
@@ -216,11 +245,7 @@ export function closeModal(event) {
 }
 
 export function closeModalDirect() {
-  const overlay = document.getElementById('modalOverlay');
-  if (overlay) {
-    overlay.classList.remove('active');
-    overlay.setAttribute('aria-hidden', 'true');
-  }
+  setModalOpenState(false);
   if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
     _previousActiveElement.focus();
     _previousActiveElement = null;
@@ -294,17 +319,37 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+function resolveActiveOverlayScrollContainer(target) {
+  const modalOverlay = document.getElementById('modalOverlay');
+  if (modalOverlay?.classList?.contains('active')) {
+    const modalContainer =
+      target?.closest?.('.modal, #modalContent') ||
+      (!modalOverlay.querySelector('.modal, #modalContent') && target?.closest?.('#modalOverlay'));
+    return { active: true, container: modalContainer || null };
+  }
+
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar?.classList?.contains('open')) {
+    const sidebarContainer =
+      target?.closest?.('.sidebar-nav') ||
+      (!sidebar.querySelector('.sidebar-nav') && target?.closest?.('#sidebar'));
+    return { active: true, container: sidebarContainer || null };
+  }
+
+  return { active: false, container: null };
+}
+
 export function initEventDelegation() {
   if (typeof document === 'undefined' || !document.addEventListener) return;
 
   let _touchStartY = 0;
 
-  // Prevent scroll chaining to background page when mobile sidebar is open
+  // Prevent scroll chaining to background page when modal or mobile sidebar is open
   document.addEventListener(
     'touchstart',
     (e) => {
-      const sidebar = document.getElementById('sidebar');
-      if (!sidebar || !sidebar.classList.contains('open')) return;
+      const { active } = resolveActiveOverlayScrollContainer(e.target);
+      if (!active) return;
       if (e.touches && e.touches.length > 0) {
         _touchStartY = e.touches[0].clientY;
       }
@@ -315,14 +360,10 @@ export function initEventDelegation() {
   document.addEventListener(
     'touchmove',
     (e) => {
-      const sidebar = document.getElementById('sidebar');
-      if (!sidebar || !sidebar.classList.contains('open')) return;
+      const { active, container } = resolveActiveOverlayScrollContainer(e.target);
+      if (!active) return;
 
-      const insideSidebarNav =
-        e.target?.closest?.('.sidebar-nav') ||
-        (!sidebar.querySelector('.sidebar-nav') && e.target?.closest?.('#sidebar'));
-
-      if (!insideSidebarNav) {
+      if (!container) {
         if (e.cancelable) e.preventDefault();
         return;
       }
@@ -331,7 +372,7 @@ export function initEventDelegation() {
       const deltaY = currentY - _touchStartY;
       _touchStartY = currentY;
 
-      const { scrollTop, scrollHeight, clientHeight } = insideSidebarNav;
+      const { scrollTop, scrollHeight, clientHeight } = container;
       const isScrollable = scrollHeight > clientHeight;
       const isAtTop = scrollTop <= 0 && deltaY > 0;
       const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1 && deltaY < 0;
@@ -346,19 +387,15 @@ export function initEventDelegation() {
   document.addEventListener(
     'wheel',
     (e) => {
-      const sidebar = document.getElementById('sidebar');
-      if (!sidebar || !sidebar.classList.contains('open')) return;
+      const { active, container } = resolveActiveOverlayScrollContainer(e.target);
+      if (!active) return;
 
-      const insideSidebarNav =
-        e.target?.closest?.('.sidebar-nav') ||
-        (!sidebar.querySelector('.sidebar-nav') && e.target?.closest?.('#sidebar'));
-
-      if (!insideSidebarNav) {
+      if (!container) {
         if (e.cancelable) e.preventDefault();
         return;
       }
 
-      const { scrollTop, scrollHeight, clientHeight } = insideSidebarNav;
+      const { scrollTop, scrollHeight, clientHeight } = container;
       const isScrollable = scrollHeight > clientHeight;
       const isAtTop = scrollTop <= 0 && e.deltaY < 0;
       const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1 && e.deltaY > 0;
@@ -393,10 +430,13 @@ export function initEventDelegation() {
   });
 
   document.addEventListener('click', (e) => {
-    // Block background interactions while mobile sidebar is open
+    // Block background interactions while mobile sidebar or modal is open
     const sidebar = document.getElementById('sidebar');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const isOverlayBlockingMain =
+      sidebar?.classList.contains('open') || modalOverlay?.classList.contains('active');
     if (
-      sidebar?.classList.contains('open') &&
+      isOverlayBlockingMain &&
       e.target?.closest?.('.main-content') &&
       !e.target?.closest?.('#menuToggleBtn')
     ) {
@@ -418,7 +458,6 @@ export function initEventDelegation() {
     const navItem = e.target.closest?.('[data-page]');
     if (
       navItem &&
-      !navItem.closest?.('#modalContent') &&
       !navItem.closest?.('#lessonTabs') &&
       !navItem.closest?.('#tenseCategoryTabs') &&
       !navItem.closest?.('#comparisonTabs')
@@ -444,7 +483,11 @@ export function initEventDelegation() {
     const actionEl = e.target.closest?.('[data-action]');
     if (actionEl) {
       if (actionEl.dataset.locked === 'true') {
-        const lId = actionEl.dataset.lessonId;
+        const lId =
+          actionEl.dataset.lessonId ||
+          (actionEl.dataset.tenseId
+            ? getOrderedLessons().find((l) => l.tenseId === actionEl.dataset.tenseId)?.id
+            : null);
         const prevLesson = lId ? getPreviousLesson(lId) : null;
         const prereqTitle = prevLesson ? `« ${prevLesson.title} »` : 'la leçon précédente';
         showToast(

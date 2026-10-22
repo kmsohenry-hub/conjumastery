@@ -3,13 +3,33 @@ export function showToast(message, type = 'info', options = {}) {
   if (!container) {
     container = document.createElement('div');
     container.id = 'toastContainer';
-    container.setAttribute('aria-live', 'polite');
-    container.setAttribute('aria-atomic', 'true');
+    container.className = 'toast-container';
+    container.setAttribute?.('aria-live', 'polite');
+    container.setAttribute?.('aria-atomic', 'true');
     document.body.appendChild(container);
+  } else if (
+    typeof container.classList?.contains === 'function' &&
+    !container.classList.contains('toast-container')
+  ) {
+    container.classList.add?.('toast-container');
+  }
+
+  const toastKey = `${type}:${message}`;
+  if (typeof container.querySelectorAll === 'function') {
+    const existingDuplicate = Array.from(container.querySelectorAll('.toast')).find(
+      (el) => el.dataset?.toastKey === toastKey,
+    );
+    if (existingDuplicate) {
+      existingDuplicate.remove?.();
+    }
   }
 
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
+  if (toast.dataset) {
+    toast.dataset.toastKey = toastKey;
+  }
+  toast.setAttribute?.('role', type === 'error' || type === 'warning' ? 'alert' : 'status');
   toast.textContent = message;
 
   const { actionLabel, onAction, duration = 3000 } = options;

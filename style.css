@@ -971,16 +971,27 @@ body {
 }
 
 /* MODAL */
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+body.modal-open .main-content {
+  pointer-events: none;
+  user-select: none;
+}
 .modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.65);
   z-index: 2000;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  animation: fadeIn 0.3s ease;
+  overscroll-behavior: contain;
+  touch-action: none;
+  animation: fadeIn 0.25s ease;
 }
 .modal-overlay.active {
   display: flex;
@@ -992,9 +1003,14 @@ body {
   width: 100%;
   max-height: 85vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   padding: 32px;
   box-shadow: var(--shadow-lg);
-  animation: slideIn 0.3s ease;
+  border: 1px solid var(--border);
+  animation: slideIn 0.25s ease;
 }
 .modal-header {
   display: flex;
@@ -1070,6 +1086,7 @@ body {
   display: none;
 }
 
+#toastContainer,
 .toast-container {
   position: fixed;
   top: 80px;
@@ -1077,32 +1094,72 @@ body {
   z-index: 3000;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  max-width: min(420px, calc(100vw - 32px));
+  width: 100%;
+  pointer-events: none;
 }
 .toast {
-  padding: 12px 20px;
+  padding: 14px 18px;
   border-radius: var(--radius-sm);
-  color: #fff;
-  font-size: 0.9rem;
+  color: #ffffff;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-left: 5px solid var(--primary-light);
+  font-size: 0.92rem;
   font-weight: 600;
-  box-shadow: var(--shadow-lg);
-  animation: slideIn 0.3s ease;
+  line-height: 1.45;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.28);
+  animation: slideIn 0.25s ease;
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 280px;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  word-break: break-word;
+  pointer-events: auto;
 }
 .toast-success {
-  background: var(--success);
+  background: #065f46;
+  border-left-color: #34d399;
+  color: #ffffff;
+}
+.toast-warning {
+  background: #92400e;
+  border-left-color: #fbbf24;
+  color: #ffffff;
 }
 .toast-error {
-  background: var(--danger);
+  background: #991b1b;
+  border-left-color: #f87171;
+  color: #ffffff;
 }
 .toast-info {
-  background: var(--primary);
+  background: #3730a3;
+  border-left-color: #818cf8;
+  color: #ffffff;
 }
 .toast-xp {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(135deg, #4338ca, #0f766e);
+  border-left-color: #5eead4;
+  color: #ffffff;
+}
+.toast-action {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-xs);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition);
+}
+.toast-action:hover {
+  background: rgba(255, 255, 255, 0.32);
 }
 
 /* SECTION TITLE */
@@ -1279,6 +1336,26 @@ body {
   }
   .conj-grid {
     grid-template-columns: 1fr;
+  }
+  .modal-overlay {
+    padding: 12px;
+  }
+  .modal {
+    padding: 20px;
+    max-height: 88vh;
+  }
+  #toastContainer,
+  .toast-container {
+    top: auto;
+    bottom: 16px;
+    left: 12px;
+    right: 12px;
+    max-width: none;
+    width: auto;
+  }
+  .toast {
+    padding: 13px 16px;
+    font-size: 0.88rem;
   }
 }
 
