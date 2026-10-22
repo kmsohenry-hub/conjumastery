@@ -197,12 +197,20 @@ describe('navigation', () => {
   });
 
   it('toggles sidebar, body scroll lock, and theme deterministically', () => {
+    const main = document.createElement('div');
+    main.className = 'main-content';
+    document.body.appendChild(main);
+
     toggleSidebar();
     expect(document.getElementById('sidebar').classList.contains('open')).toBe(true);
     expect(document.body.classList.contains('sidebar-open')).toBe(true);
-    toggleSidebar();
+    expect(document.documentElement.classList.contains('sidebar-open')).toBe(true);
+    expect(main.hasAttribute('inert')).toBe(true);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(document.getElementById('sidebar').classList.contains('open')).toBe(false);
-    expect(document.body.classList.contains('sidebar-open')).toBe(false);
+    expect(main.hasAttribute('inert')).toBe(false);
+
     toggleSidebar();
     expect(document.getElementById('sidebar').classList.contains('open')).toBe(true);
     setTheme('dark');
@@ -211,6 +219,93 @@ describe('navigation', () => {
     toggleTheme();
     expect(document.documentElement.dataset.theme).toBe('light');
     expect(document.getElementById('themeBtn').textContent).toBe('🌙');
+  });
+
+  it('prevents background scroll chaining via touchmove/wheel and blocks background clicks while sidebar is open', () => {
+    const sidebar = document.getElementById('sidebar');
+    const navEl = document.createElement('nav');
+    navEl.className = 'sidebar-nav';
+    Object.defineProperty(navEl, 'scrollHeight', { value: 500, configurable: true });
+    Object.defineProperty(navEl, 'clientHeight', { value: 200, configurable: true });
+    Object.defineProperty(navEl, 'scrollTop', { value: 0, writable: true, configurable: true });
+    sidebar.appendChild(navEl);
+
+    const main = document.createElement('div');
+    main.className = 'main-content';
+    const bgAction = document.createElement('button');
+    bgAction.dataset.action = 'start-revision';
+    main.appendChild(bgAction);
+    document.body.appendChild(main);
+
+    toggleSidebar(); // open sidebar
+
+    // Background click inside .main-content should be blocked
+    bgAction.click();
+    expect(mocks.startRevisionSession).not.toHaveBeenCalled();
+
+    // Touch outside .sidebar-nav should be prevented
+    const outsideMove = new Event('touchmove', { bubbles: true, cancelable: true });
+    outsideMove.touches = [{ clientY: 100 }];
+    main.dispatchEvent(outsideMove);
+    expect(outsideMove.defaultPrevented).toBe(true);
+
+    // Touch at top boundary pulling down (deltaY > 0) should be prevented
+    const startEv = new Event('touchstart', { bubbles: true });
+    startEv.touches = [{ clientY: 100 }];
+    navEl.dispatchEvent(startEv);
+
+    const topMove = new Event('touchmove', { bubbles: true, cancelable: true });
+    topMove.touches = [{ clientY: 140 }];
+    navEl.dispatchEvent(topMove);
+    expect(topMove.defaultPrevented).toBe(true);
+
+    // Touch scrolling down within scrollable range (scrollTop = 50, deltaY < 0) should be allowed
+    navEl.scrollTop = 50;
+    const midMove = new Event('touchmove', { bubbles: true, cancelable: true });
+    midMove.touches = [{ clientY: 110 }];
+    navEl.dispatchEvent(midMove);
+    expect(midMove.defaultPrevented).toBe(false);
+
+    // Touch at bottom boundary pushing up (scrollTop = 300, deltaY < 0) should be prevented
+    navEl.scrollTop = 300;
+    const bottomMove = new Event('touchmove', { bubbles: true, cancelable: true });
+    bottomMove.touches = [{ clientY: 80 }];
+    navEl.dispatchEvent(bottomMove);
+    expect(bottomMove.defaultPrevented).toBe(true);
+
+    // Wheel outside .sidebar-nav should be prevented
+    const outsideWheel = Object.assign(new Event('wheel', { bubbles: true, cancelable: true }), {
+      deltaY: 50,
+    });
+    main.dispatchEvent(outsideWheel);
+    expect(outsideWheel.defaultPrevented).toBe(true);
+
+    // Wheel at bottom boundary should be prevented, middle allowed
+    const bottomWheel = Object.assign(new Event('wheel', { bubbles: true, cancelable: true }), {
+      deltaY: 50,
+    });
+    navEl.dispatchEvent(bottomWheel);
+    expect(bottomWheel.defaultPrevented).toBe(true);
+
+    navEl.scrollTop = 100;
+    const midWheel = Object.assign(new Event('wheel', { bubbles: true, cancelable: true }), {
+      deltaY: 50,
+    });
+    navEl.dispatchEvent(midWheel);
+    expect(midWheel.defaultPrevented).toBe(false);
+  });
+
+  it('guards locked lessons with a warning toast instead of opening them', () => {
+    const lockedCard = document.createElement('div');
+    lockedCard.dataset.action = 'open-lesson';
+    lockedCard.dataset.lessonId = 'l_present_continuous';
+    lockedCard.dataset.tenseId = 'present_continuous';
+    lockedCard.dataset.locked = 'true';
+    document.body.appendChild(lockedCard);
+
+    lockedCard.click();
+    expect(mocks.openLesson).not.toHaveBeenCalled();
+    expect(document.getElementById('toastContainer')?.textContent).toContain('75%');
   });
 
   it('supports keyboard activation without interfering with native buttons', () => {

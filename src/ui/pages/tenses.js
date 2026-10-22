@@ -2,6 +2,7 @@ import { APP_DATA } from '../../data/index.js';
 import { State } from '../../core/state/State.js';
 import { escapeHtml } from '../../core/security.js';
 import { openTenseModal } from './lessons.js';
+import { UNLOCK_THRESHOLD, isTenseUnlocked } from '../../core/progression.js';
 
 export { openTenseModal };
 
@@ -38,14 +39,18 @@ export function showTenseCategory(category, tabEl) {
     ${tenses
       .map((t) => {
         const isFav = typeof State?.isFavorite === 'function' ? State.isFavorite(t.id) : false;
+        const unlocked = isTenseUnlocked(State?.data, t.id, APP_DATA.modules);
+        const stats = State?.data?.tenseStats?.[t.id];
+        const acc = stats?.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
         return `
-      <div class="lesson-card" data-action="open-tense-modal" data-tense-id="${t.id}" role="button" tabindex="0">
-        <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">${t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
+      <div class="lesson-card ${!unlocked ? 'locked' : ''}" data-action="open-tense-modal" data-tense-id="${t.id}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''} role="button" tabindex="0">
+        <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">${!unlocked ? '🔒' : t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
         <div class="lesson-info">
           <div class="lesson-title">${t.nameFR}</div>
           <div class="lesson-desc">${t.explanation.substring(0, 120)}...</div>
           <div class="lesson-meta">
             <span class="tag tag-blue">${t.name}</span>
+            <span class="tag ${unlocked ? 'tag-green' : 'tag-locked'}">${unlocked ? (acc !== null ? `✓ ${acc}%` : '🔓 Débloqué') : `🔒 ${UNLOCK_THRESHOLD}% requis`}</span>
             <span><code>${t.structure}</code></span>
           </div>
         </div>
