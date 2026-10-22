@@ -81,6 +81,9 @@ body {
   z-index: 1000;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   transition: transform var(--transition);
   box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
 }
@@ -93,6 +96,8 @@ body {
   align-items: center;
   gap: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  user-select: none;
 }
 .sidebar-brand .logo-icon {
   width: 36px;
@@ -106,6 +111,10 @@ body {
 }
 .sidebar-nav {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 12px 0;
 }
 .nav-section-title {
@@ -1162,6 +1171,10 @@ body {
   }
 }
 @media (max-width: 768px) {
+  body.sidebar-open {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
   .sidebar {
     transform: translateX(-100%);
   }
@@ -1203,6 +1216,8 @@ body {
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 999;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 .sidebar-overlay.active {
   display: block;

@@ -171,16 +171,38 @@ describe('navigation', () => {
     expect(mocks.cancelTest).not.toHaveBeenCalled();
   });
 
-  it('closes the mobile sidebar after navigation', () => {
+  it('closes the mobile sidebar after navigation and unlocks body scroll', () => {
     window.innerWidth = 600;
     document.getElementById('sidebar').classList.add('open');
     document.getElementById('sidebarOverlay').classList.add('active');
+    document.body.classList.add('sidebar-open');
     navigateTo('dashboard');
     expect(document.getElementById('sidebar').classList.contains('open')).toBe(false);
     expect(document.getElementById('sidebarOverlay').classList.contains('active')).toBe(false);
+    expect(document.body.classList.contains('sidebar-open')).toBe(false);
   });
 
-  it('toggles sidebar and theme deterministically', () => {
+  it('navigates to dashboard when clicking the sidebar brand logo/title', () => {
+    navigateTo('lessons');
+    mocks.renderDashboard.mockClear();
+    const brand = document.createElement('div');
+    brand.className = 'sidebar-brand';
+    brand.dataset.page = 'dashboard';
+    brand.innerHTML = '<div class="logo-icon">🇬🇧</div><div>ConjuMaster UK</div>';
+    document.getElementById('sidebar').appendChild(brand);
+
+    brand.querySelector('.logo-icon').click();
+    expect(mocks.renderDashboard).toHaveBeenCalledOnce();
+    expect(document.getElementById('page-dashboard').classList.contains('active')).toBe(true);
+  });
+
+  it('toggles sidebar, body scroll lock, and theme deterministically', () => {
+    toggleSidebar();
+    expect(document.getElementById('sidebar').classList.contains('open')).toBe(true);
+    expect(document.body.classList.contains('sidebar-open')).toBe(true);
+    toggleSidebar();
+    expect(document.getElementById('sidebar').classList.contains('open')).toBe(false);
+    expect(document.body.classList.contains('sidebar-open')).toBe(false);
     toggleSidebar();
     expect(document.getElementById('sidebar').classList.contains('open')).toBe(true);
     setTheme('dark');
