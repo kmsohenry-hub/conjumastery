@@ -9,6 +9,7 @@ import {
 } from './conjugation.js';
 import { generateQuestions } from './generator.js';
 import { State } from '../state/State.js';
+import { getUnlockedTenseIds } from '../progression.js';
 
 const ExerciseEngine = {
   currentExercise: null,
@@ -81,7 +82,18 @@ const ExerciseEngine = {
       lessonId,
       isRevision,
     });
-    this.questions = generateQuestions(mode, tenseFilter, difficulty, count, isRevision, lessonId);
+    const effectiveTenseFilter =
+      tenseFilter && tenseFilter.length > 0
+        ? tenseFilter
+        : getUnlockedTenseIds(State?.data, APP_DATA.modules);
+    this.questions = generateQuestions(
+      mode,
+      effectiveTenseFilter,
+      difficulty,
+      count,
+      isRevision,
+      lessonId,
+    );
     this.currentIndex = 0;
     this.score = 0;
     this.answered = false;

@@ -2,6 +2,12 @@ import { APP_DATA } from '../../data/index.js';
 import { escapeHtml } from '../../core/security.js';
 import { State } from '../../core/state/State.js';
 import { openModal } from '../navigation.js';
+import {
+  UNLOCK_THRESHOLD,
+  getLessonProgress,
+  getPreviousLesson,
+  isLessonUnlocked,
+} from '../../core/progression.js';
 
 export function renderLessons() {
   const tabs = document.getElementById('lessonTabs');
@@ -24,7 +30,6 @@ export function showModule(index, btn) {
     btn.classList.add('active');
   }
   const mod = APP_DATA.modules[index];
-  const completed = new Set(State.data.completedLessons);
   const content = document.getElementById('lessonContent');
 
   if (!mod || !content) return;
@@ -32,24 +37,36 @@ export function showModule(index, btn) {
   content.innerHTML = `
     <div style="margin-bottom:20px">
       <h3>${mod.name}</h3>
-      <p style="color:var(--text-light)">${mod.description || ''}</p>
+      <p style="color:var(--text-light)">${mod.description || `Atteignez ${UNLOCK_THRESHOLD}% de réussite sur chaque leçon pour débloquer la suivante.`}</p>
     </div>
     <div class="card-grid">
       ${mod.lessons
         .map((l) => {
-          const isDone = completed.has(l.id);
+          const progress = getLessonProgress(State.data, l);
+          const isDone = progress.isMastered;
+          const unlocked = isLessonUnlocked(State.data, l.id, APP_DATA.modules);
+          const prevLesson = !unlocked ? getPreviousLesson(l.id, APP_DATA.modules) : null;
           const tense = l.tenseId ? APP_DATA.tensesById[l.tenseId] : null;
+          const fillWidth = isDone ? 100 : unlocked ? progress.rawAccuracy : 0;
+
           return `
-        <div class="card lesson-card ${isDone ? 'completed' : ''}" role="button" tabindex="0" data-action="open-lesson" data-lesson-id="${l.id}" data-tense-id="${l.tenseId || ''}">
+        <div class="card lesson-card ${isDone ? 'completed' : ''} ${!unlocked ? 'locked' : ''}" role="button" tabindex="0" data-action="open-lesson" data-lesson-id="${l.id}" data-tense-id="${l.tenseId || ''}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''}>
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-            <span class="tag ${isDone ? 'tag-green' : 'tag-blue'}">${isDone ? '✓ Terminé' : l.level || mod.level || ''}</span>
+            <span class="tag ${isDone ? 'tag-green' : unlocked ? 'tag-blue' : 'tag-locked'}">${isDone ? '✓ Terminé' : unlocked ? l.level || mod.level || 'Débloqué' : '🔒 Verrouillé'}</span>
             <span style="font-size:0.8rem;color:var(--text-light)">${l.exercises} exercices</span>
           </div>
           <h3 style="margin-bottom:8px">${l.title}</h3>
           <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:12px">${l.desc}</p>
           ${tense ? `<p style="font-size:0.85rem;color:var(--primary);font-family:monospace">${tense.structure}</p>` : ''}
+          ${
+            !unlocked && prevLesson
+              ? `<p class="lesson-prereq">🎯 ${UNLOCK_THRESHOLD}% requis : <strong>${escapeHtml(prevLesson.title)}</strong></p>`
+              : unlocked && !isDone && progress.attempts > 0
+                ? `<p class="lesson-prereq">Progression : <strong>${progress.rawAccuracy}%</strong> / ${UNLOCK_THRESHOLD}% requis</p>`
+                : ''
+          }
           <div class="progress-bar" style="margin-top:12px">
-            <div class="fill" style="width:${isDone ? '100%' : '0%'}"></div>
+            <div class="fill" style="width:${fillWidth}%"></div>
           </div>
         </div>`;
         })

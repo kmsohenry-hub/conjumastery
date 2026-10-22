@@ -313,16 +313,18 @@ describe('exercises page', () => {
   });
 
   it.each([
-    [90, '🎉'],
-    [60, '👍'],
-    [40, '💪'],
-  ])('renders finish state at %s%%', (pct, emoji) => {
-    engine.getProgress.mockReturnValue({ current: 10, total: 10, score: pct / 10 });
-    engine.currentLessonId = pct === 90 ? 'lesson-1' : null;
+    [90, '🎉', 1],
+    [75, '🎉', 1],
+    [74, '👍', 0],
+    [60, '👍', 0],
+    [40, '💪', 0],
+  ])('renders finish state at %s%% with 75%% mastery threshold', (pct, emoji, expectedCalls) => {
+    engine.getProgress.mockReturnValue({ current: 100, total: 100, score: pct });
+    engine.currentLessonId = expectedCalls === 1 ? 'lesson-1' : null;
     finishExercise();
     expect(document.getElementById('exerciseQuestionContainer').textContent).toContain(emoji);
-    expect(launchConfetti).toHaveBeenCalledTimes(pct >= 80 ? 1 : 0);
-    expect(state.completeLesson).toHaveBeenCalledTimes(pct >= 80 ? 1 : 0);
+    expect(launchConfetti).toHaveBeenCalledTimes(expectedCalls);
+    expect(state.completeLesson).toHaveBeenCalledTimes(expectedCalls);
   });
 
   it('starts a valid lesson asynchronously and guards an invalid id', () => {

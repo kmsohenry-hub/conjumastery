@@ -5,6 +5,7 @@ import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
 import { escapeHtml } from '../../core/security.js';
 import { launchConfetti } from '../utils/confetti.js';
+import { UNLOCK_THRESHOLD } from '../../core/progression.js';
 
 let selectedOptionIndex = -1;
 let currentOptionButtons = [];
@@ -149,10 +150,21 @@ export function renderExerciseQuestion(q) {
   document.getElementById('exCurrent').textContent = ExerciseEngine.currentIndex + 1;
   document.getElementById('exTotal').textContent = ExerciseEngine.questions.length;
 
+  const typeLabel =
+    q.type === 'qcm'
+      ? 'QCM'
+      : q.type === 'fill'
+        ? 'Compléter'
+        : q.type === 'transform'
+          ? 'Transformer'
+          : q.type === 'correction'
+            ? 'Corriger'
+            : 'Traduire';
+
   let html = `<div class="exercise-card">`;
-  html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+  html += `<div class="exercise-card-header">
     <span class="tag tag-blue">${escapeHtml(APP_DATA.tensesById[q.tenseId]?.nameFR || q.tenseId)}</span>
-    <span style="font-size:0.8rem;color:var(--text-light)">Type : ${escapeHtml(q.type === 'qcm' ? 'QCM' : q.type === 'fill' ? 'Compléter' : q.type === 'transform' ? 'Transformer' : q.type === 'correction' ? 'Corriger' : 'Traduire')}</span>
+    <span class="exercise-type-pill">Type : ${escapeHtml(typeLabel)}</span>
   </div>`;
 
   html += `<div class="exercise-question">${escapeHtml(q.sentence).replace(/\n/g, '<br>')}</div>`;
@@ -294,14 +306,22 @@ export function updateExerciseProgress() {
 export function finishExercise() {
   const p = ExerciseEngine.getProgress();
   const pct = Math.round((p.score / p.total) * 100);
+  const passed = pct >= UNLOCK_THRESHOLD;
 
   const container = document.getElementById('exerciseQuestionContainer');
   container.innerHTML = `
-    <div class="card" style="text-align:center;padding:48px">
-      <div style="font-size:4rem;margin-bottom:16px">${pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '💪'}</div>
-      <h2 style="margin-bottom:8px">${pct >= 80 ? 'Excellent !' : pct >= 50 ? 'Bien joué !' : 'Continuez vos efforts !'}</h2>
-      <p style="font-size:1.2rem;color:var(--text-light);margin-bottom:20px">${p.score} / ${p.total} bonnes réponses (${pct}%)</p>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <div class="card exercise-results-card" style="text-align:center;padding:40px 32px">
+      <div style="font-size:4rem;margin-bottom:16px">${passed ? '🎉' : pct >= 50 ? '👍' : '💪'}</div>
+      <h2 style="margin-bottom:8px">${passed ? 'Excellent !' : pct >= 50 ? 'Bien joué !' : 'Continuez vos efforts !'}</h2>
+      <p style="font-size:1.2rem;color:var(--text-light);margin-bottom:12px">${p.score} / ${p.total} bonnes réponses (${pct}%)</p>
+      <p class="exercise-threshold-note ${passed ? 'passed' : 'pending'}">
+        ${
+          passed
+            ? `🔓 Objectif de maîtrise atteint (${pct}% ≥ ${UNLOCK_THRESHOLD}%) — Cours suivant débloqué !`
+            : `🎯 Atteignez au moins ${UNLOCK_THRESHOLD}% de réussite pour débloquer le cours suivant.`
+        }
+      </p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px">
         <button class="btn btn-primary" data-action="reset-exercise-ui">🏠 Retour</button>
         <button class="btn btn-secondary" data-action="restart-exercise">🔄 Recommencer</button>
       </div>
@@ -312,7 +332,7 @@ export function finishExercise() {
   document.getElementById('exNextBtn').style.display = 'none';
   document.getElementById('exSkipBtn').style.display = 'none';
 
-  if (pct >= 80) {
+  if (passed) {
     launchConfetti();
     if (ExerciseEngine.currentLessonId) {
       State.completeLesson(ExerciseEngine.currentLessonId);

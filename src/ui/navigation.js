@@ -35,10 +35,38 @@ import { renderFavorites, toggleFav } from './pages/favorites.js';
 import { renderStats } from './pages/stats.js';
 import { State } from '../core/state/State.js';
 import { APP_DATA } from '../data/index.js';
+import { showToast } from './utils/toast.js';
+import { getPreviousLesson, UNLOCK_THRESHOLD } from '../core/progression.js';
 
 let _cachedPages = null;
 let _cachedNavItems = null;
 let _previousActiveElement = null;
+
+export function setSidebarOpenState(isOpen) {
+  const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  const mainContent = document.querySelector('.main-content');
+  const menuBtn = document.getElementById('menuToggleBtn');
+
+  if (sidebar) sidebar.classList.toggle('open', isOpen);
+  if (sidebarOverlay) sidebarOverlay.classList.toggle('active', isOpen);
+  document.body?.classList?.toggle('sidebar-open', isOpen);
+  document.documentElement?.classList?.toggle('sidebar-open', isOpen);
+
+  if (mainContent) {
+    if (isOpen) {
+      mainContent.setAttribute('inert', '');
+      mainContent.setAttribute('aria-hidden', 'true');
+    } else {
+      mainContent.removeAttribute('inert');
+      mainContent.removeAttribute('aria-hidden');
+    }
+  }
+
+  if (menuBtn) {
+    menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+}
 
 export function navigateTo(page) {
   if (page !== 'test') {
@@ -123,24 +151,19 @@ export function navigateTo(page) {
   }
 
   // Close mobile sidebar
-  if (window.innerWidth <= 768 || document.body?.classList?.contains('sidebar-open')) {
-    document.getElementById('sidebar')?.classList.remove('open');
-    document.getElementById('sidebarOverlay')?.classList.remove('active');
-    document.body?.classList?.remove('sidebar-open');
-    document.getElementById('menuToggleBtn')?.setAttribute('aria-expanded', 'false');
+  if (
+    window.innerWidth <= 768 ||
+    document.body?.classList?.contains('sidebar-open') ||
+    document.getElementById('sidebar')?.classList?.contains('open')
+  ) {
+    setSidebarOpenState(false);
   }
 }
 
 export function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
-  const sidebarOverlay = document.getElementById('sidebarOverlay');
-  const isOpen = sidebar?.classList.toggle('open') ?? false;
-  sidebarOverlay?.classList.toggle('active', isOpen);
-  document.body?.classList?.toggle('sidebar-open', isOpen);
-  const menuBtn = document.getElementById('menuToggleBtn');
-  if (menuBtn) {
-    menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  }
+  const isOpen = !(sidebar?.classList.contains('open') ?? false);
+  setSidebarOpenState(isOpen);
 }
 
 export function toggleTheme() {
@@ -211,6 +234,8 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (isModalActive) {
       closeModalDirect();
+    } else if (document.getElementById('sidebar')?.classList.contains('open')) {
+      setSidebarOpenState(false);
     }
   } else if (e.key === 'Tab' && isModalActive) {
     const focusable = Array.from(
@@ -272,6 +297,79 @@ window.addEventListener('keydown', (e) => {
 export function initEventDelegation() {
   if (typeof document === 'undefined' || !document.addEventListener) return;
 
+  let _touchStartY = 0;
+
+  // Prevent scroll chaining to background page when mobile sidebar is open
+  document.addEventListener(
+    'touchstart',
+    (e) => {
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar || !sidebar.classList.contains('open')) return;
+      if (e.touches && e.touches.length > 0) {
+        _touchStartY = e.touches[0].clientY;
+      }
+    },
+    { passive: true },
+  );
+
+  document.addEventListener(
+    'touchmove',
+    (e) => {
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar || !sidebar.classList.contains('open')) return;
+
+      const insideSidebarNav =
+        e.target?.closest?.('.sidebar-nav') ||
+        (!sidebar.querySelector('.sidebar-nav') && e.target?.closest?.('#sidebar'));
+
+      if (!insideSidebarNav) {
+        if (e.cancelable) e.preventDefault();
+        return;
+      }
+
+      const currentY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : _touchStartY;
+      const deltaY = currentY - _touchStartY;
+      _touchStartY = currentY;
+
+      const { scrollTop, scrollHeight, clientHeight } = insideSidebarNav;
+      const isScrollable = scrollHeight > clientHeight;
+      const isAtTop = scrollTop <= 0 && deltaY > 0;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1 && deltaY < 0;
+
+      if (!isScrollable || isAtTop || isAtBottom) {
+        if (e.cancelable) e.preventDefault();
+      }
+    },
+    { passive: false },
+  );
+
+  document.addEventListener(
+    'wheel',
+    (e) => {
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar || !sidebar.classList.contains('open')) return;
+
+      const insideSidebarNav =
+        e.target?.closest?.('.sidebar-nav') ||
+        (!sidebar.querySelector('.sidebar-nav') && e.target?.closest?.('#sidebar'));
+
+      if (!insideSidebarNav) {
+        if (e.cancelable) e.preventDefault();
+        return;
+      }
+
+      const { scrollTop, scrollHeight, clientHeight } = insideSidebarNav;
+      const isScrollable = scrollHeight > clientHeight;
+      const isAtTop = scrollTop <= 0 && e.deltaY < 0;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1 && e.deltaY > 0;
+
+      if (!isScrollable || isAtTop || isAtBottom) {
+        if (e.cancelable) e.preventDefault();
+      }
+    },
+    { passive: false },
+  );
+
   // Keydown delegation for Enter on exercise and test inputs
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
@@ -295,6 +393,17 @@ export function initEventDelegation() {
   });
 
   document.addEventListener('click', (e) => {
+    // Block background interactions while mobile sidebar is open
+    const sidebar = document.getElementById('sidebar');
+    if (
+      sidebar?.classList.contains('open') &&
+      e.target?.closest?.('.main-content') &&
+      !e.target?.closest?.('#menuToggleBtn')
+    ) {
+      e.preventDefault();
+      return;
+    }
+
     // 0. Toggle Favorite (MUST run before verb-card/lesson-card to prevent event bubbling)
     const favBtn = e.target.closest?.('[data-action="toggle-fav"]');
     if (favBtn) {
@@ -334,6 +443,17 @@ export function initEventDelegation() {
     // 3. Action buttons & cards: [data-action]
     const actionEl = e.target.closest?.('[data-action]');
     if (actionEl) {
+      if (actionEl.dataset.locked === 'true') {
+        const lId = actionEl.dataset.lessonId;
+        const prevLesson = lId ? getPreviousLesson(lId) : null;
+        const prereqTitle = prevLesson ? `« ${prevLesson.title} »` : 'la leçon précédente';
+        showToast(
+          `🔒 Cours verrouillé : validez ${prereqTitle} avec au moins ${UNLOCK_THRESHOLD}% de réussite pour débloquer la suite.`,
+          'warning',
+        );
+        return;
+      }
+
       const action = actionEl.dataset.action;
       switch (action) {
         case 'toggle-verb': {
