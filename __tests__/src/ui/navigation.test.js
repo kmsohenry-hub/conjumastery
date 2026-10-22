@@ -295,7 +295,79 @@ describe('navigation', () => {
     expect(midWheel.defaultPrevented).toBe(false);
   });
 
-  it('guards locked lessons with a warning toast instead of opening them', () => {
+  it('prevents background scroll chaining and background clicks when modal is open', () => {
+    const modalContent = document.getElementById('modalContent');
+    modalContent.classList.add('modal');
+    Object.defineProperty(modalContent, 'scrollHeight', { value: 600, configurable: true });
+    Object.defineProperty(modalContent, 'clientHeight', { value: 250, configurable: true });
+    Object.defineProperty(modalContent, 'scrollTop', {
+      value: 120,
+      writable: true,
+      configurable: true,
+    });
+
+    const main = document.createElement('div');
+    main.className = 'main-content';
+    const bgAction = document.createElement('button');
+    bgAction.dataset.action = 'start-revision';
+    main.appendChild(bgAction);
+    document.body.appendChild(main);
+
+    openModal();
+    expect(document.body.classList.contains('modal-open')).toBe(true);
+    expect(document.documentElement.classList.contains('modal-open')).toBe(true);
+    expect(main.hasAttribute('inert')).toBe(true);
+    expect(modalContent.scrollTop).toBe(0);
+
+    // Background click inside .main-content should be blocked while modal is active
+    bgAction.click();
+    expect(mocks.startRevisionSession).not.toHaveBeenCalled();
+
+    // Touch on modalOverlay backdrop (outside #modalContent) should be prevented
+    const overlay = document.getElementById('modalOverlay');
+    const backdropMove = new Event('touchmove', { bubbles: true, cancelable: true });
+    backdropMove.touches = [{ clientY: 100 }];
+    overlay.dispatchEvent(backdropMove);
+    expect(backdropMove.defaultPrevented).toBe(true);
+
+    // Touch at top boundary of modalContent pulling down (deltaY > 0) should be prevented
+    const startEv = new Event('touchstart', { bubbles: true });
+    startEv.touches = [{ clientY: 100 }];
+    modalContent.dispatchEvent(startEv);
+
+    const topMove = new Event('touchmove', { bubbles: true, cancelable: true });
+    topMove.touches = [{ clientY: 140 }];
+    modalContent.dispatchEvent(topMove);
+    expect(topMove.defaultPrevented).toBe(true);
+
+    // Touch scrolling inside modalContent range (scrollTop = 100, deltaY < 0) should be allowed
+    modalContent.scrollTop = 100;
+    const midMove = new Event('touchmove', { bubbles: true, cancelable: true });
+    midMove.touches = [{ clientY: 90 }];
+    modalContent.dispatchEvent(midMove);
+    expect(midMove.defaultPrevented).toBe(false);
+
+    // Touch at bottom boundary of modalContent pushing up (scrollTop = 350, deltaY < 0) should be prevented
+    modalContent.scrollTop = 350;
+    const bottomMove = new Event('touchmove', { bubbles: true, cancelable: true });
+    bottomMove.touches = [{ clientY: 60 }];
+    modalContent.dispatchEvent(bottomMove);
+    expect(bottomMove.defaultPrevented).toBe(true);
+
+    // Wheel at bottom boundary of modalContent should be prevented
+    const bottomWheel = Object.assign(new Event('wheel', { bubbles: true, cancelable: true }), {
+      deltaY: 60,
+    });
+    modalContent.dispatchEvent(bottomWheel);
+    expect(bottomWheel.defaultPrevented).toBe(true);
+
+    // Closing modal unlocks body and main-content
+    closeModalDirect();
+    expect(document.body.classList.contains('modal-open')).toBe(false);
+    expect(main.hasAttribute('inert')).toBe(false);
+  });
+
+  it('guards locked lessons and locked tenses with a warning toast instead of opening them', () => {
     const lockedCard = document.createElement('div');
     lockedCard.dataset.action = 'open-lesson';
     lockedCard.dataset.lessonId = 'l_present_continuous';
@@ -306,6 +378,16 @@ describe('navigation', () => {
     lockedCard.click();
     expect(mocks.openLesson).not.toHaveBeenCalled();
     expect(document.getElementById('toastContainer')?.textContent).toContain('75%');
+
+    const lockedTenseCard = document.createElement('div');
+    lockedTenseCard.dataset.action = 'open-tense-modal';
+    lockedTenseCard.dataset.tenseId = 'present_continuous';
+    lockedTenseCard.dataset.locked = 'true';
+    document.body.appendChild(lockedTenseCard);
+
+    lockedTenseCard.click();
+    expect(mocks.openTenseModal).not.toHaveBeenCalled();
+    expect(document.getElementById('toastContainer')?.textContent).toContain('Present Simple');
   });
 
   it('supports keyboard activation without interfering with native buttons', () => {
