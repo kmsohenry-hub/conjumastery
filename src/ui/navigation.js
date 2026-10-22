@@ -123,9 +123,11 @@ export function navigateTo(page) {
   }
 
   // Close mobile sidebar
-  if (window.innerWidth <= 768) {
+  if (window.innerWidth <= 768 || document.body?.classList?.contains('sidebar-open')) {
     document.getElementById('sidebar')?.classList.remove('open');
     document.getElementById('sidebarOverlay')?.classList.remove('active');
+    document.body?.classList?.remove('sidebar-open');
+    document.getElementById('menuToggleBtn')?.setAttribute('aria-expanded', 'false');
   }
 }
 
@@ -133,7 +135,8 @@ export function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebarOverlay');
   const isOpen = sidebar?.classList.toggle('open') ?? false;
-  sidebarOverlay?.classList.toggle('active');
+  sidebarOverlay?.classList.toggle('active', isOpen);
+  document.body?.classList?.toggle('sidebar-open', isOpen);
   const menuBtn = document.getElementById('menuToggleBtn');
   if (menuBtn) {
     menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
