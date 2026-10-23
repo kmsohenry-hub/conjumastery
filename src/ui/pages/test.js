@@ -1,4 +1,4 @@
-import { answerMatches } from '../../core/exercises/validation.js';
+import { answerMatches, checkAmericanEnglishUsage } from '../../core/exercises/validation.js';
 import ExerciseEngine from '../../core/exercises/ExerciseEngine.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
@@ -141,7 +141,10 @@ export function validateTestAnswer() {
     const input = document.getElementById('testInput');
     if (!input || !input.value.trim()) return;
     userAnswer = input.value.trim();
-    correct = answerMatches(userAnswer, q.answer);
+    correct =
+      answerMatches(userAnswer, q.answer) ||
+      (Array.isArray(q.acceptedAnswers) &&
+        q.acceptedAnswers.some((alt) => answerMatches(userAnswer, alt)));
   }
 
   ExerciseEngine.answered = true;
@@ -158,10 +161,24 @@ export function validateTestAnswer() {
 
   const feedbackEl = document.getElementById('testFeedback');
   feedbackEl.style.display = 'block';
+  const amCheck =
+    correct && q.type !== 'qcm'
+      ? checkAmericanEnglishUsage(userAnswer, q.answer)
+      : { isAmerican: false };
   const safeAnswer = escapeHtml(q.answer || (q.options ? q.options[q.correct] : ''));
+  const safeUserAnswer = escapeHtml(userAnswer || '');
   const safeExplanation = escapeHtml(q.explanation || '');
+  const safeExpectedUk = escapeHtml(amCheck.expectedBritishAnswer || q.answer || '');
+  const safeAmPairs = amCheck.isAmerican
+    ? amCheck.differences.map((d) => `${escapeHtml(d.us)} → ${escapeHtml(d.uk)}`).join(', ')
+    : '';
   feedbackEl.innerHTML = `<div class="feedback-box ${correct ? 'correct' : 'incorrect'}">
-    <strong>${correct ? '✅ Correct !' : '❌ Incorrect'}</strong>
+    <strong>${correct ? (amCheck.isAmerican ? '✅ Correct (anglais américain accepté) !' : '✅ Correct !') : '❌ Incorrect'}</strong>
+    ${
+      amCheck.isAmerican
+        ? `<br>🇬🇧 <strong>Note (Anglais Britannique) :</strong> Votre réponse en anglais américain (« ${safeUserAnswer} ») est acceptée, mais <strong>ce n'était pas le résultat attendu</strong>.<br>Résultat attendu en anglais britannique : <strong>${safeExpectedUk}</strong> (${safeAmPairs})`
+        : ''
+    }
     ${!correct ? `<br>Réponse : <strong>${safeAnswer}</strong>` : ''}
     <br><br><em>${safeExplanation}</em>
   </div>`;
