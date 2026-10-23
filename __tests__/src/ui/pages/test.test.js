@@ -1,35 +1,46 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { engine, state, answerMatches, showToast, appData } = vi.hoisted(() => ({
-  engine: {
-    start: vi.fn(),
-    getCurrent: vi.fn(),
-    next: vi.fn(() => false),
-    questions: [],
-    currentIndex: 0,
-    score: 0,
-    answered: false,
-  },
-  state: { addXP: vi.fn(), recordAnswer: vi.fn() },
-  answerMatches: vi.fn(() => false),
-  showToast: vi.fn(),
-  appData: {
-    tenses: [
-      { id: 'present_simple', nameFR: 'Présent simple' },
-      { id: 'past_simple', nameFR: 'Past simple' },
-      { id: 'future_will', nameFR: 'Futur avec will' },
-    ],
-    tensesById: {
-      present_simple: { nameFR: 'Présent simple' },
-      past_simple: { nameFR: 'Past simple' },
-      future_will: { nameFR: 'Futur avec will' },
+const { engine, state, answerMatches, checkAmericanEnglishUsage, showToast, appData } = vi.hoisted(
+  () => ({
+    engine: {
+      start: vi.fn(),
+      getCurrent: vi.fn(),
+      next: vi.fn(() => false),
+      questions: [],
+      currentIndex: 0,
+      score: 0,
+      answered: false,
     },
-  },
-}));
+    state: { addXP: vi.fn(), recordAnswer: vi.fn() },
+    answerMatches: vi.fn(() => false),
+    checkAmericanEnglishUsage: vi.fn(() => ({
+      isAmerican: false,
+      differences: [],
+      expectedBritishAnswer: '',
+      notice: '',
+    })),
+    showToast: vi.fn(),
+    appData: {
+      tenses: [
+        { id: 'present_simple', nameFR: 'Présent simple' },
+        { id: 'past_simple', nameFR: 'Past simple' },
+        { id: 'future_will', nameFR: 'Futur avec will' },
+      ],
+      tensesById: {
+        present_simple: { nameFR: 'Présent simple' },
+        past_simple: { nameFR: 'Past simple' },
+        future_will: { nameFR: 'Futur avec will' },
+      },
+    },
+  }),
+);
 
 vi.mock('../../../../src/core/exercises/ExerciseEngine.js', () => ({ default: engine }));
 vi.mock('../../../../src/core/state/State.js', () => ({ State: state }));
-vi.mock('../../../../src/core/exercises/validation.js', () => ({ answerMatches }));
+vi.mock('../../../../src/core/exercises/validation.js', () => ({
+  answerMatches,
+  checkAmericanEnglishUsage,
+}));
 vi.mock('../../../../src/data/index.js', () => ({ APP_DATA: appData }));
 vi.mock('../../../../src/ui/utils/toast.js', () => ({ showToast }));
 

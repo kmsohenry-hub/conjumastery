@@ -1,31 +1,41 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { engine, navigateTo, launchConfetti, answerMatches, state } = vi.hoisted(() => ({
-  engine: {
-    start: vi.fn(),
-    getCurrent: vi.fn(),
-    getProgress: vi.fn(() => ({ current: 1, total: 10, score: 0 })),
-    next: vi.fn(() => false),
-    questions: [],
-    currentIndex: 0,
-    score: 0,
-    answered: false,
-    currentMode: null,
-    currentTenseFilter: null,
-    currentDifficulty: null,
-    currentCount: 10,
-    currentLessonId: null,
-    isRevision: false,
-    sessionConfig: null,
-  },
-  navigateTo: vi.fn(),
-  launchConfetti: vi.fn(),
-  answerMatches: vi.fn(() => false),
-  state: { addXP: vi.fn(), recordAnswer: vi.fn(), completeLesson: vi.fn() },
-}));
+const { engine, navigateTo, launchConfetti, answerMatches, checkAmericanEnglishUsage, state } =
+  vi.hoisted(() => ({
+    engine: {
+      start: vi.fn(),
+      getCurrent: vi.fn(),
+      getProgress: vi.fn(() => ({ current: 1, total: 10, score: 0 })),
+      next: vi.fn(() => false),
+      questions: [],
+      currentIndex: 0,
+      score: 0,
+      answered: false,
+      currentMode: null,
+      currentTenseFilter: null,
+      currentDifficulty: null,
+      currentCount: 10,
+      currentLessonId: null,
+      isRevision: false,
+      sessionConfig: null,
+    },
+    navigateTo: vi.fn(),
+    launchConfetti: vi.fn(),
+    answerMatches: vi.fn(() => false),
+    checkAmericanEnglishUsage: vi.fn(() => ({
+      isAmerican: false,
+      differences: [],
+      expectedBritishAnswer: '',
+      notice: '',
+    })),
+    state: { addXP: vi.fn(), recordAnswer: vi.fn(), completeLesson: vi.fn() },
+  }));
 
 vi.mock('../../../../src/core/exercises/ExerciseEngine.js', () => ({ default: engine }));
-vi.mock('../../../../src/core/exercises/validation.js', () => ({ answerMatches }));
+vi.mock('../../../../src/core/exercises/validation.js', () => ({
+  answerMatches,
+  checkAmericanEnglishUsage,
+}));
 vi.mock('../../../../src/core/state/State.js', () => ({ State: state }));
 vi.mock('../../../../src/ui/navigation.js', () => ({ navigateTo }));
 vi.mock('../../../../src/ui/utils/confetti.js', () => ({ launchConfetti }));
@@ -266,6 +276,57 @@ describe('exercises page', () => {
     validateExercise();
     expect(answerMatches).toHaveBeenCalledWith('SaW', 'saw');
     expect(state.recordAnswer).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts alternative grammatically valid answers from q.acceptedAnswers', () => {
+    const q = {
+      type: 'correction',
+      tenseId: 'present_simple',
+      sentence: 'Trouvez l’erreur : "She don’t like coffee."',
+      answer: "She doesn't like coffee.",
+      acceptedAnswers: ["doesn't like", 'does not like'],
+      explanation: '3rd person singular negative',
+    };
+    engine.getCurrent.mockReturnValue(q);
+    answerMatches.mockImplementation((user, expected) => user === expected);
+    renderExerciseQuestion(q);
+    const input = document.getElementById('exerciseInput');
+    input.value = "doesn't like";
+    validateExercise();
+    expect(engine.score).toBe(1);
+    expect(state.recordAnswer).toHaveBeenCalledWith('present_simple', true);
+  });
+
+  it('accepts American English while explicitly stating it was not the expected British English result', () => {
+    const q = {
+      type: 'fill',
+      tenseId: 'present_perfect',
+      sentence: 'She ___ (learn) English.',
+      answer: 'has learnt',
+      explanation: 'Present Perfect (UK: learnt)',
+    };
+    engine.getCurrent.mockReturnValue(q);
+    answerMatches.mockReturnValue(true);
+    checkAmericanEnglishUsage.mockReturnValueOnce({
+      isAmerican: true,
+      differences: [{ us: 'learned', uk: 'learnt' }],
+      expectedBritishAnswer: 'has learnt',
+      notice:
+        "Attention : vous avez utilisé l'anglais américain (« learned » → « learnt »). La réponse est acceptée, mais ce n'était pas le résultat attendu en anglais britannique : « has learnt ».",
+    });
+
+    renderExerciseQuestion(q);
+    const input = document.getElementById('exerciseInput');
+    input.value = 'has learned';
+    validateExercise();
+
+    expect(engine.score).toBe(1);
+    expect(state.recordAnswer).toHaveBeenCalledWith('present_perfect', true);
+    const feedbackHtml = document.getElementById('exerciseFeedback').innerHTML;
+    expect(feedbackHtml).toContain('anglais américain accepté');
+    expect(feedbackHtml).toContain("ce n'était pas le résultat attendu");
+    expect(feedbackHtml).toContain('has learnt');
+    expect(feedbackHtml).toContain('learned → learnt');
   });
 
   it('skips once and exposes the expected answer', () => {

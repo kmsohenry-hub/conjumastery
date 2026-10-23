@@ -1,5 +1,5 @@
 import { navigateTo } from '../navigation.js';
-import { answerMatches } from '../../core/exercises/validation.js';
+import { answerMatches, checkAmericanEnglishUsage } from '../../core/exercises/validation.js';
 import ExerciseEngine from '../../core/exercises/ExerciseEngine.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
@@ -180,16 +180,23 @@ export function renderExerciseQuestion(q) {
     });
     html += `</div>`;
   } else if (q.type === 'fill' || q.type === 'translation') {
+    const hintText =
+      q.type === 'fill'
+        ? '💡 Formes contractées ou complètes acceptées (mot(s) manquant(s) ou phrase entière).'
+        : '💡 Formes contractées ou complètes acceptées.';
     html += `<div class="input-group" style="margin-top:16px">
       <input class="input" type="text" id="exerciseInput" data-action="submit-exercise" placeholder="Votre réponse...">
+      <small class="exercise-input-hint" style="display:block;margin-top:6px;color:var(--text-light);font-size:0.8rem">${hintText}</small>
     </div>`;
   } else if (q.type === 'transform') {
     html += `<div class="input-group" style="margin-top:16px">
       <textarea class="textarea" id="exerciseInput" placeholder="Écrivez la phrase transformée..." rows="2"></textarea>
+      <small class="exercise-input-hint" style="display:block;margin-top:6px;color:var(--text-light);font-size:0.8rem">💡 Formes contractées (doesn't, won't...) et formes complètes (does not, will not...) acceptées.</small>
     </div>`;
   } else if (q.type === 'correction') {
     html += `<div class="input-group" style="margin-top:16px">
-      <textarea class="textarea" id="exerciseInput" placeholder="Écrivez la phrase corrigée..." rows="2"></textarea>
+      <textarea class="textarea" id="exerciseInput" placeholder="Écrivez la phrase corrigée (ou le verbe corrigé)..." rows="2"></textarea>
+      <small class="exercise-input-hint" style="display:block;margin-top:6px;color:var(--text-light);font-size:0.8rem">💡 Écrivez toute la phrase corrigée ou uniquement le verbe corrigé (formes contractées ou complètes acceptées).</small>
     </div>`;
   }
 
@@ -229,7 +236,10 @@ export function validateExercise() {
     const input = document.getElementById('exerciseInput');
     if (!input || !input.value.trim()) return;
     userAnswer = input.value.trim();
-    correct = answerMatches(userAnswer, q.answer);
+    correct =
+      answerMatches(userAnswer, q.answer) ||
+      (Array.isArray(q.acceptedAnswers) &&
+        q.acceptedAnswers.some((alt) => answerMatches(userAnswer, alt)));
   }
 
   ExerciseEngine.answered = true;
@@ -244,11 +254,24 @@ export function validateExercise() {
   // Show feedback
   const feedbackEl = document.getElementById('exerciseFeedback');
   feedbackEl.style.display = 'block';
+  const amCheck =
+    correct && q.type !== 'qcm'
+      ? checkAmericanEnglishUsage(userAnswer, q.answer)
+      : { isAmerican: false };
   const safeAnswer = escapeHtml(q.answer || q.options[q.correct]);
   const safeUserAnswer = escapeHtml(userAnswer);
   const safeExplanation = escapeHtml(q.explanation);
+  const safeExpectedUk = escapeHtml(amCheck.expectedBritishAnswer || q.answer || '');
+  const safeAmPairs = amCheck.isAmerican
+    ? amCheck.differences.map((d) => `${escapeHtml(d.us)} → ${escapeHtml(d.uk)}`).join(', ')
+    : '';
   feedbackEl.innerHTML = `<div class="feedback-box ${correct ? 'correct' : 'incorrect'}">
-    <strong>${correct ? '✅ Correct !' : '❌ Incorrect'}</strong>
+    <strong>${correct ? (amCheck.isAmerican ? '✅ Correct (anglais américain accepté) !' : '✅ Correct !') : '❌ Incorrect'}</strong>
+    ${
+      amCheck.isAmerican
+        ? `<br>🇬🇧 <strong>Note (Anglais Britannique) :</strong> Votre réponse en anglais américain (« ${safeUserAnswer} ») est acceptée, mais <strong>ce n'était pas le résultat attendu</strong>.<br>Résultat attendu en anglais britannique : <strong>${safeExpectedUk}</strong> (${safeAmPairs})`
+        : ''
+    }
     ${!correct ? `<br>Réponse attendue : <strong>${safeAnswer}</strong><br>Votre réponse : ${safeUserAnswer}` : ''}
     <br><br><em>${safeExplanation}</em>
   </div>`;
