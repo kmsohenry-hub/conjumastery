@@ -56,17 +56,6 @@ import { renderStats } from './src/ui/pages/stats.js';
 // 1. STATE MANAGEMENT
 // ============================================================
 
-// Index APP_DATA for O(1) lookups
-APP_DATA.tensesById = APP_DATA.tenses.reduce((acc, t) => {
-  acc[t.id] = t;
-  return acc;
-}, {});
-
-APP_DATA.verbsByBase = APP_DATA.irregularVerbs.reduce((acc, v) => {
-  acc[v.base] = v;
-  return acc;
-}, {});
-
 import { State } from './src/core/state/State.js';
 import { defaultState } from './src/core/state/store.js';
 

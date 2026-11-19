@@ -133,4 +133,25 @@ describe('lessons page', () => {
     showModule(1, btn);
     expect(btn.classList.contains('active')).toBe(true);
   });
+
+  it('renders real APP_DATA tense examples, commonErrors, usage list, and arrow timeline without NaN', () => {
+    openLesson('l_present_simple', 'present_simple');
+    const presentModal = document.getElementById('modalContent').innerHTML;
+    expect(presentModal).toContain('She drinks tea every morning.');
+    expect(presentModal).toContain('Elle boit du thé tous les matins.');
+    expect(presentModal).toContain('Erreurs fréquentes à éviter');
+    expect(presentModal).toContain('He go to school every day.');
+    expect(presentModal).toContain('<ul class="usage-list">');
+
+    openLesson('l_present_perfect', 'present_perfect');
+    const perfectModal = document.getElementById('modalContent').innerHTML;
+    expect(perfectModal).toContain('timeline-arrow');
+    expect(perfectModal).not.toContain('NaN');
+
+    const arrowWithNowOnly = renderTimeline({
+      timeline: { type: 'arrow', start: 10, now: 50, label: 'Passé → Présent' },
+    });
+    expect(arrowWithNowOnly).toContain('width:40%');
+    expect(arrowWithNowOnly).not.toContain('NaN');
+  });
 });

@@ -29,7 +29,7 @@ export const phrasalVerbs = [
   {
     pv: 'figure out',
     meaning: 'comprendre, résoudre',
-    example: "I can't figure out this math problem.",
+    example: "I can't figure out this maths problem.",
   },
   {
     pv: 'get over',
@@ -59,7 +59,7 @@ export const phrasalVerbs = [
     meaning: 'prendre le contrôle',
     example: 'The new manager will take over tomorrow.',
   },
-  { pv: 'turn out', meaning: "s'avérer", example: 'The movie turned out to be great.' },
+  { pv: 'turn out', meaning: "s'avérer", example: 'The film turned out to be great.' },
   {
     pv: 'work out',
     meaning: 'faire du sport / résoudre',

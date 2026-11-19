@@ -1,5 +1,19 @@
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
+import { createGitHubMiddleware } from './server/githubMiddleware.js';
+
+export function createGitHubApiPlugin() {
+  const middleware = createGitHubMiddleware();
+  return {
+    name: 'github-server-api',
+    configureServer(server) {
+      server.middlewares.use(middleware);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(middleware);
+    },
+  };
+}
 
 export function createServiceWorkerPlugin() {
   const template = readFileSync(new URL('./sw.js', import.meta.url), 'utf8');
@@ -25,7 +39,7 @@ export function createServiceWorkerPlugin() {
 }
 
 export default defineConfig({
-  plugins: [createServiceWorkerPlugin()],
+  plugins: [createServiceWorkerPlugin(), createGitHubApiPlugin()],
   root: '.',
   base: './',
   build: {
@@ -36,6 +50,17 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: './index.html',
+      },
+      output: {
+        manualChunks(id) {
+          const normalized = id.replace(/\\/g, '/');
+          if (normalized.includes('/src/data/exerciseTemplates.js')) {
+            return 'exercise-templates';
+          }
+          if (normalized.includes('/src/data/')) {
+            return 'curriculum-data';
+          }
+        },
       },
     },
   },
