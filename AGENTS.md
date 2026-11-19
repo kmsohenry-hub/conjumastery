@@ -9,6 +9,7 @@ This is a maintenance-only mandate. **Do not add product features or expand prod
 ## Non-negotiable scope
 
 Allowed:
+
 - Fix reproducible bugs and regressions.
 - Correct inaccurate English grammar, conjugation, examples, explanations, exercise answers, and British-English guidance.
 - Improve reliability, performance, accessibility, responsive behaviour, security, and error handling of existing functionality.
@@ -18,6 +19,7 @@ Allowed:
 - Correct documentation, CI configuration, build tooling, and developer workflows.
 
 Forbidden:
+
 - New user-facing features, modes, screens, content categories, integrations, backend services, accounts, or product capabilities.
 - Speculative redesigns or broad rewrites without a demonstrated defect or measurable benefit.
 - Removing existing functionality, data, or user workflows to make tests pass.
@@ -54,12 +56,14 @@ When a proposed change could be interpreted as a feature, do not implement it. R
 ## Quality standards
 
 ### Pedagogical correctness
+
 - Treat British English as the product's primary teaching variety.
 - Distinguish British and American variants accurately; do not incorrectly mark valid variants as wrong.
 - Check tense, aspect, agreement, spelling, punctuation, naturalness, and consistency between prompts, accepted answers, explanations, and scoring.
 - Do not invent grammar rules. Prefer authoritative references already used by the project; document uncertainty for human review.
 
 ### Engineering quality
+
 - Preserve public interfaces and existing data formats unless a compatibility fix requires a carefully tested migration.
 - Prefer deterministic tests and reproducible bug reports.
 - Protect localStorage data and import/export compatibility.
@@ -70,6 +74,7 @@ When a proposed change could be interpreted as a feature, do not implement it. R
 ## Reporting
 
 For every work cycle, report:
+
 - Defects found and their severity.
 - Root cause and files changed.
 - Tests/checks run with exact outcomes.
