@@ -1,5 +1,6 @@
 import { navigateTo } from '../navigation.js';
 import { startExercise } from './exercises.js';
+import { escapeHtml } from '../../core/security.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
 
@@ -29,8 +30,8 @@ export function renderRevision() {
         return `<div class="revision-item">
         <span class="ri-icon">📖</span>
         <div class="ri-info">
-          <div class="ri-title">${tense ? tense.nameFR : q.tenseId}</div>
-          <div class="ri-meta">Prochaine révision : maintenant • Intervalle : ${q.interval}min • Erreurs : ${q.errors}</div>
+          <div class="ri-title">${escapeHtml(tense ? tense.nameFR : q.tenseId)}</div>
+          <div class="ri-meta">Prochaine révision : maintenant • Intervalle : ${escapeHtml(String(q.interval))}min • Erreurs : ${escapeHtml(String(q.errors))}</div>
         </div>
         <span class="ri-priority ${q.errors > 3 ? 'priority-high' : q.errors > 1 ? 'priority-medium' : 'priority-low'}">
           ${q.errors > 3 ? 'Urgent' : q.errors > 1 ? 'Moyen' : 'Faible'}

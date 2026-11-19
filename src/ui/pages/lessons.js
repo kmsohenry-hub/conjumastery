@@ -36,8 +36,8 @@ export function showModule(index, btn) {
 
   content.innerHTML = `
     <div style="margin-bottom:20px">
-      <h3>${mod.name}</h3>
-      <p style="color:var(--text-light)">${mod.description || `Atteignez ${UNLOCK_THRESHOLD}% de réussite sur chaque leçon pour débloquer la suivante.`}</p>
+      <h3>${escapeHtml(mod.name)}</h3>
+      <p style="color:var(--text-light)">${escapeHtml(mod.description || `Atteignez ${UNLOCK_THRESHOLD}% de réussite sur chaque leçon pour débloquer la suivante.`)}</p>
     </div>
     <div class="card-grid">
       ${mod.lessons
@@ -50,14 +50,14 @@ export function showModule(index, btn) {
           const fillWidth = isDone ? 100 : unlocked ? progress.rawAccuracy : 0;
 
           return `
-        <div class="card lesson-card ${isDone ? 'completed' : ''} ${!unlocked ? 'locked' : ''}" role="button" tabindex="0" data-action="open-lesson" data-lesson-id="${l.id}" data-tense-id="${l.tenseId || ''}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''}>
+        <div class="card lesson-card ${isDone ? 'completed' : ''} ${!unlocked ? 'locked' : ''}" role="button" tabindex="0" data-action="open-lesson" data-lesson-id="${escapeHtml(l.id)}" data-tense-id="${escapeHtml(l.tenseId || '')}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''}>
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-            <span class="tag ${isDone ? 'tag-green' : unlocked ? 'tag-blue' : 'tag-locked'}">${isDone ? '✓ Terminé' : unlocked ? l.level || mod.level || 'Débloqué' : '🔒 Verrouillé'}</span>
-            <span style="font-size:0.8rem;color:var(--text-light)">${l.exercises} exercices</span>
+            <span class="tag ${isDone ? 'tag-green' : unlocked ? 'tag-blue' : 'tag-locked'}">${isDone ? '✓ Terminé' : unlocked ? escapeHtml(l.level || mod.level || 'Débloqué') : '🔒 Verrouillé'}</span>
+            <span style="font-size:0.8rem;color:var(--text-light)">${escapeHtml(String(l.exercises))} exercices</span>
           </div>
-          <h3 style="margin-bottom:8px">${l.title}</h3>
-          <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:12px">${l.desc}</p>
-          ${tense ? `<p style="font-size:0.85rem;color:var(--primary);font-family:monospace">${tense.structure}</p>` : ''}
+          <h3 style="margin-bottom:8px">${escapeHtml(l.title)}</h3>
+          <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:12px">${escapeHtml(l.desc)}</p>
+          ${tense ? `<p style="font-size:0.85rem;color:var(--primary);font-family:monospace">${escapeHtml(tense.structure)}</p>` : ''}
           ${
             !unlocked && prevLesson
               ? `<p class="lesson-prereq">🎯 ${UNLOCK_THRESHOLD}% requis : <strong>${escapeHtml(prevLesson.title)}</strong></p>`
@@ -90,49 +90,79 @@ export function openTenseModal(tense, lessonId = null) {
   renderTenseModal(tense, lessonId);
 }
 
+function renderUsageHtml(usage) {
+  if (Array.isArray(usage)) {
+    return `<ul class="usage-list">${usage.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+  }
+  return `<p>${escapeHtml(usage || '')}</p>`;
+}
+
+function renderExamplesHtml(examples) {
+  if (Array.isArray(examples) && examples.length > 0) {
+    return `
+    <h4 style="margin:20px 0 12px">📖 Exemples</h4>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <tr><th>Anglais</th><th>Traduction</th></tr>
+        ${examples
+          .map(
+            (ex) =>
+              `<tr><td><strong>${escapeHtml(ex.en || '')}</strong></td><td>${escapeHtml(ex.fr || '')}</td></tr>`,
+          )
+          .join('')}
+      </table>
+    </div>`;
+  }
+
+  return `
+    <h4 style="margin:20px 0 12px">📖 Exemples par type de phrase</h4>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <tr><th>Type</th><th>Exemple</th></tr>
+        <tr><td><strong>Affirmatif</strong></td><td>${escapeHtml(examples?.affirmative || examples?.[0]?.en || '')}</td></tr>
+        <tr><td><strong>Négatif</strong></td><td>${escapeHtml(examples?.negative || '')}</td></tr>
+        <tr><td><strong>Interrogatif</strong></td><td>${escapeHtml(examples?.interrogative || '')}</td></tr>
+      </table>
+    </div>`;
+}
+
 function renderTenseModal(tense, lessonId) {
   const modal = document.getElementById('modalContent');
   if (!modal || !tense) return;
-  const signalWords = tense.signalWords || [];
-  const commonMistakes = tense.commonMistakes || [];
+  const signalWords = Array.isArray(tense.signalWords) ? tense.signalWords : [];
+  const commonMistakes = tense.commonErrors || tense.commonMistakes || [];
 
   modal.innerHTML = `
     <div class="modal-header">
       <div>
-        <div class="modal-title" id="modalTitle">${tense.nameEN || tense.name || ''}</div>
-        <div style="color:var(--text-light);font-size:0.9rem">${tense.nameFR || ''} • ${tense.level || ''}</div>
+        <div class="modal-title" id="modalTitle">${escapeHtml(tense.nameEN || tense.name || '')}</div>
+        <div style="color:var(--text-light);font-size:0.9rem">${escapeHtml(tense.nameFR || '')} • ${escapeHtml(tense.level || '')}</div>
       </div>
       <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
     
     <div class="explain-block">
       <h4>📝 Utilisation</h4>
-      <p>${Array.isArray(tense.usage) ? tense.usage.join(',') : tense.usage || ''}</p>
+      ${renderUsageHtml(tense.usage)}
     </div>
 
     <div class="explain-block">
       <h4>🏗️ Structure</h4>
-      <p><code>${tense.structure || ''}</code></p>
+      <p><code>${escapeHtml(tense.structure || '')}</code></p>
+      ${tense.structureNeg ? `<p style="margin-top:6px"><small>Négation : <code>${escapeHtml(tense.structureNeg)}</code></small></p>` : ''}
+      ${tense.structureQ ? `<p style="margin-top:4px"><small>Question : <code>${escapeHtml(tense.structureQ)}</code></small></p>` : ''}
     </div>
 
     ${renderTimeline(tense)}
 
-    <h4 style="margin:20px 0 12px">📖 Exemples par type de phrase</h4>
-    <div class="table-wrapper">
-      <table class="data-table">
-        <tr><th>Type</th><th>Exemple</th></tr>
-        <tr><td><strong>Affirmatif</strong></td><td>${tense.examples?.affirmative || tense.examples?.[0]?.en || ''}</td></tr>
-        <tr><td><strong>Négatif</strong></td><td>${tense.examples?.negative || ''}</td></tr>
-        <tr><td><strong>Interrogatif</strong></td><td>${tense.examples?.interrogative || ''}</td></tr>
-      </table>
-    </div>
+    ${renderExamplesHtml(tense.examples)}
 
     ${
       signalWords.length > 0
         ? `
     <h4 style="margin:20px 0 12px">🔑 Mots-clés / Marqueurs temporels</h4>
     <div class="signal-words">
-      ${signalWords.map((w) => `<span class="signal-tag">${w}</span>`).join('')}
+      ${signalWords.map((w) => `<span class="signal-tag">${escapeHtml(w)}</span>`).join('')}
     </div>`
         : ''
     }
@@ -145,8 +175,8 @@ function renderTenseModal(tense, lessonId) {
       .map(
         (e) => `
     <div class="mistake-item">
-      <span class="wrong">${e.wrong}</span> → <span class="right">${e.right}</span>
-      <br><small style="color:var(--text-light)">${e.note}</small>
+      <span class="wrong">${escapeHtml(e.wrong || '')}</span> → <span class="right">${escapeHtml(e.right || '')}</span>
+      <br><small style="color:var(--text-light)">${escapeHtml(e.note || '')}</small>
     </div>`,
       )
       .join('')}`
@@ -154,8 +184,8 @@ function renderTenseModal(tense, lessonId) {
     }
 
     <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-      ${lessonId ? `<button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${lessonId}">🎯 Commencer la leçon</button>` : ''}
-      <button class="btn ${lessonId ? 'btn-outline' : 'btn-primary'}" data-action="start-tense" data-tense-id="${tense.id}">🎮 Entraînement libre</button>
+      ${lessonId ? `<button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${escapeHtml(lessonId)}">🎯 Commencer la leçon</button>` : ''}
+      <button class="btn ${lessonId ? 'btn-outline' : 'btn-primary'}" data-action="start-tense" data-tense-id="${escapeHtml(tense.id)}">🎮 Entraînement libre</button>
       <button class="btn btn-outline" data-page="comparison">📊 Voir le comparatif</button>
     </div>`;
 
@@ -173,24 +203,24 @@ export function openPassiveModal(lessonId = 'l_passive') {
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
-      <p>${info.explanation}</p>
+      <p>${escapeHtml(info.explanation)}</p>
     </div>
     <div class="explain-block">
       <h4>🏗️ Structure</h4>
-      <p><code>${info.structure}</code></p>
+      <p><code>${escapeHtml(info.structure)}</code></p>
     </div>
     <h4 style="margin:16px 0 12px">📖 Exemples</h4>
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Temps</th><th>Active</th><th>Passive</th></tr>
-        ${info.examples.map((e) => `<tr><td>${e.tense}</td><td>${e.active}</td><td><strong>${e.passive}</strong></td></tr>`).join('')}
+        ${info.examples.map((e) => `<tr><td>${escapeHtml(e.tense)}</td><td>${escapeHtml(e.active)}</td><td><strong>${escapeHtml(e.passive)}</strong></td></tr>`).join('')}
       </table>
     </div>
     <div class="explain-block" style="border-left-color:var(--accent);margin-top:16px">
       <h4>💡 Nuances</h4>
-      <p>${info.nuances}</p>
+      <p>${escapeHtml(info.nuances)}</p>
     </div>
-    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${lessonId}">🎯 Commencer la leçon</button></div>`;
+    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${escapeHtml(lessonId)}">🎯 Commencer la leçon</button></div>`;
   openModal();
 }
 
@@ -205,23 +235,23 @@ export function openReportedModal(lessonId = 'l_reported') {
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
-      <p>${info.explanation}</p>
+      <p>${escapeHtml(info.explanation)}</p>
     </div>
     <h4 style="margin:16px 0 12px">🔄 Concordance des temps</h4>
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Discours direct</th><th>Discours indirect</th><th>Exemple</th></tr>
-        ${info.rules.map((r) => `<tr><td>${r.direct}</td><td><strong>${r.reported}</strong></td><td><em>${r.example}</em></td></tr>`).join('')}
+        ${info.rules.map((r) => `<tr><td>${escapeHtml(r.direct)}</td><td><strong>${escapeHtml(r.reported)}</strong></td><td><em>${escapeHtml(r.example)}</em></td></tr>`).join('')}
       </table>
     </div>
     <h4 style="margin:16px 0 12px">📅 Changements de temps/mots</h4>
     <div class="table-wrapper">
       <table class="data-table">
         <tr><th>Direct</th><th>Indirect</th></tr>
-        ${info.timeChanges.map((t) => `<tr><td>${t.direct}</td><td><strong>${t.reported}</strong></td></tr>`).join('')}
+        ${info.timeChanges.map((t) => `<tr><td>${escapeHtml(t.direct)}</td><td><strong>${escapeHtml(t.reported)}</strong></td></tr>`).join('')}
       </table>
     </div>
-    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${lessonId}">🎯 Commencer la leçon</button></div>`;
+    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${escapeHtml(lessonId)}">🎯 Commencer la leçon</button></div>`;
   openModal();
 }
 
@@ -229,6 +259,8 @@ export function renderTimeline(tense) {
   const tl = tense.timeline;
   if (!tl) return '';
 
+  const safeLabel = escapeHtml(tl.label || '');
+  const safeDesc = escapeHtml(tl.description || '');
   let visual;
   switch (tl.type) {
     case 'point':
@@ -240,8 +272,8 @@ export function renderTimeline(tense) {
         </div>
         <div class="timeline-visual">
           <div class="timeline-now-line" style="left:50%"></div>
-          <div class="timeline-point" style="left:${tl.position}%" title="${tl.label}">
-            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">${tl.label}</span>
+          <div class="timeline-point" style="left:${tl.position}%" title="${safeLabel}">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">${safeLabel}</span>
           </div>
         </div>`;
       break;
@@ -255,8 +287,8 @@ export function renderTimeline(tense) {
         </div>
         <div class="timeline-visual">
           <div class="timeline-now-line" style="left:50%"></div>
-          <div class="timeline-range" style="left:${tl.start}%;width:${tl.end - tl.start}%">
-            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">${tl.label}</span>
+          <div class="timeline-range" style="left:${tl.start}%;width:${Math.max(0, (tl.end ?? 50) - (tl.start ?? 0))}%">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">${safeLabel}</span>
           </div>
         </div>`;
       break;
@@ -299,7 +331,10 @@ export function renderTimeline(tense) {
         </div>`;
       break;
 
-    case 'arrow':
+    case 'arrow': {
+      const start = tl.start ?? 0;
+      const end = tl.end ?? tl.now ?? 50;
+      const width = Math.max(0, end - start);
       visual = `
         <div class="timeline-axis">
           <div class="axis-past">Passé</div>
@@ -308,11 +343,12 @@ export function renderTimeline(tense) {
         </div>
         <div class="timeline-visual">
           <div class="timeline-now-line" style="left:50%"></div>
-          <div class="timeline-arrow" style="left:${tl.start}%;width:${tl.end - tl.start}%">
-            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">${tl.label || '→'}</span>
+          <div class="timeline-arrow" style="left:${start}%;width:${width}%">
+            <span class="timeline-event" style="left:50%;bottom:calc(100% + 6px)">${safeLabel || '→'}</span>
           </div>
         </div>`;
       break;
+    }
 
     case 'cycle':
       visual = `
@@ -323,7 +359,7 @@ export function renderTimeline(tense) {
         </div>
         <div class="timeline-visual">
           <div class="timeline-now-line" style="left:50%"></div>
-          <div class="timeline-cycle">↻</div>
+          <div class="timeline-cycle">↻${safeLabel ? ` <span>${safeLabel}</span>` : ''}</div>
         </div>`;
       break;
 
@@ -349,5 +385,5 @@ export function renderTimeline(tense) {
       return '';
   }
 
-  return `<div class="timeline-container">${visual}<div class="timeline-desc">${tl.description || ''}</div></div>`;
+  return `<div class="timeline-container">${visual}${safeDesc ? `<div class="timeline-desc">${safeDesc}</div>` : ''}</div>`;
 }

@@ -125,7 +125,7 @@ export const tenses = [
       { en: "She hasn't called me yet.", fr: "Elle ne m'a pas encore appelé." },
       { en: "We've lived here for ten years.", fr: 'Nous vivons ici depuis dix ans.' },
     ],
-    timeline: { type: 'arrow', start: 10, now: 50, label: 'Passé → Présent' },
+    timeline: { type: 'arrow', start: 10, end: 50, now: 50, label: 'Passé → Présent' },
     commonErrors: [
       {
         wrong: 'I have seen him yesterday.',
@@ -181,7 +181,7 @@ export const tenses = [
       { en: 'Have you been crying?', fr: 'As-tu pleuré ?' },
       { en: "It's been raining all day.", fr: 'Il pleut depuis toute la journée.' },
     ],
-    timeline: { type: 'arrow', start: 5, now: 50, label: "Durée jusqu'à maintenant" },
+    timeline: { type: 'arrow', start: 5, end: 50, now: 50, label: "Durée jusqu'à maintenant" },
     commonErrors: [
       {
         wrong: "I've been knowing him for years.",
@@ -311,7 +311,7 @@ export const tenses = [
       'Action antérieure à une autre action passée : When I arrived, the film had already started.',
       "Cause d'un état passé : She was tired because she had worked all day.",
       'Dans le discours indirect : He said he had finished his work.',
-      "With 'by the time', 'before', 'after', 'when'",
+      "Avec 'by the time', 'before', 'after', 'when'",
     ],
     examples: [
       {
@@ -803,7 +803,7 @@ export const tenses = [
     timeline: { type: 'conditional', condition: 20, result: 60, label: 'Temps croisés' },
     commonErrors: [],
     nuances:
-      'Les mixed conditionnels sont très courants dans la conversation naturelle. Il faut identifier si la condition est dans le passé (→ Past Perfect) ou permanente (→ Past Simple), et si la conséquence est dans le présent (→ would + base) ou le passé (→ would have + pp).',
+      'Les conditionnels mixtes (mixed conditionals) sont très courants dans la conversation naturelle. Il faut identifier si la condition est dans le passé (→ Past Perfect) ou permanente (→ Past Simple), et si la conséquence est dans le présent (→ would + base) ou le passé (→ would have + pp).',
     comparison: ['conditional_2', 'conditional_3'],
     signalWords: ['if', 'now', 'at that time'],
   },

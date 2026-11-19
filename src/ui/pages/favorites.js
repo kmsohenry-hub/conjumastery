@@ -1,3 +1,4 @@
+import { escapeHtml } from '../../core/security.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
 
@@ -18,20 +19,20 @@ export function renderFavorites() {
         const verb = APP_DATA.verbsByBase[verbName];
         if (!verb) return '';
         return `<div class="card" style="margin-bottom:10px;display:flex;align-items:center;padding:14px 20px">
-          <span class="verb-base">${verb.base}</span> → <span style="color:var(--accent)">${verb.past}</span> → <span style="color:var(--secondary)">${verb.pp}</span>
-          <span style="color:var(--text-light);margin-left:8px">${verb.meaning}</span>
-          <button class="fav-btn active" style="margin-left:auto" data-action="toggle-fav" data-fav-id="${f}" aria-label="Favori">★</button>
+          <span class="verb-base">${escapeHtml(verb.base)}</span> → <span style="color:var(--accent)">${escapeHtml(verb.past)}</span> → <span style="color:var(--secondary)">${escapeHtml(verb.pp)}</span>
+          <span style="color:var(--text-light);margin-left:8px">${escapeHtml(verb.meaning)}</span>
+          <button class="fav-btn active" style="margin-left:auto" data-action="toggle-fav" data-fav-id="${escapeHtml(f)}" aria-label="Favori">★</button>
         </div>`;
       } else {
         const tense = APP_DATA.tensesById[f];
         if (tense) {
-          return `<div class="lesson-card" data-action="open-tense-modal" data-tense-id="${f}" role="button" tabindex="0">
+          return `<div class="lesson-card" data-action="open-tense-modal" data-tense-id="${escapeHtml(f)}" role="button" tabindex="0">
           <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">📖</div>
           <div class="lesson-info">
-            <div class="lesson-title">${tense.nameFR}</div>
-            <div class="lesson-desc">${tense.explanation.substring(0, 80)}...</div>
+            <div class="lesson-title">${escapeHtml(tense.nameFR)}</div>
+            <div class="lesson-desc">${escapeHtml((tense.explanation || '').substring(0, 80))}...</div>
           </div>
-          <button class="fav-btn active" data-action="toggle-fav" data-fav-id="${f}" aria-label="Favori">★</button>
+          <button class="fav-btn active" data-action="toggle-fav" data-fav-id="${escapeHtml(f)}" aria-label="Favori">★</button>
         </div>`;
         }
       }

@@ -43,18 +43,18 @@ export function showTenseCategory(category, tabEl) {
         const stats = State?.data?.tenseStats?.[t.id];
         const acc = stats?.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
         return `
-      <div class="lesson-card ${!unlocked ? 'locked' : ''}" data-action="open-tense-modal" data-tense-id="${t.id}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''} role="button" tabindex="0">
+      <div class="lesson-card ${!unlocked ? 'locked' : ''}" data-action="open-tense-modal" data-tense-id="${escapeHtml(t.id)}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''} role="button" tabindex="0">
         <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">${!unlocked ? '🔒' : t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
         <div class="lesson-info">
-          <div class="lesson-title">${t.nameFR}</div>
-          <div class="lesson-desc">${t.explanation.substring(0, 120)}...</div>
+          <div class="lesson-title">${escapeHtml(t.nameFR)}</div>
+          <div class="lesson-desc">${escapeHtml((t.explanation || '').substring(0, 120))}...</div>
           <div class="lesson-meta">
-            <span class="tag tag-blue">${t.name}</span>
+            <span class="tag tag-blue">${escapeHtml(t.name || '')}</span>
             <span class="tag ${unlocked ? 'tag-green' : 'tag-locked'}">${unlocked ? (acc !== null ? `✓ ${acc}%` : '🔓 Débloqué') : `🔒 ${UNLOCK_THRESHOLD}% requis`}</span>
-            <span><code>${t.structure}</code></span>
+            <span><code>${escapeHtml(t.structure)}</code></span>
           </div>
         </div>
-        <button class="fav-btn ${isFav ? 'active' : ''}" data-action="toggle-fav" data-fav-id="${t.id}" aria-label="Favori">${isFav ? '★' : '☆'}</button>
+        <button class="fav-btn ${isFav ? 'active' : ''}" data-action="toggle-fav" data-fav-id="${escapeHtml(t.id)}" aria-label="Favori">${isFav ? '★' : '☆'}</button>
       </div>`;
       })
       .join('')}
@@ -92,16 +92,21 @@ export function showComparison(category, tabEl) {
         <thead><tr><th>Temps</th><th>Structure</th><th>Usage principal</th><th>Exemple</th><th>Mot-clé</th></tr></thead>
         <tbody>
           ${tenses
-            .map(
-              (t) => `
+            .map((t) => {
+              const mainUsage = Array.isArray(t.usage) ? t.usage[0] || '' : t.usage || '';
+              const mainExample = Array.isArray(t.examples)
+                ? t.examples[0]?.en || ''
+                : t.examples?.affirmative || '';
+              const signal = Array.isArray(t.signalWords) ? t.signalWords[0] || '—' : '—';
+              return `
             <tr>
               <td><strong>${escapeHtml(t.nameFR)}</strong></td>
               <td><code style="font-size:0.75rem">${escapeHtml(t.structure)}</code></td>
-              <td>${escapeHtml(t.usage)}</td>
-              <td><em>${escapeHtml(t.examples.affirmative)}</em></td>
-              <td><span class="signal-tag">${escapeHtml(t.signalWords[0] || '—')}</span></td>
-            </tr>`,
-            )
+              <td>${escapeHtml(mainUsage)}</td>
+              <td><em>${escapeHtml(mainExample)}</em></td>
+              <td><span class="signal-tag">${escapeHtml(signal)}</span></td>
+            </tr>`;
+            })
             .join('')}
         </tbody>
       </table>
@@ -110,9 +115,9 @@ export function showComparison(category, tabEl) {
     ${tenses
       .map(
         (t) => `
-      <div class="card" style="margin-bottom:12px;cursor:pointer" data-action="open-tense-modal" data-tense-id="${t.id}" role="button" tabindex="0">
+      <div class="card" style="margin-bottom:12px;cursor:pointer" data-action="open-tense-modal" data-tense-id="${escapeHtml(t.id)}" role="button" tabindex="0">
         <h4>${escapeHtml(t.nameFR)} vs autres</h4>
-        <p style="font-size:0.9rem;color:var(--text-light);margin-top:8px">${escapeHtml(t.nuances || t.explanation.substring(0, 200))}</p>
+        <p style="font-size:0.9rem;color:var(--text-light);margin-top:8px">${escapeHtml(t.nuances || (t.explanation || '').substring(0, 200))}</p>
       </div>`,
       )
       .join('')}`;
