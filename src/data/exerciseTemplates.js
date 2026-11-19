@@ -689,7 +689,7 @@ export const exerciseTemplates = {
       {
         wrong: 'She has been know him for years.',
         answer: 'She has known him for years.',
-        acceptedAnswers: ['has been knowing', 'has known', 'She has known'],
+        acceptedAnswers: ["She's known him for years.", 'has known', 'She has known'],
         explanation:
           "Attention : 'know' est un verbe d'état, mais dans tous les cas 'has been + base verbale' est grammaticalement impossible.",
       },

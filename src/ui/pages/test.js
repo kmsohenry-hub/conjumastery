@@ -35,7 +35,7 @@ export function renderTestSetup() {
     .map(
       (t) => `
     <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">
-      <input type="checkbox" value="${t.id}" checked> ${t.nameFR}
+      <input type="checkbox" value="${escapeHtml(t.id)}" checked> ${escapeHtml(t.nameFR)}
     </label>`,
     )
     .join('');

@@ -118,4 +118,11 @@ describe('tenses page', () => {
     expect(openModalMock).not.toHaveBeenCalled();
     expect(document.getElementById('modalContent').innerHTML).toBe('');
   });
+
+  it('renders real APP_DATA comparison rows without undefined example cells', () => {
+    showComparison('present');
+    const tableHtml = document.querySelector('.comparison-table').innerHTML;
+    expect(tableHtml).toContain('She drinks tea every morning.');
+    expect(tableHtml).not.toContain('undefined');
+  });
 });

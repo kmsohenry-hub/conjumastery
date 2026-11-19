@@ -1,3 +1,4 @@
+import { escapeHtml } from '../../core/security.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
 
@@ -29,13 +30,13 @@ export function renderDashboardNextLesson(completedLessons) {
       next.duration || `${Math.max(5, Math.round((next.exercises || 10) * 0.8))} min`;
     nextLessonEl.innerHTML = `
       <div class="lesson-card" data-page="lessons" role="button" tabindex="0">
-        <div class="lesson-icon" style="background:${next.module.color}20;color:${next.module.color}">${next.module.icon}</div>
+        <div class="lesson-icon" style="background:${escapeHtml(next.module.color)}20;color:${escapeHtml(next.module.color)}">${escapeHtml(next.module.icon)}</div>
         <div class="lesson-info">
-          <div class="lesson-title">${next.title}</div>
-          <div class="lesson-desc">${next.desc}</div>
+          <div class="lesson-title">${escapeHtml(next.title)}</div>
+          <div class="lesson-desc">${escapeHtml(next.desc)}</div>
           <div class="lesson-meta">
-            <span>📚 ${next.exercises} exercices</span>
-            <span>⏱️ ${durationLabel}</span>
+            <span>📚 ${escapeHtml(String(next.exercises))} exercices</span>
+            <span>⏱️ ${escapeHtml(durationLabel)}</span>
           </div>
         </div>
       </div>`;
@@ -55,8 +56,8 @@ export function renderDashboardRevisionQueue(queue) {
         return `<div class="revision-item">
         <span class="ri-icon">📖</span>
         <div class="ri-info">
-          <div class="ri-title">${tense ? tense.nameFR : q.tenseId}</div>
-          <div class="ri-meta">Prochaine révision : maintenant • ${q.interval}min d'intervalle</div>
+          <div class="ri-title">${escapeHtml(tense ? tense.nameFR : q.tenseId)}</div>
+          <div class="ri-meta">Prochaine révision : maintenant • ${escapeHtml(String(q.interval))}min d'intervalle</div>
         </div>
         <span class="ri-priority ${q.errors > 3 ? 'priority-high' : q.errors > 1 ? 'priority-medium' : 'priority-low'}">
           ${q.errors > 3 ? 'Urgent' : q.errors > 1 ? 'Moyen' : 'Faible'}

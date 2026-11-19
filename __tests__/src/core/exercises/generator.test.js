@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { APP_DATA } from '../../../../src/data/index.js';
 import {
   generateQuestions,
+  generateQCM,
   generateTransform,
   generateFill,
   generatePassiveQuestion,
@@ -87,5 +88,59 @@ describe('generator core distribution', () => {
     } finally {
       APP_DATA.reportedSpeech = originalReported;
     }
+  });
+
+  test('generateQCM dynamic fallback builds auxiliary continuous forms and single-blank conditionals', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    try {
+      const presCont = generateQCM(
+        APP_DATA.tensesById.present_continuous,
+        'He',
+        'work',
+        true,
+        'intermediate',
+      );
+      expect(presCont.sentence).toBe('He ___ right now.');
+      expect(presCont.options[presCont.correct]).toBe('is working');
+
+      const pastCont = generateQCM(
+        APP_DATA.tensesById.past_continuous,
+        'He',
+        'work',
+        true,
+        'intermediate',
+      );
+      expect(pastCont.sentence).toBe('He ___ when I arrived.');
+      expect(pastCont.options[pastCont.correct]).toBe('was working');
+
+      const cond0 = generateQCM(
+        APP_DATA.tensesById.conditional_0,
+        'He',
+        'work',
+        true,
+        'intermediate',
+      );
+      expect(cond0.sentence).toBe('If He ___, He ___.');
+
+      const cond3 = generateQCM(
+        APP_DATA.tensesById.conditional_3,
+        'He',
+        'work',
+        true,
+        'intermediate',
+      );
+      expect(cond3.sentence).toBe('If He had ___, He would have ___.');
+    } finally {
+      Math.random.mockRestore();
+    }
+  });
+
+  test('curated stative-verb correction template does not accept ungrammatical continuous form', () => {
+    const knowCorrection = APP_DATA.exerciseTemplates.present_perfect_continuous.correction.find(
+      (item) => item.wrong.includes('She has been know'),
+    );
+    expect(knowCorrection).toBeDefined();
+    expect(knowCorrection.answer).toBe('She has known him for years.');
+    expect(knowCorrection.acceptedAnswers).not.toContain('has been knowing');
   });
 });

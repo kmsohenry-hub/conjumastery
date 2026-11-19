@@ -300,6 +300,12 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty, usedSente
     } else if (tense.id === 'future_continuous') {
       fullSentence = `${subj} ${aux} ${correctForm} tomorrow evening.`;
       correctAnswer = `${aux} ${correctForm}`;
+    } else if (tense.id === 'present_continuous') {
+      fullSentence = `${subj} ${aux} ${correctForm} right now.`;
+      correctAnswer = `${aux} ${correctForm}`;
+    } else if (tense.id === 'past_continuous') {
+      fullSentence = `${subj} ${aux} ${correctForm} when I arrived.`;
+      correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id === 'future_will') {
       fullSentence = `${subj} will ${correctForm} tomorrow.`;
       correctAnswer = `will ${correctForm}`;
