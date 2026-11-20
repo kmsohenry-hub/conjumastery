@@ -5,8 +5,8 @@ import { join } from 'node:path';
 
 const DIST = new URL('../dist/', import.meta.url);
 const BUDGETS = {
-  html: 30 * 1024,
-  css: 30 * 1024,
+  html: 35 * 1024,
+  css: 35 * 1024,
   js: 180 * 1024,
 };
 

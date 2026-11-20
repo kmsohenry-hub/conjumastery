@@ -27,7 +27,7 @@ export function renderFavorites() {
         const tense = APP_DATA.tensesById[f];
         if (tense) {
           return `<div class="lesson-card" data-action="open-tense-modal" data-tense-id="${escapeHtml(f)}" role="button" tabindex="0">
-          <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">📖</div>
+          <div class="lesson-icon" style="background:var(--primary-soft);color:var(--primary)">📖</div>
           <div class="lesson-info">
             <div class="lesson-title">${escapeHtml(tense.nameFR)}</div>
             <div class="lesson-desc">${escapeHtml((tense.explanation || '').substring(0, 80))}...</div>

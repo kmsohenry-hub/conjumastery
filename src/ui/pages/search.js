@@ -20,15 +20,14 @@ export function performGlobalSearch() {
 
   // Search tenses
   APP_DATA.tenses.forEach((t) => {
-    if (
-      t.name.toLowerCase().includes(query) ||
-      t.nameFR.toLowerCase().includes(query) ||
-      t.explanation.toLowerCase().includes(query)
-    ) {
+    const name = (t.name || '').toLowerCase();
+    const nameFR = (t.nameFR || '').toLowerCase();
+    const explanation = (t.explanation || '').toLowerCase();
+    if (name.includes(query) || nameFR.includes(query) || explanation.includes(query)) {
       results.push({
         type: 'temps',
         title: t.nameFR,
-        desc: t.explanation.substring(0, 100),
+        desc: (t.explanation || '').substring(0, 100),
         actionType: 'open-tense',
         targetId: t.id,
       });
@@ -37,11 +36,15 @@ export function performGlobalSearch() {
 
   // Search verbs
   APP_DATA.irregularVerbs.forEach((v) => {
+    const base = (v.base || '').toLowerCase();
+    const past = (v.past || '').toLowerCase();
+    const pp = (v.pp || '').toLowerCase();
+    const meaning = (v.meaning || '').toLowerCase();
     if (
-      v.base.includes(query) ||
-      v.past.includes(query) ||
-      v.pp.includes(query) ||
-      v.meaning.includes(query)
+      base.includes(query) ||
+      past.includes(query) ||
+      pp.includes(query) ||
+      meaning.includes(query)
     ) {
       results.push({
         type: 'verbe',
@@ -55,14 +58,18 @@ export function performGlobalSearch() {
 
   // Search phrasal verbs
   APP_DATA.phrasalVerbs.forEach((pv) => {
-    if (pv.pv.includes(query) || pv.meaning.includes(query)) {
+    const phrase = (pv.pv || '').toLowerCase();
+    const meaning = (pv.meaning || '').toLowerCase();
+    if (phrase.includes(query) || meaning.includes(query)) {
       results.push({ type: 'phrasal verb', title: pv.pv, desc: pv.meaning });
     }
   });
 
   // Search modals
   APP_DATA.modals.forEach((m) => {
-    if (m.name.toLowerCase().includes(query) || m.ability.toLowerCase().includes(query)) {
+    const name = (m.name || '').toLowerCase();
+    const ability = (m.ability || '').toLowerCase();
+    if (name.includes(query) || ability.includes(query)) {
       results.push({ type: 'modal', title: m.name, desc: m.ability });
     }
   });
@@ -77,9 +84,9 @@ export function performGlobalSearch() {
     .map((r) => {
       let attrs = 'class="search-result-item" role="button" tabindex="0"';
       if (r.actionType === 'open-tense') {
-        attrs += ` data-action="open-tense-modal" data-tense-id="${r.targetId}"`;
+        attrs += ` data-action="open-tense-modal" data-tense-id="${escapeHtml(r.targetId)}"`;
       } else if (r.actionType === 'nav-page') {
-        attrs += ` data-page="${r.targetPage}"`;
+        attrs += ` data-page="${escapeHtml(r.targetPage)}"`;
       }
       return `
     <div ${attrs}>

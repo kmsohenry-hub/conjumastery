@@ -90,7 +90,28 @@ export function setModalOpenState(isOpen) {
   syncMainContentInertState();
 }
 
-export function navigateTo(page) {
+export const VALID_PAGES = new Set([
+  'dashboard',
+  'lessons',
+  'exercises',
+  'test',
+  'tenses',
+  'verbs',
+  'comparison',
+  'revision',
+  'weakpoints',
+  'search',
+  'favorites',
+  'stats',
+  'settings',
+]);
+
+export function resolvePageFromHash(hash) {
+  const raw = typeof hash === 'string' ? hash.replace(/^#/, '').trim() : '';
+  return VALID_PAGES.has(raw) ? raw : 'dashboard';
+}
+
+export function navigateTo(page, { updateHash = true } = {}) {
   if (page !== 'test') {
     cancelTest();
   }
@@ -187,6 +208,17 @@ export function navigateTo(page) {
     document.getElementById('modalOverlay')?.classList?.contains('active')
   ) {
     setModalOpenState(false);
+  }
+
+  if (updateHash && VALID_PAGES.has(page) && typeof window !== 'undefined' && window.location) {
+    const nextHash = `#${page}`;
+    if (window.location.hash !== nextHash && typeof window.history?.pushState === 'function') {
+      try {
+        window.history.pushState({ page }, '', nextHash);
+      } catch {
+        // Ignore restricted history contexts
+      }
+    }
   }
 }
 
@@ -626,6 +658,11 @@ export function initEventDelegation() {
             window.resetProgress();
           }
           break;
+        case 'confirm-reset-execute':
+          if (typeof window !== 'undefined' && typeof window.executeResetProgress === 'function') {
+            window.executeResetProgress();
+          }
+          break;
       }
       return;
     }
@@ -658,6 +695,12 @@ export function initEventDelegation() {
       }
     }
   });
+
+  if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    window.addEventListener('hashchange', () => {
+      navigateTo(resolvePageFromHash(window.location?.hash), { updateHash: false });
+    });
+  }
 }
 
 if (typeof window !== 'undefined') {

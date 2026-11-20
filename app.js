@@ -1,5 +1,6 @@
 import {
   navigateTo,
+  resolvePageFromHash,
   toggleSidebar,
   toggleTheme,
   setTheme,
@@ -245,6 +246,37 @@ function importData() {
   input.click();
 }
 
+function confirmReset() {
+  const modal = document.getElementById('modalContent');
+  if (!modal) {
+    resetProgress();
+    return;
+  }
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">⚠️ Réinitialiser la progression ?</div>
+      </div>
+      <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
+    </div>
+    <div class="explain-block">
+      <p>Cette action effacera définitivement vos XP, niveaux, leçons validées, statistiques, favoris et historiques de révision.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="cancelResetBtn" data-action="close-modal">Annuler</button>
+      <button class="btn btn-accent" id="confirmResetBtn" data-action="confirm-reset-execute">Confirmer la réinitialisation</button>
+    </div>`;
+  openModal();
+}
+
+function executeResetProgress() {
+  State.reset();
+  setTheme(State.data.settings?.theme === 'dark' ? 'dark' : 'light');
+  closeModalDirect();
+  navigateTo('dashboard');
+  showToast('🔄 Progression réinitialisée', 'info');
+}
+
 function resetProgress() {
   if (
     confirm(
@@ -311,7 +343,8 @@ export function init() {
     showToast('⚠️ Espace de stockage saturé : échec de sauvegarde locale', 'warning');
   });
   updateUI();
-  navigateTo('dashboard');
+  const initialPage = resolvePageFromHash(window.location?.hash);
+  navigateTo(initialPage, { updateHash: false });
 
   // Apply saved theme
   setTheme(State.data.settings.theme === 'dark' ? 'dark' : 'light');
@@ -370,6 +403,8 @@ window.finishExercise = finishExercise;
 window.toggleTheme = toggleTheme;
 window.toggleSidebar = toggleSidebar;
 window.setTheme = setTheme;
+window.confirmReset = confirmReset;
+window.executeResetProgress = executeResetProgress;
 window.resetProgress = resetProgress;
 window.importData = importData;
 window.exportData = exportData;
@@ -410,6 +445,8 @@ export {
   launchConfetti,
   navigateTo,
   closeModal,
+  confirmReset,
+  executeResetProgress,
   answerMatches,
   normalizeAnswer,
 };
