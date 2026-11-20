@@ -117,7 +117,14 @@ export function renderDashboardChart() {
 
     const barLabel = document.createElement('div');
     barLabel.className = 'bar-label';
-    barLabel.textContent = t.nameFR.split(' ')[0];
+    const cleanLabel = t.nameFR
+      .replace(/\s*\([^)]*\)/, '')
+      .replace(/Continuous/gi, 'Cont.')
+      .replace(/continu/gi, 'cont.')
+      .replace(/Perfect/gi, 'Perf.')
+      .trim();
+    barLabel.textContent = cleanLabel;
+    barLabel.title = t.nameFR;
 
     barItem.appendChild(barValue);
     barItem.appendChild(bar);

@@ -1,449 +1,286 @@
-# ConjuMaster UK 🇬🇧
+<p align="center">
+  <img
+    src="docs/assets/conjumastery-banner.png"
+    alt="ConjuMaster UK — Plateforme d'apprentissage de la conjugaison anglaise britannique"
+    width="100%"
+  />
+</p>
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Status](https://img.shields.io/badge/status-stable-success)
+<h1 align="center">ConjuMaster UK</h1>
 
-**Application web interactive pour apprendre et maîtriser la conjugaison de l'anglais britannique**
+<p align="center">
+  <strong>Application web interactive et hors-ligne pour maîtriser la conjugaison de l’anglais britannique.</strong>
+</p>
 
----
-
-## 📖 Table des matières
-
-- [Fonctionnalités](#-fonctionnalités)
-- [Démarrage rapide](#-démarrage-rapide)
-- [Installation pour développeurs](#-installation-pour-développeurs)
-- [Architecture du projet](#-architecture-du-projet)
-- [Tests unitaires](#-tests-unitaires)
-- [Sécurité](#-sécurité)
-- [Structure des données](#-structure-des-données)
-- [Contribuer](#-contribuer)
-- [Auteur](#-auteur)
-- [Licence](#-licence)
-
----
-
-## 🌟 Fonctionnalités
-
-### 📊 Tableau de bord personnalisé
-
-- **Système de progression** : Gagnez de l'XP et montez en niveau
-- **Suivi statistique** : Visualisez vos exercices réussis/échoués
-- **Répétition espacée** : Révisez intelligemment avec un algorithme de révision optimisé
-- **File d'attente de révision** : Ne révisez que ce dont vous avez besoin
-
-### 📚 Parcours d'apprentissage structurés
-
-- **Leçons par temps verbaux** : Du niveau débutant à expert
-  - Present Simple / Continuous / Perfect
-  - Past Simple / Continuous / Perfect
-  - Future (will / going to)
-  - Et bien plus encore...
-- **Explications détaillées** : Comprenez la logique derrière chaque temps
-- **Exemples contextuels** : Apprenez avec des phrases du quotidien
-
-### 🎮 Exercices interactifs variés
-
-- **QCM intelligents** : Choisissez la bonne réponse parmi plusieurs options
-- **Phrases à compléter** : Complétez les trous avec la forme verbale correcte
-- **Transformations** : Passez de l'affirmatif au négatif/interrogatif
-- **Correction d'erreurs** : Identifiez et corrigez les erreurs
-- **Traductions** : Traduisez depuis le français vers l'anglais
-
-### 📝 Mode Test & Évaluation
-
-- **Test de niveau** : 20 questions générées dynamiquement
-- **Score instantané** : Obtenez votre résultat immédiatement
-- **Feedback détaillé** : Comprenez vos erreurs
-
-### 📖 Références complètes
-
-- **Dictionnaire de verbes** : 143 verbes irréguliers consultables
-- **Tableau comparatif** : Tous les temps verbaux côte à côte
-- **Mode sombre intégré** : Confort de lecture optimal
+<p align="center">
+  <a href="https://github.com/kmsohenry-hub/conjumastery/actions/workflows/ci.yml">
+    <img src="https://github.com/kmsohenry-hub/conjumastery/actions/workflows/ci.yml/badge.svg" alt="Statut CI" />
+  </a>
+  <img src="https://img.shields.io/badge/version-2.0.0-1d4ed8" alt="Version 2.0.0" />
+  <img src="https://img.shields.io/badge/node-%3E%3D24%20%3C25-047857" alt="Node.js 24" />
+  <img src="https://img.shields.io/badge/vitest-43%20fichiers%20%7C%20728%20tests-0f766e" alt="Suite Vitest" />
+  <img src="https://img.shields.io/badge/playwright-E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/licence-MIT-334155" alt="Licence MIT" />
+  </a>
+</p>
 
 ---
 
-## 🚀 Démarrage rapide
+**ConjuMaster UK** enseigne la grammaire et la conjugaison anglaises en plaçant l’**anglais britannique (_British English_)** au centre du parcours, sans transformer chaque exercice en QCM rigide. Les données pédagogiques, le moteur de correction et la progression restent entièrement locaux dans le navigateur (PWA installable, stockage `localStorage`, fonctionnement hors-ligne), tandis qu’une couche Node optionnelle expose des routes `/api/github/*` sécurisées côté serveur lorsque l’application est hébergée.
 
-ConjuMaster UK est une application **100% front-end** qui ne nécessite **aucun backend ni base de données**.
+## Table des matières
 
-### Option 1 : Utilisation directe (la plus simple)
+- [Aperçu de l’interface](#-aperçu-de-linterface)
+- [Approche pédagogique & moteur d’exercices](#-approche-pédagogique--moteur-dexercices)
+- [Architecture & flux de données](#-architecture--flux-de-données)
+- [Démarrage rapide & scripts](#-démarrage-rapide--scripts)
+- [Intégration GitHub côté serveur](#-intégration-github-côté-serveur)
+- [Qualité, accessibilité & budgets de performance](#-qualité-accessibilité--budgets-de-performance)
+- [Sécurité & modèles de données](#-sécurité--modèles-de-données)
+- [Contribuer & limites connues](#-contribuer--limites-connues)
+- [Auteur & licence](#-auteur--licence)
 
-```bash
-# 1. Clonez ou téléchargez ce dépôt
-git clone https://github.com/kmsohenry-hub/conjumastery.git
-cd conjumastery
+---
 
-# 2. Ouvrez simplement le fichier dans votre navigateur
-# Double-cliquez sur index.html ou utilisez :
-open index.html       # macOS
-start index.html      # Windows
-xdg-open index.html   # Linux
+## Aperçu de l’interface
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <p align="center">
+        <img src="docs/assets/preview-dashboard.png" alt="Tableau de bord en mode clair avec suivi d'XP, révisions et graphique de performance" width="100%" />
+      </p>
+      <p align="center"><sub><strong>Tableau de bord (clair)</strong> — Suivi XP, série quotidienne, file de révision espacée et performance par temps verbal.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <p align="center">
+        <img src="docs/assets/preview-exercises-dark.png" alt="Exercice QCM en mode sombre avec correction immédiate" width="100%" />
+      </p>
+      <p align="center"><sub><strong>Mode Exercices (sombre)</strong> — Interface contrastée WCAG AA, feedback immédiat et explications grammaticales contextualisées.</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <img src="docs/assets/preview-mobile.png" alt="Version mobile responsive sur écran 390px" width="320" />
+      <p><sub><strong>Affichage mobile (390 × 844)</strong> — Navigation latérale repliable avec verrouillage du défilement arrière-plan et cibles tactiles ≥ 44 px.</sub></p>
+    </td>
+  </tr>
+</table>
+
+---
+
+## Approche pédagogique & moteur d’exercices
+
+### Couverture grammaticale
+
+| Domaine                         | Volume vérifié            | Détails                                                                                                                 |
+| ------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Temps & structures verbales** | **18 temps**              | Présent (2), Perfect (4), Passé (2), Futur (4), Conditionnels (4 : _0, 1st, 2nd, 3rd_), Voix passive, Discours indirect |
+| **Parcours séquentiel**         | **4 modules / 20 leçons** | _Les bases_ (5), _Intermédiaire_ (5), _Avancé_ (5), _Expert_ (5) — seuil de maîtrise à **75 %** (`UNLOCK_THRESHOLD`)    |
+| **Modèles d’exercices**         | **250 modèles**           | `qcm` (89), `fill` (86), `correction` (43), `translation` (32), complétés par un générateur dynamique                   |
+| **Dictionnaires de référence**  | **221 entrées**           | 143 verbes irréguliers, 11 modaux, 26 _phrasal verbs_, 41 verbes d’état (_stative verbs_)                               |
+
+### Cinq types d’exercices + évaluation
+
+- **QCM**, **phrases à compléter**, **transformations** (affirmatif ↔ négatif / interrogatif), **correction d’erreurs**, **traductions FR → EN** et **mode mixte**.
+- **Mode Test** : épreuve chronométrée de **20 questions** filtrables par temps et par niveau, avec bilan détaillé.
+- **Répétition espacée** (`src/core/state/store.js`) : file de révision adaptative dérivée de l’algorithme SM-2 (intervalle, facteur de facilité à partir de `2.5`, plancher à `1.3`, priorisation des erreurs récentes).
+
+### Priorité à l’anglais britannique & validation tolérante
+
+Le module `src/core/exercises/validation.js` distingue la correction grammaticale de la variante orthographique ou lexicale :
+
+1. **Normalisation syntaxique** (`answerMatches`) : gère ponctuation, apostrophes typographiques, expansion des contractions (`won't` ↔ `will not`, `'s` ↔ `is`/`has`, `'d` ↔ `would`/`had`), inversion des propositions conditionnelles (`If X, Y` ↔ `Y if X`), omission facultative de `that` au discours indirect et variantes séparées par `/`.
+2. **Détection explicite de l’anglais américain** (`checkAmericanEnglishUsage`) : les variantes américaines courantes (`learned`, `gotten`, `traveled`, `realize`, `color`, `movie`, `vacation`, `apartment`, `elevator`, `soccer`…) sont **acceptées**, mais accompagnées d’un avertissement explicite rappelant la forme britannique attendue (`learnt`, `got`, `travelled`, `realise`, `colour`, `film`, `holiday`, `flat`, `lift`, `football`).
+
+---
+
+## Architecture & flux de données
+
+### Organisation du dépôt
+
+```text
+conjumastery/
+├── index.html                  # Point d'entrée HTML, CSP stricte, conteneurs de vues
+├── style.css                   # Système visuel "Oxford Studio" (clair / sombre / responsive)
+├── app.js                      # Bootstrap, événements délégués, export global contrôlé
+├── sw.js                       # Service Worker PWA avec pré-cache généré au build
+├── manifest.webmanifest        # Métadonnées d'installation PWA
+├── server.js                   # Serveur HTTP de production (dist/ + middleware /api/github)
+├── server/
+│   ├── githubMiddleware.js     # Routeur /api/github/* et restriction loopback en écriture
+│   └── githubService.js        # Client GitHub REST v3 (sans exposition de GITHUB_TOKEN)
+├── scripts/
+│   └── performance-budget.mjs  # Contrôle automatisé des poids HTML / CSS / JS dans dist/
+├── src/
+│   ├── pwa.js                  # Enregistrement SW, bannière hors-ligne, notification de mise à jour
+│   ├── data/                   # 10 modules de contenu + façade APP_DATA avec index O(1)
+│   ├── core/
+│   │   ├── exercises/          # ExerciseEngine, conjugaison, générateur, mélange, validation
+│   │   ├── persistence/        # Chargement, migration et import/export localStorage
+│   │   ├── state/              # Store pur, fusion multi-onglets, sélecteurs, façade State
+│   │   ├── progression.js      # Déblocage séquentiel des 20 leçons (seuil 75 %)
+│   │   └── security.js         # escapeHtml(), sanitizeInput()
+│   └── ui/
+│       ├── pages/              # Tableau de bord, leçons, exercices, test, temps, verbes, etc.
+│       ├── utils/              # Toasts, confettis, notifications navigateur
+│       └── navigation.js       # Routage interne, thème clair/sombre, modales, tiroir mobile
+├── __tests__/                  # 43 fichiers Vitest (unitaires, intégration, régression, sécurité)
+└── e2e/                        # 3 specs Playwright (parcours app, accessibilité axe-core, responsive)
 ```
 
-### Option 2 : Serveur de développement Vite (recommandé pour développer)
+### Flux applicatif
 
-```bash
-# Installer les dépendances
-npm install
-
-# Lancer le serveur de développement
-npm run dev
+```mermaid
+flowchart LR
+  User["Apprenant (Navigateur)"] -->|"Interactions DOM"| UI["src/ui/ + app.js"]
+  UI -->|"Génération & correction"| Core["src/core/exercises & progression"]
+  Core -->|"Lecture O(1)"| Data["src/data/ (APP_DATA)"]
+  UI -->|"Mutations d'état"| Store["src/core/state/ & persistence/"]
+  Store -->|"Synchronisation & sauvegarde"| Storage[("localStorage\n(conjumaster_data)")]
+  Vite["vite.config.js / server.js"] -.->|"Routes serveur optionnelles"| GitHub["/api/github/* → API GitHub"]
 ```
-
-### Option 3 : Serveur statique simple
-
-```bash
-# Avec Python
-python -m http.server 8000
-
-# Avec Node.js (npx)
-npx serve .
-
-# Puis ouvrez http://localhost:8000
-```
-
-### 💾 Sauvegarde des données
-
-Toutes vos données (statistiques, niveaux, leçons complétées) sont sauvegardées automatiquement dans le **localStorage** de votre navigateur. Aucune donnée n'est envoyée vers un serveur externe.
-
-**Export/Import** : Utilisez la fonctionnalité de sauvegarde dans les paramètres pour exporter/importer votre progression.
 
 ---
 
-## 🛠️ Installation pour développeurs
+## Démarrage rapide & scripts
 
 ### Prérequis
 
-- Node.js >= 18.x (recommandé)
-- npm >= 9.x
+- **Node.js `>= 24 < 25`** (voir `.nvmrc` et `package.json`)
+- **npm** (`npm ci` recommandé pour respecter `package-lock.json`)
 
-### Installation des dépendances
-
-```bash
-npm install
-```
-
-### Scripts disponibles
-
-```bash
-# Serveur de développement (Vite)
-npm run dev
-
-# Build de production
-npm run build
-
-# Prévisualiser le build de production
-npm run preview
-
-# Lancer les tests unitaires (Vitest, exécution unique)
-npm test
-
-# Lancer les tests en mode watch
-npm run test:watch
-
-# Lancer les tests avec interface graphique
-npm run test:ui
-
-# Lancer les tests avec couverture de code
-npm run test:coverage
-
-# Lint
-npm run lint
-npm run lint:fix
-
-# Formatage Prettier
-npm run format
-npm run format:check
-```
-
-### Structure de développement
-
-```
-conjumastery/
-├── __tests__/              # Tests unitaires et tests de régression (Vitest)
-├── src/
-│   ├── data/               # Données pédagogiques modulaires
-│   │   ├── index.js        # Façade APP_DATA stable
-│   │   ├── irregularVerbs.js # Verbes irréguliers et index
-│   │   ├── tenses.js       # Temps verbaux et règles
-│   │   ├── exerciseTemplates.js # Templates d'exercices
-│   │   ├── modules.js      # Modules et leçons
-│   │   ├── modals.js       # Données des modaux
-│   │   ├── phrasalVerbs.js # Phrasal verbs
-│   │   ├── passiveInfo.js  # Voix passive
-│   │   ├── reportedSpeech.js # Discours indirect
-│   │   └── stativeVerbs.js # Verbes d'état
-│   ├── core/
-│   │   ├── exercises/      # Génération, validation et conjugaison
-│   │   ├── persistence/    # Accès localStorage
-│   │   ├── state/          # Store, sélecteurs et façade State
-│   │   └── security.js     # Échappement HTML et nettoyage d'entrées
-│   └── ui/
-│       ├── pages/          # Rendu des pages de l'application
-│       ├── utils/          # Toasts, notifications, confettis
-│       └── navigation.js   # Navigation interne et thème
-├── index.html              # Squelette HTML et conteneurs de pages
-├── style.css               # Feuilles de style (responsive + mode sombre)
-├── app.js                  # Bootstrap et compatibilité globale
-├── package.json            # Scripts npm et dépendances
-└── vite.config.js          # Configuration Vite
-```
-
-> Le projet utilise npm comme gestionnaire de paquets de référence. Utilisez `npm ci` en CI et `npm install` en local.
-
----
-
-## 🏗️ Architecture du projet
-
-### Séparation des responsabilités
-
-| Zone         | Responsabilité                                                       |
-| ------------ | -------------------------------------------------------------------- |
-| `index.html` | Structure HTML et conteneurs de pages                                |
-| `style.css`  | Design responsive et mode sombre                                     |
-| `src/data/`  | Données pédagogiques séparées par domaine, assemblées par `APP_DATA` |
-| `src/core/`  | Logique métier, état, persistance, exercices et sécurité             |
-| `src/ui/`    | Pages, navigation et utilitaires d'interface                         |
-| `app.js`     | Bootstrap, compatibilité globale et orchestration                    |
-
-### Flux de données
-
-```
-Utilisateur → Interface (`src/ui/`)
-           → Événements / bootstrap (`app.js`)
-           → Logique métier (`src/core/`)
-           → Données pédagogiques (`src/data/`)
-           → État et persistance (`src/core/state/`, `src/core/persistence/`)
-           → `localStorage`
-```
-
-### Points de maintenance importants
-
-- Les exercices doivent toujours conserver une cohérence entre `tenseId`, consigne, réponse attendue et statistiques.
-- Les imports de sauvegarde utilisateur sont validés avant d'être appliqués à l'état local.
-- Toute nouvelle donnée pédagogique doit être couverte par un test de structure ou de génération d'exercice.
-- Les handlers inline historiques sont conservés pour compatibilité, mais les nouveaux développements doivent privilégier `addEventListener`.
-
-### Modules principaux (`app.js`)
-
-1. **State Management** : Gestion centralisée de l'état (XP, niveau, statistiques)
-2. **ExerciseEngine** : Génération dynamique de questions et conjugaison
-3. **SpacedRepetition** : Algorithme de révision espacée
-4. **UI Renderer** : Rendu dynamique des composants
-5. **Data Persistence** : Sauvegarde/chargement localStorage
-
----
-
-## ✅ Tests unitaires
-
-Le projet inclut une suite de tests avec **Vitest** pour garantir la fiabilité du code. La suite actuellement exécutée compte **27 fichiers de test et 294 tests**, tous passés lors de l’audit fonctionnel du 2 septembre 2026.
-
-### Couverture des tests
-
-- ✅ **State Management** : XP, niveaux, logs d'activité
-- ✅ **Système de favoris** : Ajout, suppression, vérification
-- ✅ **Points faibles** : Identification des temps à réviser
-- ✅ **Moteur de conjugaison** : Tous les temps verbaux
-- ✅ **Générateur de questions** : QCM, phrases à compléter, transformations, correction d'erreurs et traductions
-- ✅ **Validation des réponses** : casse, espaces, apostrophes et variantes exactes (ex. BrE/AmE)
-- ✅ **Navigation et accessibilité** : routage des pages, thème, barre latérale, modales, clavier et focus
-- ✅ **Répétition espacée** : Algorithmes de révision
-- ✅ **Structure des données** : Validation de APP_DATA
-- ✅ **Sécurité** : validation des imports, nettoyage des entrées et régressions XSS
-
-### Exécuter les tests
-
-```bash
-# Tous les tests (exécution unique)
-npm test
-
-# Mode watch (re-run automatique)
-npm run test:watch
-
-# Interface graphique Vitest
-npm run test:ui
-
-# Avec couverture de code
-npm run test:coverage
-```
-
----
-
-## 🔒 Sécurité
-
-### Analyse de sécurité
-
-✅ **Contrôles de sécurité applicatifs validés** : 11 tests dédiés à la sécurité et aux régressions XSS passent actuellement.
-
-#### Points forts
-
-- **Pas de backend** : Toutes les opérations sont locales
-- **Sanitization** : Fonctions `escapeHtml()` et `sanitizeInput()` implémentées
-- **Pas de pratiques dangereuses** : Aucun `eval()`, `document.write()`, ou injection directe
-- **Stockage local uniquement** : pas de transmission réseau
-
-#### Bonnes pratiques implémentées
-
-- Validation des entrées utilisateur
-- Échappement du contenu HTML dynamique
-- Politique de sécurité CSP active dans `index.html`
-
-#### CSP actuellement déployée
-
-La page principale applique déjà une Content Security Policy via une balise `<meta>` dans `index.html`. Elle couvre notamment :
-
-- `default-src 'self'` : ressources limitées par défaut à l’origine de l’application
-- `script-src 'self' 'unsafe-inline'` : scripts locaux et inline nécessaires au fonctionnement actuel
-- `style-src 'self' 'unsafe-inline'` : styles locaux et inline utilisés par l’interface
-- `img-src 'self' data:` : images locales et données inline
-- `connect-src 'self'` : connexions limitées à l’origine de l’application
-- `object-src 'none'` : désactivation des plugins/objets embarqués
-- `base-uri 'self'` : base URL limitée à l’origine de l’application
-- `form-action 'self'` : soumissions de formulaires limitées à l’origine de l’application
-- `frame-ancestors 'none'` : interdiction de l’encapsulation de l’application dans une iframe
-
-Aucune étape d’installation supplémentaire n’est nécessaire pour activer cette CSP. Tout durcissement futur doit être traité comme une évolution distincte et vérifié contre les besoins réels de l’application.
-
----
-
-## 📊 Structure des données
-
-### APP_DATA (`src/data/index.js`)
-
-```javascript
-{
-  irregularVerbs: [     // Données issues de src/data/verbs.js
-    { base, past, pp, meaning }
-  ],
-
-  tenses: [            // Tous les temps verbaux
-    {
-      id, name, level,
-      structure, explanation, examples,
-      conjugationRules
-    }
-  ],
-
-  exercises: {         // Templates d'exercices
-    templates: [...],
-    lessons: [...]
-  },
-
-  ui: {                // Textes et labels UI
-    levels: [...],
-    messages: [...]
-  }
-}
-```
-
-### State (app.js)
-
-```javascript
-{
-  xp: Number,          // Expérience actuelle
-  level: Number,       // Niveau actuel
-  statistics: {
-    correct: Number,
-    incorrect: Number,
-    streak: Number,
-    bestStreak: Number
-  },
-  completedLessons: [],
-  spacedRepetition: {},
-  favorites: [],
-  activityLog: []
-}
-```
-
----
-
-## 🤝 Contribuer
-
-Les contributions sont les bienvenues ! Voici comment procéder :
-
-### 1. Fork et clone
+### Installation locale
 
 ```bash
 git clone https://github.com/kmsohenry-hub/conjumastery.git
 cd conjumastery
+npm ci
+npm run dev
 ```
 
-### 2. Créer une branche
+L’application est alors servie par Vite sur `http://localhost:3000`.
 
-```bash
-git checkout -b feature/nouvelle-fonctionnalite
-```
+### Scripts disponibles
 
-### 3. Installer les dépendances
-
-```bash
-npm install
-```
-
-### 4. Développer et tester
-
-```bash
-# Codez votre fonctionnalité
-# Assurez-vous que tous les tests passent
-npm test
-```
-
-### 5. Commit et push
-
-```bash
-git add .
-git commit -m \"feat: ajout de [description]\"
-git push origin feature/nouvelle-fonctionnalite
-```
-
-### 6. Pull Request
-
-Ouvrez une PR sur GitHub avec une description claire de vos changements.
-
-### Conventions de commit
-
-- `feat:` Nouvelle fonctionnalité
-- `fix:` Correction de bug
-- `docs:` Documentation
-- `style:` Formatage, points-virgules manquants, etc.
-- `refactor:` Refactoring de code
-- `test:` Ajout/modification de tests
-- `chore:` Maintenance, dépendances
+| Commande                | Rôle                                                                              |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `npm run dev`           | Démarre le serveur de développement Vite                                          |
+| `npm run build`         | Compile les assets minifiés (`terser`), découpe les chunks et génère `dist/sw.js` |
+| `npm run preview`       | Prévisualise le dossier `dist/` via Vite                                          |
+| `node server.js`        | Démarre le serveur Node de production (`PORT=3000` par défaut)                    |
+| `npm test`              | Exécute la suite unitaire et d’intégration **Vitest**                             |
+| `npm run test:coverage` | Vérifie la couverture (`@vitest/coverage-v8`) avec seuils bloquants               |
+| `npm run test:e2e`      | Lance les tests **Playwright** (bureau, mobile et audit `axe-core`)               |
+| `npm run lint`          | Vérifie les règles **ESLint** sur tout le dépôt                                   |
+| `npm run format:check`  | Vérifie le formatage **Prettier** (`.js`, `.css`, `.json`, `.md`)                 |
+| `npm run perf:budget`   | Contrôle les budgets de taille des fichiers générés dans `dist/`                  |
 
 ---
 
-## 👨‍💻 Auteur
+## Intégration GitHub côté serveur
 
-**Kouakam Henry**  
-Créé avec passion pour faciliter l'apprentissage de l'anglais britannique.
+Lorsque le serveur Vite (`npm run dev` / `npm run preview`) ou `server.js` est actif, `server/githubMiddleware.js` et `server/githubService.js` exposent une interface serveur vers `api.github.com` sous `/api/github/*` (statut, branches, contenu, commits atomiques via l’API Git Data, Pull Requests et suivi GitHub Actions).
 
-### Contact & Support
-
-- 📧 Via l'application : Section _Paramètres_ → _Contact_
-- 🐛 Bugs & Features : Ouvrez une issue sur GitHub
+- **Configuration** : renseignez `GITHUB_TOKEN` dans les secrets d’environnement serveur (modèle fourni dans `.env.example`).
+- **Cloisonnement strict** : le jeton n’est lu que via `process.env.GITHUB_TOKEN` côté Node.js, filtré des messages d’erreur (`[REDACTED]`) et jamais transmis au frontend.
+- **Restriction en écriture** : toute requête non `GET` sur `/api/github/*` vérifie l’origine _loopback_ (`127.0.0.1` / `::1` sans en-tête `x-forwarded-for`).
 
 ---
 
-## 📄 Licence
+## Qualité, accessibilité & budgets de performance
 
-Ce projet est distribué sous la licence **MIT** - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+Le pipeline défini dans `.github/workflows/ci.yml` bloque toute fusion tant que les contrôles suivants ne sont pas verts :
+
+1. **Audit des dépendances** : `npm audit --omit=dev --audit-level=moderate`.
+2. **Qualité de code** : `npm run lint` (ESLint) + `npm run format:check` (Prettier).
+3. **Suite unitaire (43 fichiers, 728 tests)** : couverture minimale exigée dans `vite.config.js` :
+   - **Statements / Branches / Lines** : `≥ 85 %`
+   - **Functions** : `≥ 90 %`
+4. **Budgets de production (`npm run perf:budget`)** :
+   - `index.html` ≤ **30 KiB**
+   - Feuille CSS minifiée ≤ **30 KiB**
+   - Chaque bundle JavaScript (dont `curriculum-data`) ≤ **180 KiB**
+5. **Tests E2E & accessibilité (`e2e/*.spec.js`)** : 3 suites Playwright vérifiant les parcours critiques, la non-régression responsive mobile/bureau sans débordement horizontal et la conformité WCAG 2.0 A / AA via `@axe-core/playwright`.
 
 ---
 
-## 🙏 Remerciements
+## Sécurité & modèles de données
 
-- À tous les apprenants qui utilisent ConjuMaster
-- Aux contributeurs open-source dont les librairies rendent ce projet possible
-- À la communauté pour les retours et suggestions
+### Mesures appliquées
+
+- **Content Security Policy (`index.html`)** :
+  ```text
+  default-src 'self'; script-src 'self'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'
+  ```
+- **Protection XSS & imports** : tout contenu dynamique inséré dans le DOM passe par `escapeHtml()`, les saisies sont nettoyées par `sanitizeInput()`, et les sauvegardes importées sont validées et migrées (`migrateState`) avant écriture dans le store.
+- **Stockage borné** : `errorLog` et `activityLog` sont plafonnés à **100 entrées** chacun (`MAX_ERROR_LOG_ENTRIES`, `MAX_ACTIVITY_LOG_ENTRIES`), et l’état se synchronise entre onglets via `mergeStates()`.
+
+### Schéma `APP_DATA` (`src/data/index.js`)
+
+```javascript
+{
+  tenses: [...],          // 18 temps (id, nameEN, nameFR, level, structure, timeline, examples...)
+  modules: [...],         // 4 modules ordonnés totalisant 20 leçons
+  exerciseTemplates: {},  // Dictionnaire indexé par tenseId -> { qcm, fill, correction, translation }
+  irregularVerbs: [...],  // 143 verbes (base, past, pp, meaning...)
+  modals: [...],          // 11 modaux et règles d'usage
+  phrasalVerbs: [...],    // 26 verbes à particule
+  stativeVerbs: [...],    // 41 verbes d'état
+  passiveInfo: {},        // Règles et tableaux de voix passive
+  reportedSpeech: {},     // Concordance des temps et marqueurs temporels
+  tensesById: {},         // Index O(1) par identifiant de temps
+  verbsByBase: {},        // Index O(1) par base verbale
+}
+```
+
+### Schéma `State` (`localStorage['conjumaster_data']`)
+
+```javascript
+{
+  xp: Number,
+  level: Number,               // Math.floor(xp / 100) + 1
+  totalExercises: Number,
+  correctAnswers: Number,
+  incorrectAnswers: Number,
+  bestStreak: Number,
+  currentStreak: Number,
+  daysStreak: Number,
+  lastActiveDate: String | null,
+  completedLessons: Array,     // IDs des leçons validées
+  tenseStats: Object,          // { [tenseId]: { correct, total } }
+  errorLog: Array,             // Max 100 entrées { tenseId, date }
+  activityLog: Array,          // Max 100 entrées { date, xp }
+  favorites: Array,            // Bases verbales mises en favori
+  spacedRepetition: Object,    // { [tenseId]: { interval, nextReview, ease, errors } }
+  settings: { theme: 'light' | 'dark' },
+}
+```
 
 ---
 
-<div align="center">
+## Contribuer & limites connues
 
-**ConjuMaster UK** v2.0.0 | Fait avec ❤️ pour l'apprentissage de l'anglais
+### Limites connues
 
-[⬆ Retour en haut](#conjumaster-uk-)
+- **Stockage local** : sans synchronisation cloud utilisateur, les progrès résident dans le navigateur courant (export/import JSON disponible dans _Paramètres_).
+- **Synthèse audio / API externes** : l’application ne dépend d’aucune API linguistique distante ; les exercices reposent sur le corpus local et le moteur de conjugaison déterministe.
 
-</div>
+### Flux de contribution
+
+1. Créez une branche depuis `main` (`git checkout -b fix/ma-correction`).
+2. Installez les dépendances avec `npm ci`.
+3. Ajoutez des tests pour toute correction grammaticale ou fonctionnelle dans `__tests__/` (et `e2e/` si l’UI change).
+4. Validez localement avant d’ouvrir une Pull Request :
+   ```bash
+   npm run lint && npm run format:check && npm run test:coverage && npm run build && npm run perf:budget
+   ```
+
+---
+
+## Auteur & licence
+
+- **Auteur** : **Kouakam Henry**
+- **Dépôt** : [github.com/kmsohenry-hub/conjumastery](https://github.com/kmsohenry-hub/conjumastery)
+- **Licence** : distribué sous licence **MIT** — voir [LICENSE](LICENSE).
