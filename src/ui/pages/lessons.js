@@ -24,6 +24,12 @@ export function renderLessons() {
   showModule(0);
 }
 
+const LEVEL_LABELS = {
+  beginner: 'Débutant',
+  intermediate: 'Intermédiaire',
+  advanced: 'Avancé',
+};
+
 export function showModule(index, btn) {
   if (btn) {
     document.querySelectorAll('#lessonTabs .tab').forEach((t) => t.classList.remove('active'));
@@ -48,16 +54,18 @@ export function showModule(index, btn) {
           const prevLesson = !unlocked ? getPreviousLesson(l.id, APP_DATA.modules) : null;
           const tense = l.tenseId ? APP_DATA.tensesById[l.tenseId] : null;
           const fillWidth = isDone ? 100 : unlocked ? progress.rawAccuracy : 0;
+          const rawLevel = l.level || mod.level || '';
+          const levelLabel = LEVEL_LABELS[rawLevel] || rawLevel || 'Débloqué';
 
           return `
         <div class="card lesson-card ${isDone ? 'completed' : ''} ${!unlocked ? 'locked' : ''}" role="button" tabindex="0" data-action="open-lesson" data-lesson-id="${escapeHtml(l.id)}" data-tense-id="${escapeHtml(l.tenseId || '')}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''}>
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-            <span class="tag ${isDone ? 'tag-green' : unlocked ? 'tag-blue' : 'tag-locked'}">${isDone ? '✓ Terminé' : unlocked ? escapeHtml(l.level || mod.level || 'Débloqué') : '🔒 Verrouillé'}</span>
-            <span style="font-size:0.8rem;color:var(--text-light)">${escapeHtml(String(l.exercises))} exercices</span>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <span class="tag ${isDone ? 'tag-green' : unlocked ? 'tag-blue' : 'tag-locked'}">${isDone ? '✓ Terminé' : unlocked ? escapeHtml(levelLabel) : '🔒 Verrouillé'}</span>
+            <span style="font-size:0.8rem;color:var(--text-light);font-variant-numeric:tabular-nums">${escapeHtml(String(l.exercises))} exercices</span>
           </div>
-          <h3 style="margin-bottom:8px">${escapeHtml(l.title)}</h3>
-          <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:12px">${escapeHtml(l.desc)}</p>
-          ${tense ? `<p style="font-size:0.85rem;color:var(--primary);font-family:monospace">${escapeHtml(tense.structure)}</p>` : ''}
+          <h3 style="margin-bottom:4px">${escapeHtml(l.title)}</h3>
+          <p style="color:var(--text-light);font-size:0.88rem;margin-bottom:6px">${escapeHtml(l.desc)}</p>
+          ${tense ? `<p class="lesson-formula">${escapeHtml(tense.structure)}</p>` : ''}
           ${
             !unlocked && prevLesson
               ? `<p class="lesson-prereq">🎯 ${UNLOCK_THRESHOLD}% requis : <strong>${escapeHtml(prevLesson.title)}</strong></p>`
@@ -131,12 +139,13 @@ function renderTenseModal(tense, lessonId) {
   if (!modal || !tense) return;
   const signalWords = Array.isArray(tense.signalWords) ? tense.signalWords : [];
   const commonMistakes = tense.commonErrors || tense.commonMistakes || [];
+  const levelLabel = LEVEL_LABELS[tense.level] || tense.level || '';
 
   modal.innerHTML = `
     <div class="modal-header">
       <div>
         <div class="modal-title" id="modalTitle">${escapeHtml(tense.nameEN || tense.name || '')}</div>
-        <div style="color:var(--text-light);font-size:0.9rem">${escapeHtml(tense.nameFR || '')} • ${escapeHtml(tense.level || '')}</div>
+        <div style="color:var(--text-light);font-size:0.9rem">${escapeHtml(tense.nameFR || '')}${levelLabel ? ` • ${escapeHtml(levelLabel)}` : ''}</div>
       </div>
       <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
