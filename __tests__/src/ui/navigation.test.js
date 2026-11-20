@@ -96,10 +96,12 @@ vi.mock('../../../src/ui/pages/favorites.js', () => ({
 vi.mock('../../../src/ui/pages/stats.js', () => ({ renderStats: mocks.renderStats }));
 
 import {
+  VALID_PAGES,
   closeModal,
   closeModalDirect,
   navigateTo,
   openModal,
+  resolvePageFromHash,
   setTheme,
   toggleSidebar,
   toggleTheme,
@@ -118,6 +120,7 @@ beforeEach(() => {
   Object.values(mocks).forEach((fn) => fn.mockClear());
   document.documentElement.removeAttribute('data-theme');
   window.innerWidth = 1024;
+  window.history.replaceState(null, '', '#dashboard');
 });
 
 describe('navigation', () => {
@@ -664,5 +667,38 @@ describe('navigation', () => {
     testInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     expect(mocks.validateExercise).toHaveBeenCalled();
     expect(mocks.validateTestAnswer).toHaveBeenCalled();
+
+    // confirm-reset-execute action
+    window.executeResetProgress = vi.fn();
+    const confirmExecuteBtn = document.createElement('button');
+    confirmExecuteBtn.dataset.action = 'confirm-reset-execute';
+    document.body.appendChild(confirmExecuteBtn);
+    confirmExecuteBtn.click();
+    expect(window.executeResetProgress).toHaveBeenCalled();
+  });
+
+  it('resolves URL hashes and syncs browser history safely', () => {
+    expect(VALID_PAGES.has('verbs')).toBe(true);
+    expect(resolvePageFromHash('#verbs')).toBe('verbs');
+    expect(resolvePageFromHash('')).toBe('dashboard');
+    expect(resolvePageFromHash('#unknown-route')).toBe('dashboard');
+
+    const pushSpy = vi.spyOn(window.history, 'pushState');
+    navigateTo('verbs');
+    expect(pushSpy).toHaveBeenCalledWith({ page: 'verbs' }, '', '#verbs');
+    expect(window.location.hash).toBe('#verbs');
+
+    pushSpy.mockClear();
+    navigateTo('lessons', { updateHash: false });
+    expect(pushSpy).not.toHaveBeenCalled();
+
+    navigateTo('future-page');
+    expect(pushSpy).not.toHaveBeenCalled();
+    pushSpy.mockRestore();
+
+    window.history.replaceState(null, '', '#settings');
+    window.dispatchEvent(new Event('hashchange'));
+    expect(document.getElementById('page-settings').classList.contains('active')).toBe(true);
+    expect(document.getElementById('pageTitle').textContent).toBe('Paramètres');
   });
 });

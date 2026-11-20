@@ -44,7 +44,7 @@ export function showTenseCategory(category, tabEl) {
         const acc = stats?.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
         return `
       <div class="lesson-card ${!unlocked ? 'locked' : ''}" data-action="open-tense-modal" data-tense-id="${escapeHtml(t.id)}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''} role="button" tabindex="0">
-        <div class="lesson-icon" style="background:var(--primary)15;color:var(--primary)">${!unlocked ? '🔒' : t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
+        <div class="lesson-icon" style="background:var(--primary-soft);color:var(--primary)">${!unlocked ? '🔒' : t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
         <div class="lesson-info">
           <div class="lesson-title">${escapeHtml(t.nameFR)}</div>
           <div class="lesson-desc">${escapeHtml((t.explanation || '').substring(0, 120))}...</div>

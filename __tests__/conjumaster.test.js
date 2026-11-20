@@ -795,6 +795,53 @@ describe('app UI and data management', () => {
     expect(State.data.xp).toBe(200);
   });
 
+  test('confirmReset opens accessible modal without calling native confirm and executeResetProgress resets state', () => {
+    const originalDocument = global.document;
+    State.data = { ...State.data, xp: 250, settings: { theme: 'dark' } };
+    global.confirm = vi.fn(() => true);
+
+    appWindow.document.body.innerHTML = `
+      <main class="main-content"></main>
+      <section class="page" id="page-dashboard"></section>
+      <section class="page" id="page-settings"></section>
+      <button class="nav-item" data-page="dashboard"></button>
+      <div id="pageTitle"></div>
+      <div id="themeBtn"></div>
+      <div id="dashXP"></div><div id="dashLevel"></div>
+      <div id="dashExercises"></div><div id="dashAccuracy"></div>
+      <div id="dashNextLesson"></div><div id="dashRevisionQueue"></div>
+      <div id="revisionBadge"></div><div id="dashChart"></div>
+      <div id="toastContainer"></div>
+      <div id="modalOverlay"><div id="modalContent"></div></div>
+    `;
+    global.document = appWindow.document;
+
+    try {
+      appWindow.confirmReset();
+      expect(global.confirm).not.toHaveBeenCalled();
+      expect(appWindow.document.getElementById('modalOverlay').classList.contains('active')).toBe(
+        true,
+      );
+      expect(appWindow.document.getElementById('confirmResetBtn')).toBeTruthy();
+      expect(appWindow.document.getElementById('cancelResetBtn')).toBeTruthy();
+
+      appWindow.executeResetProgress();
+      expect(State.data.xp).toBe(0);
+      expect(appWindow.document.getElementById('modalOverlay').classList.contains('active')).toBe(
+        false,
+      );
+      expect(appWindow.document.getElementById('page-dashboard').classList.contains('active')).toBe(
+        true,
+      );
+      expect(appWindow.document.getElementById('toastContainer').textContent).toContain(
+        'Progression réinitialisée',
+      );
+    } finally {
+      global.document = originalDocument;
+      appWindow.document.body.innerHTML = '';
+    }
+  });
+
   test('importData ignores an empty file selection', () => {
     const input = { type: '', accept: '', onchange: null, click: vi.fn() };
     const originalCreateElement = global.document.createElement;

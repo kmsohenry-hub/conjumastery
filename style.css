@@ -1738,6 +1738,53 @@ body.modal-open .main-content {
   margin: 0 auto;
 }
 
+/* SETTINGS & CONFIRMATION MODAL */
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-row-last {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.settings-title {
+  font-weight: 600;
+}
+
+.settings-title-danger,
+.btn-danger-outline {
+  color: var(--danger);
+}
+
+.btn-danger-outline:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(190, 18, 60, 0.08);
+}
+
+.settings-desc {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.settings-actions,
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.modal-actions {
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
 /* TOAST & OFFLINE */
 .offline-indicator {
   position: fixed;

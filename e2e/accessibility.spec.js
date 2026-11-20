@@ -2,23 +2,28 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 const routes = [
-  {
-    name: 'dashboard',
-    setup: async () => {},
-  },
-  {
-    name: 'exercises',
-    setup: async (page) => {
-      await page.locator('[data-page="exercises"]').click();
-    },
-  },
-  {
-    name: 'test',
-    setup: async (page) => {
-      await page.locator('[data-page="test"]').click();
-    },
-  },
-];
+  'dashboard',
+  'lessons',
+  'exercises',
+  'test',
+  'tenses',
+  'verbs',
+  'comparison',
+  'revision',
+  'weakpoints',
+  'search',
+  'favorites',
+  'stats',
+  'settings',
+].map((name) => ({
+  name,
+  setup:
+    name === 'dashboard'
+      ? async () => {}
+      : async (page) => {
+          await page.locator(`.nav-item[data-page="${name}"]`).click();
+        },
+}));
 
 for (const route of routes) {
   test(`has no critical accessibility violations on ${route.name}`, async ({ page }) => {

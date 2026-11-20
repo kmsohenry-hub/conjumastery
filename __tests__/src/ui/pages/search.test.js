@@ -62,4 +62,28 @@ describe('search page DOM and event delegation (AUDIT-01, 02, 03, 04)', () => {
 
     expect(document.getElementById('searchResults').innerHTML).toContain('Aucun résultat');
   });
+
+  it('matches verbs, phrasal verbs, modals and tenses case-insensitively', () => {
+    const input = document.getElementById('globalSearchInput');
+
+    input.value = 'ALLER';
+    performGlobalSearch();
+    expect(document.getElementById('searchResults').textContent).toContain('go → went → gone');
+
+    input.value = 'GIVE UP';
+    performGlobalSearch();
+    expect(document.getElementById('searchResults').textContent.toLowerCase()).toContain('give up');
+
+    input.value = 'MUST';
+    performGlobalSearch();
+    expect(document.getElementById('searchResults').textContent.toLowerCase()).toContain('must');
+
+    input.value = 'PRESENT SIMPLE';
+    performGlobalSearch();
+    const tenseResult = document.querySelector(
+      '.search-result-item[data-action="open-tense-modal"]',
+    );
+    expect(tenseResult).toBeTruthy();
+    expect(tenseResult.getAttribute('data-tense-id')).toBe('present_simple');
+  });
 });
