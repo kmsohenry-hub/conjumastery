@@ -6,6 +6,12 @@
     <meta name="theme-color" content="#1d4ed8" />
     <meta name="google-site-verification" content="Ao0PW3Z1nU193rP3f1bMfoqTUAtOh81CKwCtv2AyCq4" />
     <meta name="google-site-verification" content="a96gsFhr3t7HvbMZRkuJnywY8k_6W0ygjASKOQOMn6I" />
+    <meta
+      name="description"
+      content="Application web interactive pour apprendre et réviser la conjugaison de l'anglais britannique : leçons structurées, exercices ciblés, tests et répétition espacée."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://conjumastery.vercel.app/" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta
       http-equiv="Content-Security-Policy"
@@ -56,7 +62,7 @@
           <span class="nav-icon">⏱️</span> Temps verbaux
         </a>
         <a class="nav-item" data-page="verbs" role="button" tabindex="0">
-          <span class="nav-icon">📘</span> Verbes irréguliers
+          <span class="nav-icon">📖</span> Verbes irréguliers
         </a>
         <a class="nav-item" data-page="comparison" role="button" tabindex="0">
           <span class="nav-icon">📊</span> Comparatif
@@ -204,7 +210,7 @@
               <p>Choisissez la bonne forme verbale parmi 4 options</p>
             </div>
             <div class="mode-card" data-mode="fill" role="button" tabindex="0">
-              <div class="mode-icon">✏️</div>
+              <div class="mode-icon">✍️</div>
               <h3>Phrases à compléter</h3>
               <p>Écrivez la forme correcte du verbe</p>
             </div>
@@ -325,7 +331,7 @@
             </div>
             <div style="display: flex; gap: 12px; align-items: center">
               <span style="font-size: 0.85rem">⏱️ <span id="testTimer">00:00</span></span>
-              <span style="font-size: 0.85rem">✅ <span id="testScore">0</span></span>
+              <span style="font-size: 0.85rem">✓ <span id="testScore">0</span></span>
             </div>
           </div>
           <div class="progress-bar" style="margin-bottom: 24px">
@@ -360,14 +366,14 @@
       </div>
 
       <div class="page" id="page-verbs">
-        <div class="section-title">📘 Verbes Irréguliers</div>
+        <div class="section-title">📖 Verbes Irréguliers</div>
         <div class="section-subtitle">
           <span id="irregularVerbCount">143</span> verbes irréguliers — recherchez et apprenez les
           formes (Base, Past, Past Participle).
         </div>
         <div class="verb-search-container">
-          <span class="search-icon" aria-hidden="true">🔍</span
-          ><input
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input
             class="input"
             type="text"
             id="verbSearch"
@@ -458,7 +464,7 @@
             </div>
             <div class="card">
               <div class="card-header">
-                <div class="card-title">📅 Activité récente</div>
+                <div class="card-title">🕐 Activité récente</div>
               </div>
               <div id="activityLog"></div>
             </div>
