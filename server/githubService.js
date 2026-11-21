@@ -290,6 +290,18 @@ export function createGitHubService({
     if (!Array.isArray(files) || files.length === 0) {
       throw new Error('At least one file entry is required');
     }
+    for (const file of files) {
+      if (
+        !file ||
+        typeof file.path !== 'string' ||
+        !file.path ||
+        file.path.startsWith('/') ||
+        file.path.includes('..') ||
+        file.path.includes('\0')
+      ) {
+        throw new Error(`Invalid file entry path: ${file?.path}`);
+      }
+    }
 
     let parentSha = baseSha;
     if (!parentSha) {
@@ -308,9 +320,6 @@ export function createGitHubService({
 
     const treeEntries = [];
     for (const file of files) {
-      if (!file || typeof file.path !== 'string' || !file.path || file.path.includes('..')) {
-        throw new Error(`Invalid file entry path: ${file?.path}`);
-      }
       if (file.delete || file.content === null) {
         treeEntries.push({
           path: file.path,

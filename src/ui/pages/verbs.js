@@ -8,13 +8,13 @@ export function renderVerbs() {
 }
 
 export function filterVerbs() {
-  const search = (document.getElementById('verbSearch')?.value || '').toLowerCase();
+  const search = (document.getElementById('verbSearch')?.value || '').toLowerCase().trim();
   const container = document.getElementById('verbsList');
   const filtered = APP_DATA.irregularVerbs.filter(
     (v) =>
-      v.base.includes(search) ||
-      v.past.includes(search) ||
-      v.pp.includes(search) ||
+      v.base.toLowerCase().includes(search) ||
+      v.past.toLowerCase().includes(search) ||
+      v.pp.toLowerCase().includes(search) ||
       v.meaning.toLowerCase().includes(search),
   );
 

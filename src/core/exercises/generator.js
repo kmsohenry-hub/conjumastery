@@ -9,6 +9,62 @@ import {
 } from './conjugation.js';
 import { shuffle } from './shuffle.js';
 
+const NON_3RD_SING_SUBJECTS = new Set([
+  'I',
+  'You',
+  'We',
+  'They',
+  'The students',
+  'The children',
+  'My parents',
+]);
+
+const GENERATOR_SUBJECTS = [
+  'I',
+  'You',
+  'He',
+  'She',
+  'We',
+  'They',
+  'My friend',
+  'The teacher',
+  'The students',
+  'John',
+  'Sarah',
+  'The children',
+  'Emma',
+  'My parents',
+];
+
+const GENERATOR_REGULAR_VERBS = [
+  'work',
+  'play',
+  'study',
+  'cook',
+  'read',
+  'write',
+  'walk',
+  'talk',
+  'clean',
+  'watch',
+  'listen',
+  'help',
+  'ask',
+  'call',
+  'wait',
+  'start',
+  'finish',
+  'open',
+  'close',
+  'use',
+];
+
+const GENERATOR_ALL_MODES = ['qcm', 'fill', 'transform', 'correction', 'translation'];
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function pickTemplate(templates, usedSentences) {
   if (!Array.isArray(templates) || templates.length === 0) return null;
   if (usedSentences && usedSentences.size > 0) {
@@ -49,10 +105,9 @@ export function buildFillAcceptedAnswers(sentence, answer) {
       .trim();
     accepted.add(filled);
     // Also accept the span from first blank to last blank (e.g. "Did they win")
-    const spanRegex = new RegExp(
-      `${answerParts[0]}\\s+(.+?)\\s+${answerParts.slice(1).join('\\s+')}`,
-      'i',
-    );
+    const escapedFirst = escapeRegex(answerParts[0]);
+    const escapedRest = answerParts.slice(1).map(escapeRegex).join('\\s+');
+    const spanRegex = new RegExp(`${escapedFirst}\\s+(.+?)\\s+${escapedRest}`, 'i');
     const spanMatch = filled.match(spanRegex);
     if (spanMatch) {
       accepted.add(`${answerParts[0]} ${spanMatch[1]} ${answerParts.slice(1).join(' ')}`);
@@ -327,15 +382,14 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty, usedSente
     }
   }
 
-  // Generate distractors
+  // Generate distractors (O(1) lookup via verbsByBase)
   const distractors = new Set();
   const allForms = new Set();
-  APP_DATA.irregularVerbs.forEach((v) => {
-    if (v.base === verb) {
-      v.past.split('/').forEach((p) => allForms.add(p.trim()));
-      v.pp.split('/').forEach((p) => allForms.add(p.trim()));
-    }
-  });
+  const irregularEntry = APP_DATA.verbsByBase[verb];
+  if (irregularEntry) {
+    irregularEntry.past.split('/').forEach((p) => allForms.add(p.trim()));
+    irregularEntry.pp.split('/').forEach((p) => allForms.add(p.trim()));
+  }
 
   if (verb === 'be') {
     ['am', 'is', 'are', 'was', 'were', 'be', 'been', 'being'].forEach((f) => allForms.add(f));
@@ -759,16 +813,7 @@ export function generateSingleQuestion(
 ) {
   const subj = subjects[Math.floor(Math.random() * subjects.length)];
   const verb = verbs[Math.floor(Math.random() * verbs.length)];
-  const non3rdSingSubjects = [
-    'I',
-    'You',
-    'We',
-    'They',
-    'The students',
-    'The children',
-    'My parents',
-  ];
-  const is3rdSing = !non3rdSingSubjects.includes(subj);
+  const is3rdSing = !NON_3RD_SING_SUBJECTS.has(subj);
 
   switch (mode) {
     case 'qcm':
@@ -811,50 +856,11 @@ export function generateQuestions(
 
   const questions = [];
   const usedSentences = new Set();
-  const subjects = [
-    'I',
-    'You',
-    'He',
-    'She',
-    'We',
-    'They',
-    'My friend',
-    'The teacher',
-    'The students',
-    'John',
-    'Sarah',
-    'The children',
-    'Emma',
-    'My parents',
-  ];
-  const regularVerbs = [
-    'work',
-    'play',
-    'study',
-    'cook',
-    'read',
-    'write',
-    'walk',
-    'talk',
-    'clean',
-    'watch',
-    'listen',
-    'help',
-    'ask',
-    'call',
-    'wait',
-    'start',
-    'finish',
-    'open',
-    'close',
-    'use',
-  ];
-  const allVerbs = [...regularVerbs, ...APP_DATA.irregularVerbs.map((v) => v.base)];
+  const subjects = GENERATOR_SUBJECTS;
+  const allVerbs = [...GENERATOR_REGULAR_VERBS, ...APP_DATA.irregularVerbs.map((v) => v.base)];
 
   const tenses =
     tenseFilter && tenseFilter.length > 0 ? tenseFilter : APP_DATA.tenses.map((t) => t.id);
-
-  const allModes = ['qcm', 'fill', 'transform', 'correction', 'translation'];
 
   for (let i = 0; i < count; i++) {
     const tenseId = isRevision
@@ -866,7 +872,9 @@ export function generateQuestions(
     let selectedQuestion = null;
     for (let attempt = 0; attempt < 12; attempt++) {
       const modeType =
-        mode === 'mixed' ? allModes[Math.floor(Math.random() * allModes.length)] : mode;
+        mode === 'mixed'
+          ? GENERATOR_ALL_MODES[Math.floor(Math.random() * GENERATOR_ALL_MODES.length)]
+          : mode;
       const candidate = generateSingleQuestion(
         modeType,
         tense,

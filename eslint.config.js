@@ -107,6 +107,13 @@ export default [
   },
   eslintConfigPrettier,
   {
-    ignores: ['node_modules/', 'dist/', 'coverage/', '*.min.js'],
+    ignores: [
+      'node_modules/',
+      'dist/',
+      'coverage/',
+      'test-results/',
+      '.playwright-cli/',
+      '*.min.js',
+    ],
   },
 ];

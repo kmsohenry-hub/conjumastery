@@ -125,4 +125,31 @@ describe('tenses page', () => {
     expect(tableHtml).toContain('She drinks tea every morning.');
     expect(tableHtml).not.toContain('undefined');
   });
+
+  it('displays unlocked accuracy badges, favorite state, and locked prerequisites accurately', async () => {
+    const { State } = await import('../../../../src/core/state/State.js');
+    State.reset();
+    State.data.tenseStats.present_simple = { correct: 9, total: 10 };
+    State.data.favorites = ['present_simple'];
+
+    showTenseCategory('present');
+    const presentCards = [...document.querySelectorAll('#tenseContent .lesson-card')];
+    const presSimple = presentCards.find((c) => c.dataset.tenseId === 'present_simple');
+    const presCont = presentCards.find((c) => c.dataset.tenseId === 'present_continuous');
+
+    expect(presSimple.classList.contains('locked')).toBe(false);
+    expect(presSimple.textContent).toContain('✓ 90%');
+    expect(presSimple.querySelector('.fav-btn').classList.contains('active')).toBe(true);
+    expect(presSimple.querySelector('.fav-btn').textContent).toBe('★');
+    // Present Continuous unlocks because Present Simple reached >= 75% mastery
+    expect(presCont.classList.contains('locked')).toBe(false);
+    expect(presCont.textContent).toContain('🔓 Débloqué');
+
+    // Past tenses remain locked until preceding lessons are mastered
+    showTenseCategory('past');
+    const pastCards = [...document.querySelectorAll('#tenseContent .lesson-card')];
+    expect(pastCards.every((c) => c.classList.contains('locked'))).toBe(true);
+    expect(pastCards[0].getAttribute('data-locked')).toBe('true');
+    expect(pastCards[0].textContent).toContain('75% requis');
+  });
 });

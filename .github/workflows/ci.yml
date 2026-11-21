@@ -3,9 +3,13 @@ name: CI
 
 on:
   push:
-    branches: [main, stabilization, ci-fix]
+    branches: [main]
   pull_request:
     branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -14,6 +18,7 @@ jobs:
   quality:
     name: Lint, test & build (Node ${{ matrix.node }})
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -32,7 +37,7 @@ jobs:
         run: npm ci
 
       - name: Audit npm dependencies
-        run: npm audit --omit=dev --audit-level=moderate
+        run: npm audit --audit-level=moderate
 
       - name: Run ESLint
         run: npm run lint
@@ -40,10 +45,7 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
-      - name: Run unit tests
-        run: npm run test
-
-      - name: Run coverage (blocking quality gate)
+      - name: Run unit tests and coverage gate
         run: npm run test:coverage
 
       - name: Build (smoke test)
@@ -64,6 +66,7 @@ jobs:
   e2e:
     name: End-to-end tests (Node 24)
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     needs: quality
     steps:
       - name: Checkout code

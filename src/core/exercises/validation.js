@@ -81,7 +81,28 @@ const UNAMBIGUOUS_CONTRACTIONS = [
   [/\blet's\b/g, 'let us'],
 ];
 
+const COMPILED_SPELLING_RULES = SPELLING_EQUIVALENTS.map(([pattern, replacement]) => ({
+  source: pattern.source,
+  globalInsensitive: new RegExp(pattern.source, 'gi'),
+  singleInsensitive: new RegExp(pattern.source, 'i'),
+  replacement,
+}));
+
+const MAX_SLASH_VARIANTS = 64;
+
+function applyCasePreservingReplacement(match, singleInsensitive, replacement) {
+  const replaced = match.replace(singleInsensitive, replacement);
+  if (match === match.toUpperCase()) {
+    return replaced.toUpperCase();
+  }
+  if (match[0] === match[0].toUpperCase()) {
+    return replaced[0].toUpperCase() + replaced.slice(1);
+  }
+  return replaced;
+}
+
 export function normalizeAnswer(str) {
+  if (str === null || str === undefined) return '';
   return String(str)
     .toLowerCase()
     .replace(/[’'‘`]/g, "'")
@@ -172,7 +193,9 @@ function expandSlashVariants(expectedAnswer) {
       for (const v of combinatorial) {
         for (const sub of subparts) {
           next.push((v + ' ' + sub).trim());
+          if (next.length >= MAX_SLASH_VARIANTS) break;
         }
+        if (next.length >= MAX_SLASH_VARIANTS) break;
       }
       combinatorial = next;
     } else {
@@ -219,12 +242,12 @@ export function detectAmericanisms(str) {
   const differences = [];
   const seen = new Set();
 
-  for (const [pattern, replacement] of SPELLING_EQUIVALENTS) {
-    const regex = new RegExp(pattern.source, 'gi');
+  for (const { globalInsensitive, singleInsensitive, replacement } of COMPILED_SPELLING_RULES) {
+    globalInsensitive.lastIndex = 0;
     let match;
-    while ((match = regex.exec(normalized)) !== null) {
+    while ((match = globalInsensitive.exec(normalized)) !== null) {
       const usWord = match[0].toLowerCase();
-      const ukWord = usWord.replace(new RegExp(pattern.source, 'i'), replacement).toLowerCase();
+      const ukWord = usWord.replace(singleInsensitive, replacement).toLowerCase();
       const key = `${usWord}->${ukWord}`;
       if (usWord !== ukWord && !seen.has(key)) {
         seen.add(key);
@@ -251,8 +274,11 @@ export function getExpectedBritishForm(expectedAnswer) {
       cleaned = slashParts[0];
     }
   }
-  for (const [pattern, replacement] of SPELLING_EQUIVALENTS) {
-    cleaned = cleaned.replace(pattern, replacement);
+  for (const { globalInsensitive, singleInsensitive, replacement } of COMPILED_SPELLING_RULES) {
+    globalInsensitive.lastIndex = 0;
+    cleaned = cleaned.replace(globalInsensitive, (match) =>
+      applyCasePreservingReplacement(match, singleInsensitive, replacement),
+    );
   }
   return cleaned;
 }

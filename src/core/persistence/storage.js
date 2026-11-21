@@ -46,6 +46,18 @@ export function migrateState(raw) {
  * @param {any} candidate
  * @returns {Object}
  */
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+function sanitizePlainObject(defaultVal, candidateVal) {
+  const clean = { ...defaultVal };
+  for (const [k, v] of Object.entries(candidateVal)) {
+    if (!FORBIDDEN_KEYS.has(k)) {
+      clean[k] = v;
+    }
+  }
+  return clean;
+}
+
 export function sanitizeState(candidate) {
   const base = cloneState(defaultState);
   if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
@@ -62,13 +74,18 @@ export function sanitizeState(candidate) {
       sanitized[key] = Array.isArray(val) ? val : defaultVal;
     } else if (typeof defaultVal === 'object') {
       sanitized[key] =
-        typeof val === 'object' && !Array.isArray(val) ? { ...defaultVal, ...val } : defaultVal;
+        typeof val === 'object' && !Array.isArray(val)
+          ? sanitizePlainObject(defaultVal, val)
+          : defaultVal;
     } else {
       sanitized[key] = val;
     }
   }
 
   // Invariants mathématiques et d'intégrité
+  sanitized.xp = Math.max(0, Number(sanitized.xp) || 0);
+  sanitized.level = Math.max(1, Number(sanitized.level) || 1);
+  sanitized.daysStreak = Math.max(0, Number(sanitized.daysStreak) || 0);
   sanitized.currentStreak = Math.max(0, Number(sanitized.currentStreak) || 0);
   sanitized.bestStreak = Math.max(Number(sanitized.bestStreak) || 0, sanitized.currentStreak);
   sanitized.correctAnswers = Math.max(0, Number(sanitized.correctAnswers) || 0);
@@ -77,6 +94,7 @@ export function sanitizeState(candidate) {
     Number(sanitized.totalExercises) || 0,
     sanitized.correctAnswers + sanitized.incorrectAnswers,
   );
+  sanitized.settings.theme = sanitized.settings.theme === 'dark' ? 'dark' : 'light';
 
   return sanitized;
 }

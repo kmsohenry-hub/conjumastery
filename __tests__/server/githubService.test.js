@@ -1,3 +1,4 @@
+// @vitest-environment node
 /* global Buffer, Response */
 
 import { describe, expect, test, vi } from 'vitest';
@@ -250,5 +251,161 @@ describe('server githubService', () => {
 
     const jobs = await service.listRunJobs({ runId: 11 });
     expect(jobs[0].steps[0].name).toBe('test');
+  });
+
+  test('throws 503 when token is missing on authenticated API operations', async () => {
+    const service = createGitHubService({ getToken: () => '   ', fetchImpl: vi.fn() });
+    await expect(service.listBranches()).rejects.toMatchObject({
+      status: 503,
+      message: expect.stringContaining('GITHUB_TOKEN is not configured'),
+    });
+  });
+
+  test('handles partial auth/repo failures in getStatus and non-JSON API errors', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ message: 'Bad credentials' }, 401))
+      .mockResolvedValueOnce(jsonResponse({ message: 'Not Found' }, 404))
+      .mockResolvedValueOnce(
+        new Response('<html>Gateway Timeout</html>', {
+          status: 504,
+          statusText: 'Gateway Timeout',
+        }),
+      );
+
+    const service = createGitHubService({ getToken: () => 'tok_secret', fetchImpl: fetchMock });
+
+    const status = await service.getStatus();
+    expect(status.configured).toBe(true);
+    expect(status.authenticated).toBe(false);
+    expect(status.user).toBeNull();
+    expect(status.userError).toBe('Bad credentials');
+    expect(status.repoAccessible).toBe(false);
+    expect(status.repoError).toBe('Not Found');
+    expect(status.defaultBranch).toBeNull();
+    expect(status.permissions).toBeNull();
+
+    await expect(service.listBranches()).rejects.toMatchObject({
+      status: 504,
+      message: expect.stringContaining('Gateway Timeout'),
+    });
+  });
+
+  test('enforces strict input validation across branch, file, commit, PR, and actions methods', async () => {
+    const fetchMock = vi
+      .fn()
+      // getContent non-base64
+      .mockResolvedValueOnce(
+        jsonResponse({ name: 'big.bin', path: 'big.bin', sha: 's', size: 99, encoding: 'none' }),
+      )
+      // createBranch with explicit fromBranch (skips repo metadata GET)
+      .mockResolvedValueOnce(jsonResponse({ object: { sha: 'explicit-sha' } }))
+      .mockResolvedValueOnce(jsonResponse({ ref: 'refs/heads/fix/b', object: {} }))
+      // upsertFile without sha
+      .mockResolvedValueOnce(
+        jsonResponse({ content: { path: 'b.txt', sha: 'sb' }, commit: { sha: 'cb' } }),
+      )
+      // createCommit with explicit baseSha, base64 encoding, and executable mode
+      .mockResolvedValueOnce(jsonResponse({ tree: { sha: 'bt' } }))
+      .mockResolvedValueOnce(jsonResponse({ sha: 'blob-b64' }))
+      .mockResolvedValueOnce(jsonResponse({ sha: 't2' }))
+      .mockResolvedValueOnce(jsonResponse({ sha: 'c3', html_url: 'https://github.com/c/3' }))
+      .mockResolvedValueOnce(jsonResponse({ ref: 'refs/heads/fix/b' }))
+      // listPullRequests invalid state falls back to open
+      .mockResolvedValueOnce(jsonResponse([]))
+      // updatePullRequest with body & state
+      .mockResolvedValueOnce(
+        jsonResponse({ number: 5, title: 'T', state: 'closed', html_url: 'https://github.com/5' }),
+      )
+      // mergePullRequest invalid mergeMethod falls back to squash
+      .mockResolvedValueOnce(jsonResponse({ merged: true, sha: 'm2', message: 'ok' }))
+      // listActionRuns clamps perPage
+      .mockResolvedValueOnce(jsonResponse({ workflow_runs: [] }));
+
+    const service = createGitHubService({ getToken: () => 'tok', fetchImpl: fetchMock });
+
+    await expect(service.createBranch({ branch: '/leading' })).rejects.toThrow('Invalid branch');
+    await expect(service.createBranch({ branch: 'trailing/' })).rejects.toThrow('Invalid branch');
+    await expect(service.getContent({ path: '/abs/path' })).rejects.toThrow(
+      'Invalid repository file path',
+    );
+    await expect(service.getContent({ path: 'a\0b' })).rejects.toThrow(
+      'Invalid repository file path',
+    );
+    await expect(
+      service.upsertFile({ path: 'a.txt', content: 123, message: 'm', branch: 'main' }),
+    ).rejects.toThrow('File content must be a string');
+    await expect(
+      service.upsertFile({ path: 'a.txt', content: 'ok', message: '   ', branch: 'main' }),
+    ).rejects.toThrow('Commit message is required');
+    await expect(
+      service.createCommit({ branch: 'main', message: '', files: [{ path: 'a', content: 'x' }] }),
+    ).rejects.toThrow('Commit message is required');
+    await expect(service.createCommit({ branch: 'main', message: 'm', files: [] })).rejects.toThrow(
+      'At least one file entry is required',
+    );
+    await expect(
+      service.createCommit({
+        branch: 'main',
+        message: 'm',
+        baseSha: 'abc',
+        files: [{ path: '../escape.js', content: 'x' }],
+      }),
+    ).rejects.toThrow('Invalid file entry path');
+    await expect(service.updatePullRequest({ pullNumber: 0 })).rejects.toThrow(
+      'Invalid pull request number',
+    );
+    await expect(service.mergePullRequest({ pullNumber: -3 })).rejects.toThrow(
+      'Invalid pull request number',
+    );
+    await expect(service.listRunJobs({ runId: 'abc' })).rejects.toThrow('Invalid workflow run id');
+    // All validation failures must fail fast before issuing any GitHub network request
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    const nonBase64 = await service.getContent({ path: 'big.bin' });
+    expect(nonBase64.content).toBeNull();
+
+    const branchFrom = await service.createBranch({ branch: 'fix/b', fromBranch: 'develop' });
+    expect(branchFrom).toEqual({
+      ref: 'refs/heads/fix/b',
+      sha: 'explicit-sha',
+      fromBranch: 'develop',
+    });
+
+    const created = await service.upsertFile({
+      path: 'b.txt',
+      content: 'hi',
+      message: 'add b',
+      branch: 'fix/b',
+    });
+    expect(created.commitSha).toBe('cb');
+
+    const commitRes = await service.createCommit({
+      branch: 'fix/b',
+      message: 'binary file',
+      baseSha: 'explicit-sha',
+      files: [{ path: 'bin/tool', content: 'YWJj', encoding: 'base64', mode: '100755' }],
+    });
+    expect(commitRes.commitSha).toBe('c3');
+
+    await service.listPullRequests({ state: 'invalid_state' });
+    expect(fetchMock.mock.calls[9][0]).toContain('state=open');
+
+    const closedPr = await service.updatePullRequest({
+      pullNumber: 5,
+      body: 'closing',
+      state: 'closed',
+    });
+    expect(closedPr.state).toBe('closed');
+
+    const mergedPr = await service.mergePullRequest({
+      pullNumber: 5,
+      mergeMethod: 'invalid_method',
+    });
+    expect(mergedPr.merged).toBe(true);
+    expect(JSON.parse(fetchMock.mock.calls[11][1].body).merge_method).toBe('squash');
+
+    await service.listActionRuns({ perPage: 999 });
+    expect(fetchMock.mock.calls[12][0]).toContain('per_page=50');
   });
 });
