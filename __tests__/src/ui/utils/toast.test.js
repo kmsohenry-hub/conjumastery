@@ -35,7 +35,7 @@ describe('showToast', () => {
     vi.advanceTimersByTime(1);
     expect(toast.style.opacity).toBe('0');
     expect(toast.style.transform).toBe('translateX(100px)');
-    expect(toast.style.transition).toBe('all 0.3s ease');
+    expect(toast.style.transition).toBe('0.3s');
     expect(document.querySelector('.toast')).toBe(toast);
 
     vi.advanceTimersByTime(299);
