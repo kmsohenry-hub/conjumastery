@@ -146,6 +146,7 @@ describe('test mode', () => {
       sentence: '<script>alert(1)</script>\nNext line',
       answer: 'works',
     };
+    document.getElementById('testArea').style.display = 'block';
     engine.questions = [q];
     engine.getCurrent.mockReturnValue(q);
     renderTestQuestion();
