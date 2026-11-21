@@ -24,9 +24,7 @@ describe('SEO crawlability and indexing assets', () => {
       'utf8',
     );
 
-    expect(vercelSitemap).toContain(
-      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    );
+    expect(vercelSitemap).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
     expect(vercelSitemap).toContain('<loc>https://conjumastery.vercel.app/</loc>');
 
     expect(netlifySitemap).toContain(
