@@ -1,3 +1,4 @@
+// @vitest-environment node
 /* global Buffer */
 
 import { EventEmitter } from 'node:events';
@@ -175,5 +176,58 @@ describe('server githubMiddleware', () => {
     );
     expect(errRes.statusCode).toBe(422);
     expect(errRes.json.error).toBe('nope');
+  });
+
+  test('enforces 2 MiB body cap (413), blocks Forwarded writes, allows IPv6 loopback, and handles empty bodies', async () => {
+    const createBranch = vi.fn().mockResolvedValue({ ref: 'refs/heads/a', sha: '1' });
+    const middleware = createGitHubMiddleware({
+      createBranch,
+      listBranches: vi.fn().mockRejectedValue(new Error('unexpected')),
+    });
+
+    // Forwarded header rejected on write
+    const fwdRes = mockRes();
+    await middleware(
+      mockReq({
+        method: 'POST',
+        url: '/api/github/branches',
+        headers: { forwarded: 'for=203.0.113.9' },
+      }),
+      fwdRes,
+    );
+    expect(fwdRes.statusCode).toBe(403);
+
+    // IPv6 loopback ::1 and IPv4-mapped ::ffff:127.0.0.1 allowed with empty body
+    const ipv6Res = mockRes();
+    await middleware(
+      mockReq({ method: 'POST', url: '/api/github/branches', remoteAddress: '::1' }),
+      ipv6Res,
+    );
+    expect(ipv6Res.statusCode).toBe(201);
+
+    const mappedRes = mockRes();
+    await middleware(
+      mockReq({ method: 'POST', url: '/api/github/branches', remoteAddress: '::ffff:127.0.0.1' }),
+      mappedRes,
+    );
+    expect(mappedRes.statusCode).toBe(201);
+
+    // Oversized body (> 2 MiB) rejected with 413
+    const hugeBody = 'a'.repeat(2 * 1024 * 1024 + 16);
+    const largeRes = mockRes();
+    await middleware(
+      mockReq({ method: 'POST', url: '/api/github/branches', body: hugeBody }),
+      largeRes,
+    );
+    expect(largeRes.statusCode).toBe(413);
+
+    // Error without explicit HTTP status defaults to 400
+    const fallbackErrRes = mockRes();
+    await middleware(mockReq({ method: 'GET', url: '/api/github/branches' }), fallbackErrRes);
+    expect(fallbackErrRes.statusCode).toBe(400);
+    expect(fallbackErrRes.json.error).toBe('unexpected');
+
+    // Non-GitHub URL without next callback does not throw
+    await expect(middleware(mockReq({ url: '/style.css' }), mockRes())).resolves.toBeUndefined();
   });
 });

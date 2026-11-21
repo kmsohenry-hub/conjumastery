@@ -18,8 +18,8 @@
   </a>
   <img src="https://img.shields.io/badge/version-2.0.0-1d4ed8" alt="Version 2.0.0" />
   <img src="https://img.shields.io/badge/node-%3E%3D24%20%3C25-047857" alt="Node.js 24" />
-  <img src="https://img.shields.io/badge/vitest-43%20fichiers%20%7C%20728%20tests-0f766e" alt="Suite Vitest" />
-  <img src="https://img.shields.io/badge/playwright-E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
+  <img src="https://img.shields.io/badge/vitest-46%20fichiers%20%7C%20760%20tests-0f766e" alt="Suite Vitest" />
+  <img src="https://img.shields.io/badge/playwright-23%20tests%20E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/licence-MIT-334155" alt="Licence MIT" />
   </a>
@@ -193,16 +193,16 @@ Lorsque le serveur Vite (`npm run dev` / `npm run preview`) ou `server.js` est a
 
 Le pipeline défini dans `.github/workflows/ci.yml` bloque toute fusion tant que les contrôles suivants ne sont pas verts :
 
-1. **Audit des dépendances** : `npm audit --omit=dev --audit-level=moderate`.
+1. **Audit des dépendances** : `npm audit --audit-level=moderate` (complété par `.github/dependabot.yml` pour les mises à jour hebdomadaires groupées npm et GitHub Actions).
 2. **Qualité de code** : `npm run lint` (ESLint) + `npm run format:check` (Prettier).
-3. **Suite unitaire (43 fichiers, 728 tests)** : couverture minimale exigée dans `vite.config.js` :
-   - **Statements / Branches / Lines** : `≥ 85 %`
-   - **Functions** : `≥ 90 %`
+3. **Suite unitaire & intégration (46 fichiers, 760 tests)** : couverture minimale exigée dans `vite.config.js` :
+   - **Statements / Functions / Lines** : `≥ 95 %`
+   - **Branches** : `≥ 90 %`
 4. **Budgets de production (`npm run perf:budget`)** :
-   - `index.html` ≤ **30 KiB**
-   - Feuille CSS minifiée ≤ **30 KiB**
+   - `index.html` ≤ **35 KiB**
+   - Feuille CSS minifiée ≤ **35 KiB**
    - Chaque bundle JavaScript (dont `curriculum-data`) ≤ **180 KiB**
-5. **Tests E2E & accessibilité (`e2e/*.spec.js`)** : 3 suites Playwright vérifiant les parcours critiques, la non-régression responsive mobile/bureau sans débordement horizontal et la conformité WCAG 2.0 A / AA via `@axe-core/playwright`.
+5. **Tests E2E & accessibilité (`e2e/*.spec.js`)** : 23 tests Playwright vérifiant les parcours critiques (exercices, mode test chronométré, recherche, sauvegarde/import, réinitialisation accessible), la non-régression responsive mobile/bureau sans débordement horizontal et la conformité WCAG 2.0 A / AA via `@axe-core/playwright` sur l’ensemble des 13 vues.
 
 ---
 

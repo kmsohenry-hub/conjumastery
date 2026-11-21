@@ -87,13 +87,12 @@ export function mergeStates(local, remote) {
   );
   const daysStreak = Math.max(Number(local.daysStreak) || 0, Number(remote.daysStreak) || 0);
 
-  // Date d'activité la plus récente
+  // Date d'activité la plus récente (tolérante aux dates corrompues)
   let lastActiveDate = local.lastActiveDate;
   if (remote.lastActiveDate) {
-    if (
-      !lastActiveDate ||
-      new Date(remote.lastActiveDate).getTime() > new Date(lastActiveDate).getTime()
-    ) {
+    const remoteTime = new Date(remote.lastActiveDate).getTime();
+    const localTime = lastActiveDate ? new Date(lastActiveDate).getTime() : NaN;
+    if (Number.isFinite(remoteTime) && (!Number.isFinite(localTime) || remoteTime > localTime)) {
       lastActiveDate = remote.lastActiveDate;
     }
   }
@@ -126,17 +125,22 @@ export function mergeStates(local, remote) {
   correctAnswers = Math.max(correctAnswers, sumTenseCorrect);
   totalExercises = Math.max(totalExercises, sumTenseTotal, correctAnswers + incorrectAnswers);
 
-  // Spaced Repetition : conserver l'état le plus à jour
+  // Spaced Repetition : conserver l'état le plus à jour sans aliaser les références
   const localSR = isPlainObject(local.spacedRepetition) ? local.spacedRepetition : {};
   const remoteSR = isPlainObject(remote.spacedRepetition) ? remote.spacedRepetition : {};
-  const spacedRepetition = { ...localSR };
+  const spacedRepetition = {};
+  for (const [tid, lData] of Object.entries(localSR)) {
+    if (isPlainObject(lData)) {
+      spacedRepetition[tid] = { ...lData };
+    }
+  }
   for (const [tid, rData] of Object.entries(remoteSR)) {
     if (isPlainObject(rData)) {
       const lData = spacedRepetition[tid];
       const rReview = Number(rData.nextReview) || 0;
       const lReview = lData ? Number(lData.nextReview) || 0 : -1;
       if (rReview >= lReview) {
-        spacedRepetition[tid] = rData;
+        spacedRepetition[tid] = { ...rData };
       }
     }
   }
@@ -145,7 +149,7 @@ export function mergeStates(local, remote) {
   const actMap = new Map();
   for (const item of [...toArray(local.activityLog), ...toArray(remote.activityLog)]) {
     if (isPlainObject(item) && typeof item.date === 'string') {
-      actMap.set(`${item.date}_${item.xp}`, item);
+      actMap.set(`${item.date}_${item.xp}`, { ...item });
     }
   }
   const activityLog = Array.from(actMap.values())
@@ -156,7 +160,7 @@ export function mergeStates(local, remote) {
   const errMap = new Map();
   for (const item of [...toArray(local.errorLog), ...toArray(remote.errorLog)]) {
     if (isPlainObject(item) && typeof item.date === 'string') {
-      errMap.set(`${item.date}_${item.tenseId}`, item);
+      errMap.set(`${item.date}_${item.tenseId}`, { ...item });
     }
   }
   const errorLog = Array.from(errMap.values())
@@ -219,13 +223,14 @@ function createStore(initial = {}) {
   }
 
   function addXP(amount) {
-    const xp = state.xp + amount;
+    const safeAmount = Number.isFinite(Number(amount)) ? Math.max(0, Number(amount)) : 0;
+    const xp = state.xp + safeAmount;
     const level = Math.floor(xp / 100) + 1;
     setState({
       xp,
       level,
       lastActiveDate: new Date().toDateString(),
-      activityLog: [...state.activityLog, { date: new Date().toISOString(), xp: amount }].slice(
+      activityLog: [...state.activityLog, { date: new Date().toISOString(), xp: safeAmount }].slice(
         -MAX_ACTIVITY_LOG_ENTRIES,
       ),
     });

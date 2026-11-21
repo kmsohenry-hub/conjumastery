@@ -244,3 +244,48 @@ test('preserves hash route across reload, manages backup/import and resets via a
   ]);
   expect(download.suggestedFilename()).toMatch(/^conjumaster_backup_\d{4}-\d{2}-\d{2}\.json$/);
 });
+
+test('runs Test Mode validation guard, timed question flow, and cancels timer on navigation', async ({
+  page,
+}) => {
+  await page.locator('.nav-item[data-page="test"]').click();
+  await expect(page.locator('#page-test')).toBeVisible();
+  await expect(page.locator('#testSetup')).toBeVisible();
+
+  // Uncheck all tenses -> error toast and setup remains visible
+  await page.evaluate(() => {
+    document.querySelectorAll('#testTenseCheckboxes input[type="checkbox"]').forEach((cb) => {
+      cb.checked = false;
+    });
+  });
+  await page.locator('[data-action="start-test"]').click();
+  await expect(page.locator('#toastContainer')).toContainText('Sélectionnez au moins un temps');
+  await expect(page.locator('#testSetup')).toBeVisible();
+
+  // Select Present Simple only and start the timed test
+  await page.locator('#testTenseCheckboxes input[value="present_simple"]').check();
+  await page.locator('[data-action="start-test"]').click();
+
+  await expect(page.locator('#testArea')).toBeVisible();
+  await expect(page.locator('#testCurrent')).toHaveText('1');
+  await expect(page.locator('#testTotal')).toHaveText('20');
+
+  // Answer question 1 (either QCM or free text)
+  const optionCount = await page.locator('#testQuestionContainer .option-btn').count();
+  if (optionCount > 0) {
+    await page.locator('#testQuestionContainer .option-btn').first().click();
+  } else {
+    await page.locator('#testInput').fill('works');
+  }
+  await page.locator('#testValidateBtn').click();
+
+  await expect(page.locator('#testFeedback')).toBeVisible();
+  await expect(page.locator('#testNextBtn')).toBeVisible();
+  await page.locator('#testNextBtn').click();
+  await expect(page.locator('#testCurrent')).toHaveText('2');
+
+  // Navigating away cancels and resets the timer cleanly
+  await page.locator('.nav-item[data-page="dashboard"]').click();
+  await expect(page.locator('#page-dashboard')).toBeVisible();
+  await expect(page.locator('#testTimer')).toHaveText('00:00');
+});

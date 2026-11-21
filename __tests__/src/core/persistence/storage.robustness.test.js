@@ -144,4 +144,91 @@ describe('Storage and State Robustness (Issues #103, #108, #112)', () => {
       expect(migrateState([1, 2])).toEqual(defaultState);
     });
   });
+
+  describe('Security, immutability, and invariant guards', () => {
+    it('strips prototype-pollution keys and clamps negative or invalid numeric/theme values in sanitizeState', () => {
+      const malicious = JSON.parse(
+        '{"xp":-50,"level":0,"daysStreak":-4,"settings":{"theme":"neon","__proto__":{"polluted":true},"constructor":"bad"},"tenseStats":{"__proto__":{"x":1},"present_simple":{"correct":2,"total":3}}}',
+      );
+      const sanitized = sanitizeState(malicious);
+
+      expect(sanitized.xp).toBe(0);
+      expect(sanitized.level).toBe(1);
+      expect(sanitized.daysStreak).toBe(0);
+      expect(sanitized.settings.theme).toBe('light');
+      expect({}.polluted).toBeUndefined();
+      expect(Object.prototype.hasOwnProperty.call(sanitized.settings, 'constructor')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(sanitized.tenseStats, '__proto__')).toBe(false);
+      expect(sanitized.tenseStats.present_simple).toEqual({ correct: 2, total: 3 });
+    });
+
+    it('guards addXP against NaN and negative amounts', () => {
+      const store = createStore({ xp: 50, level: 1 });
+      store.addXP(-100);
+      expect(store.getState().xp).toBe(50);
+      store.addXP(Number.NaN);
+      expect(store.getState().xp).toBe(50);
+      store.addXP(60);
+      expect(store.getState().xp).toBe(110);
+      expect(store.getState().level).toBe(2);
+    });
+
+    it('mergeStates recovers from corrupted local lastActiveDate and isolates spacedRepetition objects', async () => {
+      const { mergeStates } = await import('../../../../src/core/state/store.js');
+      const local = {
+        ...defaultState,
+        lastActiveDate: 'not-a-valid-date',
+        spacedRepetition: {
+          present_simple: { interval: 1, nextReview: 1000, ease: 2.5, errors: 1 },
+        },
+      };
+      const remote = {
+        ...defaultState,
+        lastActiveDate: '2026-05-01T10:00:00.000Z',
+        spacedRepetition: {
+          past_simple: { interval: 3, nextReview: 5000, ease: 2.6, errors: 0 },
+        },
+      };
+
+      const merged = mergeStates(local, remote);
+      expect(merged.lastActiveDate).toBe('2026-05-01T10:00:00.000Z');
+
+      // Mutating merged spacedRepetition must not mutate source objects
+      merged.spacedRepetition.present_simple.interval = 999;
+      merged.spacedRepetition.past_simple.interval = 888;
+      expect(local.spacedRepetition.present_simple.interval).toBe(1);
+      expect(remote.spacedRepetition.past_simple.interval).toBe(3);
+    });
+
+    it('selectors handle malformed or zero-total entries without NaN or throwing', async () => {
+      const { getWeakPoints, getReviewQueue } =
+        await import('../../../../src/core/state/selectors.js');
+      expect(getWeakPoints(null)).toEqual([]);
+      expect(
+        getWeakPoints({
+          tenseStats: {
+            broken: null,
+            zero: { correct: 0, total: 0 },
+            few: { correct: 0, total: 2 },
+            weak: { correct: 1, total: 5 },
+          },
+        }),
+      ).toEqual([{ tenseId: 'weak', accuracy: 0.2, total: 5, errors: 4 }]);
+
+      expect(getReviewQueue(null)).toEqual([]);
+      expect(
+        getReviewQueue(
+          {
+            spacedRepetition: {
+              broken: null,
+              badDate: { nextReview: Number.NaN },
+              due: { nextReview: 100, interval: 1 },
+              later: { nextReview: 999999, interval: 10 },
+            },
+          },
+          500,
+        ),
+      ).toEqual([{ tenseId: 'due', nextReview: 100, interval: 1 }]);
+    });
+  });
 });

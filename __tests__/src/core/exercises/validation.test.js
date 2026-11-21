@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, test } from 'vitest';
 import {
   answerMatches,
@@ -132,6 +133,33 @@ describe('validation.js — smart grammatical equivalence', () => {
     );
     expect(checkUk.isAmerican).toBe(false);
     expect(checkUk.notice).toBe('');
+  });
+
+  test('preserves capitalization when converting American forms to British expected form and handles edge inputs', () => {
+    expect(getExpectedBritishForm('Traveling is fun.')).toBe('Travelling is fun.');
+    expect(getExpectedBritishForm('COLOR and Realize')).toBe('COLOUR and Realise');
+    expect(getExpectedBritishForm(null)).toBe('');
+
+    expect(normalizeAnswer(null)).toBe('');
+    expect(normalizeAnswer(undefined)).toBe('');
+    expect(detectAmericanisms(null)).toEqual([]);
+    expect(detectAmericanisms('   ')).toEqual([]);
+    expect(answerMatches('yes', null)).toBe(false);
+    expect(answerMatches(null, 'yes')).toBe(false);
+
+    // Combined contractions + Americanisms
+    expect(answerMatches("I've gotten a new apartment.", 'I have got a new flat.')).toBe(true);
+    expect(answerMatches("She's traveled a lot.", 'She has travelled a lot.')).toBe(true);
+
+    // Notice without expectedAnswer omits quoted expected British form cleanly
+    const noticeNoExpected = checkAmericanEnglishUsage('We traveled.');
+    expect(noticeNoExpected.isAmerican).toBe(true);
+    expect(noticeNoExpected.expectedBritishAnswer).toBe('');
+    expect(noticeNoExpected.notice).toContain("ce n'était pas le résultat attendu");
+
+    // Pathological multi-slash input stays fast and bounded
+    const manySlashes = 'a/b c/d e/f g/h i/j k/l m/n';
+    expect(answerMatches('a c e g i k m', manySlashes)).toBe(true);
   });
 });
 

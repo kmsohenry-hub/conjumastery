@@ -267,6 +267,40 @@ describe('test mode', () => {
     expect(q.userAnswer).toBe('WILL');
   });
 
+  it('accepts alternative acceptedAnswers and renders explicit British English notice for American spellings', () => {
+    const q = {
+      type: 'fill',
+      tenseId: 'present_perfect',
+      sentence: 'We ___ (travel) across Europe.',
+      answer: 'have travelled',
+      acceptedAnswers: ['We have travelled across Europe.'],
+      explanation: 'British English doubles final L (travelled).',
+    };
+    engine.questions = [q];
+    engine.getCurrent.mockReturnValue(q);
+    answerMatches.mockImplementation(
+      (user, expected) => expected === 'We have travelled across Europe.',
+    );
+    checkAmericanEnglishUsage.mockReturnValueOnce({
+      isAmerican: true,
+      differences: [{ us: 'traveled', uk: 'travelled' }],
+      expectedBritishAnswer: 'have travelled',
+      notice: "Attention : vous avez utilisé l'anglais américain (« traveled » → « travelled »).",
+    });
+
+    renderTestQuestion();
+    document.getElementById('testInput').value = 'We have traveled across Europe.';
+    validateTestAnswer();
+
+    expect(engine.score).toBe(1);
+    expect(state.addXP).toHaveBeenCalledWith(15);
+    expect(state.recordAnswer).toHaveBeenCalledWith('present_perfect', true);
+    const feedback = document.getElementById('testFeedback').innerHTML;
+    expect(feedback).toContain('anglais américain accepté');
+    expect(feedback).toContain('have travelled');
+    expect(feedback).toContain('traveled → travelled');
+  });
+
   it('ignores blank and duplicate validation attempts', () => {
     const q = { type: 'fill', tenseId: 'present_simple', sentence: 'She ___.', answer: 'works' };
     engine.questions = [q];
