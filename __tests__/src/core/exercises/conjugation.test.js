@@ -48,10 +48,15 @@ describe('getIngForm', () => {
     expect(getIngForm('happen')).toBe('happening');
   });
 
-  test('doubles consonant for polysyllabic verbs with final-syllable stress', () => {
+  test('doubles consonant for polysyllabic verbs with final-syllable stress and qu-clusters', () => {
     expect(getIngForm('begin')).toBe('beginning');
     expect(getIngForm('prefer')).toBe('preferring');
     expect(getIngForm('forget')).toBe('forgetting');
+    expect(getIngForm('forbid')).toBe('forbidding');
+    expect(getIngForm('upset')).toBe('upsetting');
+    expect(getIngForm('outwit')).toBe('outwitting');
+    expect(getIngForm('quit')).toBe('quitting');
+    expect(getIngForm('equip')).toBe('equipping');
   });
 
   test('doubles final l in BrE regardless of stress (travel → travelling)', () => {
@@ -65,6 +70,8 @@ describe('getRegularPast', () => {
   test('handles consonant doubling for regular past forms', () => {
     expect(getRegularPast('stop')).toBe('stopped');
     expect(getRegularPast('plan')).toBe('planned');
+    expect(getRegularPast('equip')).toBe('equipped');
+    expect(getRegularPast('outwit')).toBe('outwitted');
   });
 
   test('does NOT double consonant for polysyllabic verbs with initial stress (past)', () => {
@@ -97,6 +104,7 @@ describe('shouldDoubleFinalConsonant', () => {
     expect(shouldDoubleFinalConsonant('run')).toBe(true);
     expect(shouldDoubleFinalConsonant('sit')).toBe(true);
     expect(shouldDoubleFinalConsonant('plan')).toBe(true);
+    expect(shouldDoubleFinalConsonant('quit')).toBe(true);
   });
 
   test('returns false for polysyllabic verbs with initial stress', () => {
@@ -112,6 +120,9 @@ describe('shouldDoubleFinalConsonant', () => {
     expect(shouldDoubleFinalConsonant('prefer')).toBe(true);
     expect(shouldDoubleFinalConsonant('forget')).toBe(true);
     expect(shouldDoubleFinalConsonant('occur')).toBe(true);
+    expect(shouldDoubleFinalConsonant('forbid')).toBe(true);
+    expect(shouldDoubleFinalConsonant('upset')).toBe(true);
+    expect(shouldDoubleFinalConsonant('equip')).toBe(true);
   });
 
   test('doubles final l in BrE regardless of stress', () => {
@@ -148,6 +159,11 @@ describe('getPresentSimpleForm and getConjugation robustness', () => {
     expect(getPresentSimpleForm('have', true)).not.toBe('haves');
   });
 
+  test('adds -es for 3rd person singular verbs ending in -z', () => {
+    expect(getPresentSimpleForm('buzz', true)).toBe('buzzes');
+    expect(getPresentSimpleForm('fizz', true)).toBe('fizzes');
+  });
+
   test('getConjugation accurately conjugates be and have in context', () => {
     expect(getConjugation(APP_DATA.verbsByBase, 'be', 'present_simple', 'I', false)).toBe('am');
     expect(getConjugation(APP_DATA.verbsByBase, 'be', 'present_simple', 'She', true)).toBe('is');
@@ -155,6 +171,8 @@ describe('getPresentSimpleForm and getConjugation robustness', () => {
     expect(getConjugation(APP_DATA.verbsByBase, 'be', 'past_simple', 'I', false)).toBe('was');
     expect(getConjugation(APP_DATA.verbsByBase, 'be', 'past_simple', 'She', true)).toBe('was');
     expect(getConjugation(APP_DATA.verbsByBase, 'be', 'past_simple', 'They', false)).toBe('were');
+    expect(getConjugation(APP_DATA.verbsByBase, 'be', 'conditional_2', 'I', false)).toBe('were');
+    expect(getConjugation(APP_DATA.verbsByBase, 'be', 'conditional_2', 'She', true)).toBe('were');
     expect(getConjugation(APP_DATA.verbsByBase, 'have', 'present_simple', 'She', true)).toBe('has');
     expect(getConjugation(APP_DATA.verbsByBase, 'have', 'present_simple', 'They', false)).toBe(
       'have',

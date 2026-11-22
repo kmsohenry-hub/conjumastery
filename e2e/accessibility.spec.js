@@ -26,7 +26,7 @@ const routes = [
 }));
 
 for (const route of routes) {
-  test(`has no critical accessibility violations on ${route.name}`, async ({ page }) => {
+  test(`has no critical or serious accessibility violations on ${route.name}`, async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();
@@ -34,7 +34,36 @@ for (const route of routes) {
 
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
 
-    const critical = results.violations.filter((violation) => violation.impact === 'critical');
-    expect(critical, JSON.stringify(critical, null, 2)).toEqual([]);
+    const blocking = results.violations.filter((violation) =>
+      ['critical', 'serious'].includes(violation.impact),
+    );
+    expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
   });
 }
+
+test('has no critical or serious accessibility violations in dark mode and open modal', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+
+  await page.locator('#themeBtn').click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+  const darkResults = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+  const darkBlocking = darkResults.violations.filter((violation) =>
+    ['critical', 'serious'].includes(violation.impact),
+  );
+  expect(darkBlocking, JSON.stringify(darkBlocking, null, 2)).toEqual([]);
+
+  await page.locator('.nav-item[data-page="lessons"]').click();
+  await page.locator('#lessonContent .lesson-card:not(.locked)').first().click();
+  await expect(page.locator('#modalOverlay')).toHaveClass(/active/);
+
+  const modalResults = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+  const modalBlocking = modalResults.violations.filter((violation) =>
+    ['critical', 'serious'].includes(violation.impact),
+  );
+  expect(modalBlocking, JSON.stringify(modalBlocking, null, 2)).toEqual([]);
+});

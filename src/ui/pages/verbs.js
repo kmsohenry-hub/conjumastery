@@ -32,22 +32,22 @@ export function filterVerbs() {
       const pastEsc = escapeHtml(v.past);
       const ppEsc = escapeHtml(v.pp);
       const meaningEsc = escapeHtml(v.meaning);
-      return `<div class="verb-card" id="verb-card-${i}" data-action="toggle-verb" data-index="${i}" role="button" tabindex="0" aria-expanded="false">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
+      return `<div class="verb-card" id="verb-card-${i}">
+      <div class="verb-card-header">
+        <button type="button" class="verb-card-toggle" data-action="toggle-verb" data-index="${i}" aria-expanded="false">
           <span class="verb-base">${baseEsc}</span>
           <span style="font-weight:600;color:var(--accent)">${pastEsc}</span>
           <span style="font-weight:600;color:var(--secondary)">${ppEsc}</span>
           <span style="color:var(--text-light);margin-left:8px;font-size:0.85rem">${meaningEsc}</span>
-        </div>
-        <button class="fav-btn ${isFav ? 'active' : ''}" data-action="toggle-fav" data-fav-id="verb_${baseEsc}" aria-label="Favori">${isFav ? '★' : '☆'}</button>
+        </button>
+        <button type="button" class="fav-btn ${isFav ? 'active' : ''}" data-action="toggle-fav" data-fav-id="verb_${baseEsc}" aria-label="Favori">${isFav ? '★' : '☆'}</button>
       </div>
       <div class="verb-conjugation-table">
         <div class="conj-grid">
           <div class="conj-item"><div class="tense-label">Present Simple</div><div class="tense-form">${baseEsc}${v.base === 'be' ? ' (am/is/are)' : ''}</div></div>
-          <div class="conj-item"><div class="tense-label">Present Continuous</div><div class="tense-form">${ingForm}</div></div>
+          <div class="conj-item"><div class="tense-label">Present Continuous</div><div class="tense-form">am/is/are ${ingForm}</div></div>
           <div class="conj-item"><div class="tense-label">Past Simple</div><div class="tense-form">${pastEsc}</div></div>
-          <div class="conj-item"><div class="tense-label">Past Continuous</div><div class="tense-form">${ingForm}</div></div>
+          <div class="conj-item"><div class="tense-label">Past Continuous</div><div class="tense-form">was/were ${ingForm}</div></div>
           <div class="conj-item"><div class="tense-label">Present Perfect</div><div class="tense-form">have/has ${ppEsc}</div></div>
           <div class="conj-item"><div class="tense-label">Past Perfect</div><div class="tense-form">had ${ppEsc}</div></div>
           <div class="conj-item"><div class="tense-label">Future</div><div class="tense-form">will ${baseEsc}</div></div>
@@ -64,6 +64,9 @@ export function toggleVerbCard(index) {
   const card = document.getElementById(`verb-card-${index}`);
   if (card) {
     const isExpanded = card.classList.toggle('expanded');
-    card.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+    const toggleBtn = card.querySelector('.verb-card-toggle');
+    if (toggleBtn) {
+      toggleBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+    }
   }
 }

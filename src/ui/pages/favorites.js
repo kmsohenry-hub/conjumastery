@@ -1,6 +1,7 @@
 import { escapeHtml } from '../../core/security.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
+import { isTenseUnlocked } from '../../core/progression.js';
 
 export function renderFavorites() {
   const container = document.getElementById('favoritesContent');
@@ -21,18 +22,21 @@ export function renderFavorites() {
         return `<div class="card" style="margin-bottom:10px;display:flex;align-items:center;padding:14px 20px">
           <span class="verb-base">${escapeHtml(verb.base)}</span> → <span style="color:var(--accent)">${escapeHtml(verb.past)}</span> → <span style="color:var(--secondary)">${escapeHtml(verb.pp)}</span>
           <span style="color:var(--text-light);margin-left:8px">${escapeHtml(verb.meaning)}</span>
-          <button class="fav-btn active" style="margin-left:auto" data-action="toggle-fav" data-fav-id="${escapeHtml(f)}" aria-label="Favori">★</button>
+          <button type="button" class="fav-btn active" style="margin-left:auto" data-action="toggle-fav" data-fav-id="${escapeHtml(f)}" aria-label="Favori">★</button>
         </div>`;
       } else {
         const tense = APP_DATA.tensesById[f];
         if (tense) {
-          return `<div class="lesson-card" data-action="open-tense-modal" data-tense-id="${escapeHtml(f)}" role="button" tabindex="0">
-          <div class="lesson-icon" style="background:var(--primary-soft);color:var(--primary)">📖</div>
-          <div class="lesson-info">
-            <div class="lesson-title">${escapeHtml(tense.nameFR)}</div>
-            <div class="lesson-desc">${escapeHtml((tense.explanation || '').substring(0, 80))}...</div>
+          const unlocked = isTenseUnlocked(State?.data, tense.id, APP_DATA.modules);
+          return `<div class="lesson-card ${!unlocked ? 'locked' : ''}">
+          <div class="lesson-card-trigger" data-action="open-tense-modal" data-tense-id="${escapeHtml(f)}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''} role="button" tabindex="0">
+            <div class="lesson-icon" style="background:var(--primary-soft);color:var(--primary)">${!unlocked ? '🔒' : '📖'}</div>
+            <div class="lesson-info">
+              <div class="lesson-title">${escapeHtml(tense.nameFR)}</div>
+              <div class="lesson-desc">${escapeHtml((tense.explanation || '').substring(0, 80))}...</div>
+            </div>
           </div>
-          <button class="fav-btn active" data-action="toggle-fav" data-fav-id="${escapeHtml(f)}" aria-label="Favori">★</button>
+          <button type="button" class="fav-btn active" data-action="toggle-fav" data-fav-id="${escapeHtml(f)}" aria-label="Favori">★</button>
         </div>`;
         }
       }

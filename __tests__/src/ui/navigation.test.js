@@ -701,4 +701,58 @@ describe('navigation', () => {
     expect(document.getElementById('page-settings').classList.contains('active')).toBe(true);
     expect(document.getElementById('pageTitle').textContent).toBe('Paramètres');
   });
+
+  it('marks sidebar inert while modal is open, cancels focus timer on immediate close, and closes mobile drawer on desktop resize', () => {
+    vi.useFakeTimers();
+    try {
+      const sidebar = document.getElementById('sidebar');
+      const modalContent = document.getElementById('modalContent');
+      const modalBtn = document.createElement('button');
+      modalBtn.textContent = 'Close';
+      const focusSpy = vi.spyOn(modalBtn, 'focus');
+      modalContent.appendChild(modalBtn);
+
+      openModal();
+      expect(sidebar.hasAttribute('inert')).toBe(true);
+      expect(sidebar.getAttribute('aria-hidden')).toBe('true');
+
+      closeModalDirect();
+      expect(sidebar.hasAttribute('inert')).toBe(false);
+      expect(sidebar.hasAttribute('aria-hidden')).toBe(false);
+
+      vi.advanceTimersByTime(100);
+      expect(focusSpy).not.toHaveBeenCalled();
+
+      // Open mobile drawer and resize back to desktop width
+      window.innerWidth = 600;
+      sidebar.classList.add('open');
+      window.innerWidth = 1024;
+      window.dispatchEvent(new Event('resize'));
+      expect(sidebar.classList.contains('open')).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('forwards data-module-index to renderLessons and prevents newline on Enter in exerciseInput textarea', () => {
+    const nextCard = document.createElement('div');
+    nextCard.dataset.page = 'lessons';
+    nextCard.dataset.moduleIndex = '2';
+    document.body.appendChild(nextCard);
+
+    nextCard.click();
+    expect(mocks.renderLessons).toHaveBeenCalledWith(2);
+
+    const textarea = document.createElement('textarea');
+    textarea.id = 'exerciseInput';
+    document.body.appendChild(textarea);
+    const enterEvent = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+      cancelable: true,
+    });
+    textarea.dispatchEvent(enterEvent);
+    expect(enterEvent.defaultPrevented).toBe(true);
+    expect(mocks.validateExercise).toHaveBeenCalled();
+  });
 });

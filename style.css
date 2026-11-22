@@ -8,7 +8,7 @@
   --accent: #be123c;
   --accent-light: #f43f5e;
   --success: #047857;
-  --warning: #b45309;
+  --warning: #92400e;
   --danger: #be123c;
   --danger-light: #fda4af;
   --bg: #f6f7f9;
@@ -647,7 +647,7 @@ code {
 .input:focus,
 .select:focus,
 .textarea:focus {
-  outline: none;
+  outline: 2px solid transparent;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-soft);
 }
@@ -892,6 +892,20 @@ code {
   align-items: center;
   gap: 16px;
   margin-bottom: 4px;
+  cursor: default;
+}
+
+.lesson-card-trigger {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.lesson-card.locked .lesson-card-trigger {
+  cursor: not-allowed;
 }
 
 /* EXERCISES */
@@ -1318,10 +1332,33 @@ code {
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
   margin-bottom: 10px;
-  cursor: pointer;
   transition:
     border-color var(--transition),
     box-shadow var(--transition);
+}
+
+.verb-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.verb-card-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .verb-card:hover,
@@ -1624,12 +1661,21 @@ body.modal-open .main-content {
   border-radius: var(--radius-sm);
   margin-bottom: 10px;
   border: 1px solid var(--border);
-  cursor: pointer;
   transition: border-color var(--transition);
 }
 
-.search-result-item:hover {
+.search-result-item[role='button'] {
+  cursor: pointer;
+}
+
+.search-result-item[role='button']:hover {
   border-color: var(--primary);
+}
+
+.search-result-item.locked {
+  background: var(--bg-subtle);
+  border-style: dashed;
+  cursor: not-allowed;
 }
 
 .sr-type,
@@ -1971,6 +2017,10 @@ body.modal-open .main-content {
   .tab,
   .nav-item {
     min-height: 44px;
+  }
+  .settings-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
   }
   #toastContainer,
   .toast-container {

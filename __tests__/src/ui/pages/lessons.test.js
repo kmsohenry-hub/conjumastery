@@ -37,8 +37,17 @@ describe('lessons page', () => {
     expect(document.getElementById('lessonContent').innerHTML).toContain('Les bases');
   });
 
-  it('switches lesson module', () => {
-    renderLessons();
+  it('switches lesson module and supports initialModuleIndex', () => {
+    renderLessons(1);
+    const tabs = document.querySelectorAll('#lessonTabs .tab');
+    expect(tabs[1].classList.contains('active')).toBe(true);
+    expect(document.getElementById('lessonContent').innerHTML).toContain('Intermédiaire');
+
+    renderLessons(99);
+    expect(document.querySelectorAll('#lessonTabs .tab')[0].classList.contains('active')).toBe(
+      true,
+    );
+
     showModule(1);
     expect(document.getElementById('lessonContent').innerHTML).toContain('Intermédiaire');
   });

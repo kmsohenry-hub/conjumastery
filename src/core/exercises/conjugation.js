@@ -55,6 +55,7 @@ export function getPresentSimpleForm(verb, is3rdSing, subject = null) {
   if (!is3rdSing) return verb;
   if (
     verb.endsWith('s') ||
+    verb.endsWith('z') ||
     verb.endsWith('ch') ||
     verb.endsWith('sh') ||
     verb.endsWith('x') ||
@@ -88,9 +89,11 @@ export function getIngForm(verb) {
  */
 const FINAL_STRESS_DOUBLE = new Set([
   'begin',
+  'forbid',
   'forget',
   'prefer',
   'regret',
+  'upset',
   'compel',
   'expel',
   'propel',
@@ -104,6 +107,7 @@ const FINAL_STRESS_DOUBLE = new Set([
   'commit',
   'permit',
   'submit',
+  'outwit',
   'control',
   'demur',
   'distil',
@@ -119,10 +123,10 @@ const FINAL_STRESS_DOUBLE = new Set([
  * before -ed / -ing suffixes, following British English rules.
  *
  * Rules:
- *   1. Must be CVC pattern (consonant-vowel-consonant).
- *   2. Monosyllables → always double (stop → stopped, run → running).
+ *   1. Must be CVC pattern (consonant-vowel-consonant, treating `qu` as a consonant cluster).
+ *   2. Monosyllables → always double (stop → stopped, run → running, quit → quitting).
  *   3. Polysyllables → double only if final-syllable stress
- *      (begin → beginning, prefer → preferred).
+ *      (begin → beginning, prefer → preferred, equip → equipping).
  *   4. BrE exception: final 'l' after a single vowel always doubles
  *      regardless of stress (travel → travelled, cancel → cancelled).
  *
@@ -136,13 +140,15 @@ export function shouldDoubleFinalConsonant(verb) {
   const last = verb[verb.length - 1];
   const previous = verb[verb.length - 2];
   const beforePrevious = verb[verb.length - 3];
+  const isQuCluster = beforePrevious === 'u' && verb.length >= 4 && verb[verb.length - 4] === 'q';
 
-  // Must be CVC: consonant-vowel-consonant
+  // Must be CVC: consonant-vowel-consonant (with `qu` counted as consonant /kw/)
   if (VOWELS.includes(last) || !VOWELS.includes(previous)) return false;
-  if (VOWELS.includes(beforePrevious)) return false;
+  if (VOWELS.includes(beforePrevious) && !isQuCluster) return false;
 
-  // Estimate syllable count via vowel groups
-  const vowelGroups = verb.match(/[aeiou]+/g);
+  // Estimate syllable count via vowel groups (ignoring the `u` in `qu`)
+  const normalizedForSyllables = verb.replace(/qu/g, 'kw');
+  const vowelGroups = normalizedForSyllables.match(/[aeiou]+/g);
   if (!vowelGroups) return false;
   const syllableCount = vowelGroups.length;
 
@@ -196,7 +202,7 @@ export function getConjugation(verbsByBase, verb, tenseId, subject, is3rdSing) {
       return verb;
     case 'conditional_2':
       if (verb === 'be') {
-        return subject === 'I' || is3rdSing ? 'was' : 'were';
+        return 'were';
       }
       return past;
     case 'conditional_3':

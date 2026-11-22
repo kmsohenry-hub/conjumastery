@@ -63,7 +63,7 @@ describe('search page DOM and event delegation (AUDIT-01, 02, 03, 04)', () => {
     expect(document.getElementById('searchResults').innerHTML).toContain('Aucun résultat');
   });
 
-  it('matches verbs, phrasal verbs, modals and tenses case-insensitively', () => {
+  it('matches verbs, phrasal verbs, modals, signal words and tenses case-insensitively with honest semantics', () => {
     const input = document.getElementById('globalSearchInput');
 
     input.value = 'ALLER';
@@ -72,11 +72,26 @@ describe('search page DOM and event delegation (AUDIT-01, 02, 03, 04)', () => {
 
     input.value = 'GIVE UP';
     performGlobalSearch();
-    expect(document.getElementById('searchResults').textContent.toLowerCase()).toContain('give up');
+    const pvItem = document.querySelector('.search-result-item');
+    expect(pvItem.textContent.toLowerCase()).toContain('give up');
+    expect(pvItem.hasAttribute('role')).toBe(false);
+    expect(pvItem.hasAttribute('tabindex')).toBe(false);
 
     input.value = 'MUST';
     performGlobalSearch();
-    expect(document.getElementById('searchResults').textContent.toLowerCase()).toContain('must');
+    const modalItem = Array.from(document.querySelectorAll('.search-result-item')).find(
+      (el) => el.querySelector('.sr-type')?.textContent === 'modal',
+    );
+    expect(modalItem).toBeTruthy();
+    expect(modalItem.hasAttribute('role')).toBe(false);
+
+    input.value = 'since';
+    performGlobalSearch();
+    expect(document.getElementById('searchResults').textContent).toContain('Present Perfect');
+
+    input.value = 'yet';
+    performGlobalSearch();
+    expect(document.getElementById('searchResults').textContent).toContain('Present Perfect');
 
     input.value = 'PRESENT SIMPLE';
     performGlobalSearch();
@@ -85,5 +100,12 @@ describe('search page DOM and event delegation (AUDIT-01, 02, 03, 04)', () => {
     );
     expect(tenseResult).toBeTruthy();
     expect(tenseResult.getAttribute('data-tense-id')).toBe('present_simple');
+    expect(tenseResult.getAttribute('role')).toBe('button');
+
+    input.value = 'past perfect';
+    performGlobalSearch();
+    const lockedTense = document.querySelector('.search-result-item[data-tense-id="past_perfect"]');
+    expect(lockedTense).toBeTruthy();
+    expect(lockedTense.getAttribute('data-locked')).toBe('true');
   });
 });

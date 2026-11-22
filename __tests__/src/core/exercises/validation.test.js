@@ -52,6 +52,8 @@ describe('validation.js — smart grammatical equivalence', () => {
     ["They'll arrive tomorrow.", 'They will arrive tomorrow.'],
     ["She's worked here for ten years.", 'She has worked here for ten years.'],
     ["He's sleeping right now.", 'He is sleeping right now.'],
+    ["Be quiet! The baby's sleeping.", 'Be quiet! The baby is sleeping.'],
+    ["Someone's broken the kitchen window!", 'Someone has broken the kitchen window!'],
     ["If I'd known, I'd have helped.", 'If I had known, I would have helped.'],
     ["You'd better leave now.", 'You had better leave now.'],
   ])('matches contracted and expanded forms bidirectionally: %s <-> %s', (formA, formB) => {

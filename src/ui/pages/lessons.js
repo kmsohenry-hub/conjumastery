@@ -9,19 +9,24 @@ import {
   isLessonUnlocked,
 } from '../../core/progression.js';
 
-export function renderLessons() {
+export function renderLessons(initialModuleIndex = 0) {
   const tabs = document.getElementById('lessonTabs');
+  const maxIdx = Math.max(0, APP_DATA.modules.length - 1);
+  const safeIndex =
+    Number.isInteger(initialModuleIndex) && initialModuleIndex >= 0 && initialModuleIndex <= maxIdx
+      ? initialModuleIndex
+      : 0;
 
   tabs.innerHTML = APP_DATA.modules
     .map(
       (m, i) => `
-    <button class="tab ${i === 0 ? 'active' : ''}" data-action="show-module" data-index="${i}">
+    <button class="tab ${i === safeIndex ? 'active' : ''}" data-action="show-module" data-index="${i}">
       ${escapeHtml(m.name)}
     </button>`,
     )
     .join('');
 
-  showModule(0);
+  showModule(safeIndex);
 }
 
 const LEVEL_LABELS = {

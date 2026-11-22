@@ -158,8 +158,7 @@ function expandAmbiguousContractions(str) {
     results.add(canonicalizeGrammar(`${commaMatch[2]} if ${commaMatch[1]}`));
   }
 
-  const sSinglePattern =
-    /\b(he|she|it|that|there|what|who|john|sarah|emma|brother|sister|friend)'s\b/;
+  const sSinglePattern = /\b([a-z]+)'s\b/;
   expandSingleContractionPattern(results, sSinglePattern, ['is', 'has']);
 
   const dSinglePattern = /\b(i|you|he|she|it|we|they)'d\b/;
