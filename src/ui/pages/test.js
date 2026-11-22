@@ -2,16 +2,21 @@ import { answerMatches, checkAmericanEnglishUsage } from '../../core/exercises/v
 import ExerciseEngine from '../../core/exercises/ExerciseEngine.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
-import { escapeHtml } from '../../core/security.js';
+import { escapeHtml, sanitizeInput } from '../../core/security.js';
 import { showToast } from '../utils/toast.js';
 
 let testTimer = null;
+let testFocusTimer = null;
 let testSeconds = 0;
 
 export function cancelTest() {
   if (testTimer) {
     clearInterval(testTimer);
     testTimer = null;
+  }
+  if (testFocusTimer) {
+    clearTimeout(testFocusTimer);
+    testFocusTimer = null;
   }
   testSeconds = 0;
   const timerEl = document.getElementById('testTimer');
@@ -112,7 +117,7 @@ export function renderTestQuestion() {
     const letters = ['A', 'B', 'C', 'D'];
     html += `<div class="options-grid">`;
     (q.options || []).forEach((opt, i) => {
-      html += `<button class="option-btn" data-action="select-test-option" data-index="${i}">
+      html += `<button type="button" class="option-btn" data-action="select-test-option" data-index="${i}">
         <span class="option-letter">${letters[i]}</span>
         <span>${escapeHtml(opt)}</span>
       </button>`;
@@ -120,7 +125,7 @@ export function renderTestQuestion() {
     html += `</div>`;
   } else {
     html += `<div class="input-group" style="margin-top:16px">
-      <input class="input" type="text" id="testInput" data-action="submit-test" placeholder="Votre réponse...">
+      <input class="input" type="text" id="testInput" data-action="submit-test" aria-label="Votre réponse" placeholder="Votre réponse...">
     </div>`;
   }
 
@@ -134,7 +139,15 @@ export function renderTestQuestion() {
   selectedOptionIndex = -1;
 
   if (q.type !== 'qcm') {
-    setTimeout(() => document.getElementById('testInput')?.focus(), 100);
+    if (testFocusTimer) {
+      clearTimeout(testFocusTimer);
+    }
+    testFocusTimer = setTimeout(() => {
+      testFocusTimer = null;
+      const testPage = document.getElementById('page-test');
+      if (testPage && !testPage.classList.contains('active')) return;
+      document.getElementById('testInput')?.focus();
+    }, 100);
   }
 }
 
@@ -157,8 +170,9 @@ export function validateTestAnswer() {
     });
   } else {
     const input = document.getElementById('testInput');
-    if (!input || !input.value.trim()) return;
-    userAnswer = input.value.trim();
+    const sanitized = sanitizeInput(input?.value);
+    if (!input || !sanitized) return;
+    userAnswer = sanitized;
     correct =
       answerMatches(userAnswer, q.answer) ||
       (Array.isArray(q.acceptedAnswers) &&

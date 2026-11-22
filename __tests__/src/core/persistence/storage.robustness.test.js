@@ -230,5 +230,65 @@ describe('Storage and State Robustness (Issues #103, #108, #112)', () => {
         ),
       ).toEqual([{ tenseId: 'due', nextReview: 100, interval: 1 }]);
     });
+
+    it('deeply sanitizes tenseStats, spacedRepetition bounds, deduplicates arrays, and guards mergeStates/recordAnswer', async () => {
+      const { mergeStates, MAX_SRS_EASE, MAX_SRS_INTERVAL_MINUTES } =
+        await import('../../../../src/core/state/store.js');
+
+      const sanitized = sanitizeState({
+        lastActiveDate: 'not-a-date',
+        completedLessons: ['l_present_simple', 'l_present_simple'],
+        favorites: ['verb_go', 'verb_go'],
+        tenseStats: {
+          broken: null,
+          present_simple: { correct: 10, total: 4 },
+          past_simple: { correct: -2, total: -5 },
+        },
+        spacedRepetition: {
+          broken: 'nope',
+          present_simple: { interval: 9999999, ease: 99, nextReview: -10, errors: -3 },
+        },
+        errorLog: [{ tenseId: 'present_simple', date: 123, extra: 'drop' }],
+        activityLog: [{ date: '2026-11-22T00:00:00.000Z', xp: 15, extra: 'drop' }],
+      });
+
+      expect(sanitized.lastActiveDate).toBeNull();
+      expect(sanitized.completedLessons).toEqual(['l_present_simple']);
+      expect(sanitized.favorites).toEqual(['verb_go']);
+      expect(sanitized.tenseStats).toEqual({
+        present_simple: { correct: 10, total: 10 },
+        past_simple: { correct: 0, total: 0 },
+      });
+      expect(sanitized.spacedRepetition).toEqual({
+        present_simple: {
+          interval: MAX_SRS_INTERVAL_MINUTES,
+          ease: MAX_SRS_EASE,
+          nextReview: 0,
+          errors: 0,
+        },
+      });
+      expect(sanitized.errorLog[0].extra).toBeUndefined();
+      expect(sanitized.activityLog[0].extra).toBeUndefined();
+
+      // mergeStates strips forbidden keys
+      const pollutedRemote = JSON.parse(
+        '{"tenseStats":{"__proto__":{"correct":9,"total":9},"present_simple":{"correct":1,"total":2}},"spacedRepetition":{"constructor":{"interval":1,"nextReview":1}}}',
+      );
+      const merged = mergeStates(defaultState, pollutedRemote);
+      expect(Object.prototype.hasOwnProperty.call(merged.tenseStats, '__proto__')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(merged.spacedRepetition, 'constructor')).toBe(
+        false,
+      );
+
+      // recordAnswer ignores forbidden/empty tenseIds and rounds ease cleanly without float drift
+      const store = createStore();
+      store.recordAnswer('__proto__', true);
+      store.recordAnswer('', false);
+      expect(store.getState().totalExercises).toBe(0);
+
+      store.recordAnswer('present_simple', false);
+      store.recordAnswer('present_simple', false);
+      expect(store.getState().spacedRepetition.present_simple.ease).toBe(2.1);
+    });
   });
 });

@@ -49,11 +49,26 @@ self.addEventListener('fetch', (event) => {
           const cacheControl = response?.headers?.get?.('cache-control') || '';
           if (response && response.status === 200 && !/no-store/i.test(cacheControl)) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put('./index.html', copy))
+              .catch(() => {});
           }
           return response;
         })
-        .catch(() => caches.match('./index.html')),
+        .catch(() =>
+          caches.match('./index.html').then((cachedIndex) => {
+            if (cachedIndex) return cachedIndex;
+            if (typeof globalThis.Response === 'function') {
+              return new globalThis.Response('Offline', {
+                status: 503,
+                statusText: 'Offline',
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+              });
+            }
+            return undefined;
+          }),
+        ),
     );
     return;
   }
@@ -70,11 +85,20 @@ self.addEventListener('fetch', (event) => {
             !/no-store/i.test(cacheControl)
           ) {
             const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put(event.request, copy))
+              .catch(() => {});
           }
           return networkResponse;
         })
-        .catch(() => cached);
+        .catch(() => {
+          if (cached) return cached;
+          if (typeof globalThis.Response === 'function') {
+            return new globalThis.Response('', { status: 503, statusText: 'Offline' });
+          }
+          return undefined;
+        });
 
       return cached || fetchPromise;
     }),

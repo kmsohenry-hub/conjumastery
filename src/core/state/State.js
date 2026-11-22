@@ -87,6 +87,10 @@ const State = {
       const msPerDay = 24 * 60 * 60 * 1000;
       const todayMidnight = new Date(todayStr).getTime();
       const lastMidnight = new Date(state.lastActiveDate).getTime();
+      if (!Number.isFinite(lastMidnight)) {
+        store.setState({ daysStreak: 0, lastActiveDate: null });
+        return;
+      }
       const diff = Math.round((todayMidnight - lastMidnight) / msPerDay);
 
       if (diff > 1) {
@@ -105,6 +109,10 @@ const State = {
       const msPerDay = 24 * 60 * 60 * 1000;
       const todayMidnight = new Date(todayStr).getTime();
       const lastMidnight = new Date(state.lastActiveDate).getTime();
+      if (!Number.isFinite(lastMidnight)) {
+        store.setState({ daysStreak: 1, lastActiveDate: todayStr });
+        return;
+      }
       const diff = Math.round((todayMidnight - lastMidnight) / msPerDay);
 
       if (diff === 1) {

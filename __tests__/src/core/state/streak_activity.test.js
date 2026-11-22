@@ -114,4 +114,18 @@ describe('Streak Activity Decoupling & UI Synchronization (Issues #106, #102)', 
 
     unsub();
   });
+
+  it('recovers cleanly when lastActiveDate is corrupted or unparseable', () => {
+    vi.setSystemTime(new Date('2026-09-15T12:00:00'));
+    State.data = { ...defaultState, daysStreak: 4, lastActiveDate: 'corrupted-date' };
+
+    State.syncStreakOnLoad();
+    expect(State.data.daysStreak).toBe(0);
+    expect(State.data.lastActiveDate).toBeNull();
+
+    State.data = { ...defaultState, daysStreak: 2, lastActiveDate: 'corrupted-date' };
+    State.checkStreak();
+    expect(State.data.daysStreak).toBe(1);
+    expect(State.data.lastActiveDate).toBe(new Date('2026-09-15T12:00:00').toDateString());
+  });
 });

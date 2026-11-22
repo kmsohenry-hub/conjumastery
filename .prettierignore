@@ -2,6 +2,7 @@ node_modules/
 dist/
 coverage/
 test-results/
+playwright-report/
 .playwright-cli/
 .env
 .env.local

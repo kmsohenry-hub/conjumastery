@@ -259,7 +259,7 @@
             <div class="progress-fill" id="exProgressBar" style="width: 0%"></div>
           </div>
           <div id="exerciseQuestionContainer"></div>
-          <div id="exerciseFeedback" style="display: none"></div>
+          <div id="exerciseFeedback" style="display: none" role="status" aria-live="polite"></div>
           <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end">
             <button class="btn btn-outline" id="exSkipBtn" data-action="skip-exercise">
               Passer ⏭️
@@ -338,7 +338,7 @@
             <div class="progress-fill" id="testProgressBar" style="width: 0%"></div>
           </div>
           <div id="testQuestionContainer"></div>
-          <div id="testFeedback" style="display: none"></div>
+          <div id="testFeedback" style="display: none" role="status" aria-live="polite"></div>
           <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end">
             <button class="btn btn-primary" id="testValidateBtn" data-action="validate-test">
               Valider ✓
@@ -536,7 +536,13 @@
               >
                 Importer
               </button>
-              <input type="file" id="importFile" accept=".json" style="display: none" />
+              <input
+                type="file"
+                id="importFile"
+                accept=".json"
+                aria-label="Importer une sauvegarde JSON"
+                style="display: none"
+              />
             </div>
           </div>
           <div class="settings-row settings-row-last">

@@ -58,13 +58,14 @@ import { renderStats } from './src/ui/pages/stats.js';
 // ============================================================
 
 import { State } from './src/core/state/State.js';
-import { defaultState } from './src/core/state/store.js';
+import { defaultState, MAX_SRS_EASE, MAX_SRS_INTERVAL_MINUTES } from './src/core/state/store.js';
 
 // ============================================================
 // 2. EXERCISE ENGINE & IMPORT VALIDATION
 // ============================================================
 
 const ExerciseEngine = ExerciseEngineObj;
+const MAX_IMPORT_FILE_BYTES = 2 * 1024 * 1024;
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -79,17 +80,23 @@ function cleanCompletedLessons(value) {
   const validLessonIds = new Set(
     APP_DATA.modules.flatMap((mod) => mod.lessons.map((lesson) => lesson.id)),
   );
-  return value.filter((item) => typeof item === 'string' && validLessonIds.has(item));
+  return Array.from(
+    new Set(value.filter((item) => typeof item === 'string' && validLessonIds.has(item))),
+  );
 }
 
 function cleanFavorites(value) {
   if (!Array.isArray(value)) return [];
-  return value.filter((item) => {
-    if (typeof item !== 'string') return false;
-    if (APP_DATA.tensesById[item]) return true;
-    if (!item.startsWith('verb_')) return false;
-    return Boolean(APP_DATA.verbsByBase[item.slice('verb_'.length)]);
-  });
+  return Array.from(
+    new Set(
+      value.filter((item) => {
+        if (typeof item !== 'string') return false;
+        if (APP_DATA.tensesById[item]) return true;
+        if (!item.startsWith('verb_')) return false;
+        return Boolean(APP_DATA.verbsByBase[item.slice('verb_'.length)]);
+      }),
+    ),
+  );
 }
 
 function cleanLastActiveDate(value) {
@@ -126,10 +133,13 @@ function cleanSpacedRepetition(value) {
       .map(([tenseId, data]) => [
         tenseId,
         {
-          interval: cleanNumber(data.interval, 1, 1),
+          interval: Math.min(
+            MAX_SRS_INTERVAL_MINUTES,
+            Math.round(cleanNumber(data.interval, 1, 1)),
+          ),
           nextReview: cleanNumber(data.nextReview, Date.now(), 0),
-          ease: cleanNumber(data.ease, 2.5, 1.3),
-          errors: cleanNumber(data.errors),
+          ease: Number(Math.min(MAX_SRS_EASE, cleanNumber(data.ease, 2.5, 1.3)).toFixed(2)),
+          errors: Math.floor(cleanNumber(data.errors)),
         },
       ]),
   );
@@ -139,6 +149,13 @@ function cleanErrorLog(value) {
   return Array.isArray(value)
     ? value
         .filter((entry) => isPlainObject(entry) && isRecognizedTopicId(entry.tenseId))
+        .map((entry) => ({
+          tenseId: entry.tenseId,
+          date:
+            typeof entry.date === 'string' && Number.isFinite(Date.parse(entry.date))
+              ? entry.date
+              : new Date().toISOString(),
+        }))
         .slice(-100)
     : [];
 }
@@ -150,8 +167,13 @@ function cleanActivityLog(value) {
           (entry) =>
             isPlainObject(entry) &&
             Number.isFinite(entry.xp) &&
+            entry.xp >= 0 &&
             Number.isFinite(Date.parse(entry.date)),
         )
+        .map((entry) => ({
+          date: entry.date,
+          xp: entry.xp,
+        }))
         .slice(-100)
     : [];
 }
@@ -222,12 +244,19 @@ function exportData() {
 
 export function handleImportFile(file) {
   if (!file) return;
+  if (typeof file.size === 'number' && file.size > MAX_IMPORT_FILE_BYTES) {
+    showToast('❌ Fichier trop volumineux (max 2 Mo)', 'error');
+    return;
+  }
   const reader = new FileReader();
+  reader.onerror = () => {
+    showToast('❌ Impossible de lire le fichier', 'error');
+  };
   reader.onload = (ev) => {
     try {
       const data = validateImportedState(JSON.parse(ev.target.result));
       State.data = data;
-      State.save();
+      setTheme(data.settings.theme);
       updateUI();
       showToast('📥 Données importées avec succès', 'success');
     } catch {
@@ -261,14 +290,14 @@ function confirmReset() {
       <div>
         <div class="modal-title" id="modalTitle">⚠️ Réinitialiser la progression ?</div>
       </div>
-      <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
+      <button type="button" class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
     <div class="explain-block">
       <p>Cette action effacera définitivement vos XP, niveaux, leçons validées, statistiques, favoris et historiques de révision.</p>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-outline" id="cancelResetBtn" data-action="close-modal">Annuler</button>
-      <button class="btn btn-accent" id="confirmResetBtn" data-action="confirm-reset-execute">Confirmer la réinitialisation</button>
+      <button type="button" class="btn btn-outline" id="cancelResetBtn" data-action="close-modal">Annuler</button>
+      <button type="button" class="btn btn-accent" id="confirmResetBtn" data-action="confirm-reset-execute">Confirmer la réinitialisation</button>
     </div>`;
   openModal();
 }
@@ -298,14 +327,21 @@ function resetProgress() {
 
 function updateUI() {
   const d = State.data;
-  document.getElementById('headerXP').textContent = d.xp;
-  document.getElementById('headerLevel').textContent = d.level;
-  document.getElementById('sidebarLevel').textContent = d.level;
+  const headerXP = document.getElementById('headerXP');
+  if (headerXP) headerXP.textContent = d.xp;
+  const headerLevel = document.getElementById('headerLevel');
+  if (headerLevel) headerLevel.textContent = d.level;
+  const sidebarLevel = document.getElementById('sidebarLevel');
+  if (sidebarLevel) sidebarLevel.textContent = d.level;
   const displayXP = Math.max(0, Math.min(100, d.xp - (d.level - 1) * 100));
-  document.getElementById('sidebarXP').textContent = `${displayXP} / 100 XP`;
-  document.getElementById('sidebarXPBar').style.width = `${displayXP}%`;
-  document.getElementById('streakCount').textContent = d.daysStreak;
-  document.getElementById('streakPlural').textContent = d.daysStreak > 1 ? 's' : '';
+  const sidebarXP = document.getElementById('sidebarXP');
+  if (sidebarXP) sidebarXP.textContent = `${displayXP} / 100 XP`;
+  const sidebarXPBar = document.getElementById('sidebarXPBar');
+  if (sidebarXPBar) sidebarXPBar.style.width = `${displayXP}%`;
+  const streakCount = document.getElementById('streakCount');
+  if (streakCount) streakCount.textContent = d.daysStreak;
+  const streakPlural = document.getElementById('streakPlural');
+  if (streakPlural) streakPlural.textContent = d.daysStreak > 1 ? 's' : '';
 
   // Update revision badge
   const queue = State.getReviewQueue();

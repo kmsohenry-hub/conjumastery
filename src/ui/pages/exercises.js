@@ -3,18 +3,23 @@ import { answerMatches, checkAmericanEnglishUsage } from '../../core/exercises/v
 import ExerciseEngine from '../../core/exercises/ExerciseEngine.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
-import { escapeHtml } from '../../core/security.js';
+import { escapeHtml, sanitizeInput } from '../../core/security.js';
 import { launchConfetti } from '../utils/confetti.js';
 import { UNLOCK_THRESHOLD } from '../../core/progression.js';
 
 let selectedOptionIndex = -1;
 let currentOptionButtons = [];
 let pendingExerciseTimer = null;
+let pendingExerciseFocusTimer = null;
 
 function clearPendingExerciseTimer() {
   if (pendingExerciseTimer) {
     clearTimeout(pendingExerciseTimer);
     pendingExerciseTimer = null;
+  }
+  if (pendingExerciseFocusTimer) {
+    clearTimeout(pendingExerciseFocusTimer);
+    pendingExerciseFocusTimer = null;
   }
 }
 
@@ -192,7 +197,7 @@ export function renderExerciseQuestion(q) {
     const letters = ['A', 'B', 'C', 'D'];
     html += `<div class="options-grid">`;
     q.options.forEach((opt, i) => {
-      html += `<button class="option-btn" data-action="select-option" data-index="${i}">
+      html += `<button type="button" class="option-btn" data-action="select-option" data-index="${i}">
         <span class="option-letter">${letters[i]}</span>
         <span>${escapeHtml(opt)}</span>
       </button>`;
@@ -204,17 +209,17 @@ export function renderExerciseQuestion(q) {
         ? '💡 Formes contractées ou complètes acceptées (mot(s) manquant(s) ou phrase entière).'
         : '💡 Formes contractées ou complètes acceptées.';
     html += `<div class="input-group" style="margin-top:16px">
-      <input class="input" type="text" id="exerciseInput" data-action="submit-exercise" placeholder="Votre réponse...">
+      <input class="input" type="text" id="exerciseInput" data-action="submit-exercise" aria-label="Votre réponse" placeholder="Votre réponse...">
       <small class="exercise-input-hint" style="display:block;margin-top:6px;color:var(--text-light);font-size:0.8rem">${hintText}</small>
     </div>`;
   } else if (q.type === 'transform') {
     html += `<div class="input-group" style="margin-top:16px">
-      <textarea class="textarea" id="exerciseInput" placeholder="Écrivez la phrase transformée..." rows="2"></textarea>
+      <textarea class="textarea" id="exerciseInput" aria-label="Votre réponse" placeholder="Écrivez la phrase transformée..." rows="2"></textarea>
       <small class="exercise-input-hint" style="display:block;margin-top:6px;color:var(--text-light);font-size:0.8rem">💡 Formes contractées (doesn't, won't...) et formes complètes (does not, will not...) acceptées.</small>
     </div>`;
   } else if (q.type === 'correction') {
     html += `<div class="input-group" style="margin-top:16px">
-      <textarea class="textarea" id="exerciseInput" placeholder="Écrivez la phrase corrigée (ou le verbe corrigé)..." rows="2"></textarea>
+      <textarea class="textarea" id="exerciseInput" aria-label="Votre réponse" placeholder="Écrivez la phrase corrigée (ou le verbe corrigé)..." rows="2"></textarea>
       <small class="exercise-input-hint" style="display:block;margin-top:6px;color:var(--text-light);font-size:0.8rem">💡 Écrivez toute la phrase corrigée ou uniquement le verbe corrigé (formes contractées ou complètes acceptées).</small>
     </div>`;
   }
@@ -224,7 +229,15 @@ export function renderExerciseQuestion(q) {
   currentOptionButtons = Array.from(container.querySelectorAll('.option-btn'));
 
   if (q.type !== 'qcm') {
-    setTimeout(() => document.getElementById('exerciseInput')?.focus(), 100);
+    if (pendingExerciseFocusTimer) {
+      clearTimeout(pendingExerciseFocusTimer);
+    }
+    pendingExerciseFocusTimer = setTimeout(() => {
+      pendingExerciseFocusTimer = null;
+      const exercisesPage = document.getElementById('page-exercises');
+      if (exercisesPage && !exercisesPage.classList.contains('active')) return;
+      document.getElementById('exerciseInput')?.focus();
+    }, 100);
   }
 }
 
@@ -254,8 +267,9 @@ export function validateExercise() {
     });
   } else {
     const input = document.getElementById('exerciseInput');
-    if (!input || !input.value.trim()) return;
-    userAnswer = input.value.trim();
+    const sanitized = sanitizeInput(input?.value);
+    if (!input || !sanitized) return;
+    userAnswer = sanitized;
     correct =
       answerMatches(userAnswer, q.answer) ||
       (Array.isArray(q.acceptedAnswers) &&

@@ -13,9 +13,12 @@ function isLoopbackRequest(req) {
 }
 
 function sendJson(res, statusCode, payload) {
+  if (res.writableEnded) return;
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
   res.end(JSON.stringify(payload));
 }
 
@@ -35,13 +38,20 @@ async function readJsonBody(req) {
     return {};
   }
   const raw = Buffer.concat(chunks).toString('utf8');
+  let parsed;
   try {
-    return JSON.parse(raw);
+    parsed = JSON.parse(raw);
   } catch {
     const err = new Error('Invalid JSON payload');
     err.status = 400;
     throw err;
   }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    const err = new Error('Request body must be a JSON object');
+    err.status = 400;
+    throw err;
+  }
+  return parsed;
 }
 
 export function createGitHubMiddleware(service = createGitHubService()) {
@@ -58,16 +68,22 @@ export function createGitHubMiddleware(service = createGitHubService()) {
       return;
     }
 
-    const parsedUrl = new URL(rawUrl, 'http://localhost');
-    const pathname = parsedUrl.pathname;
-    const method = (req.method || 'GET').toUpperCase();
-
     if (!isLoopbackRequest(req)) {
       sendJson(res, 403, {
         error: 'GitHub API access is restricted to local server access',
       });
       return;
     }
+
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(rawUrl, 'http://localhost');
+    } catch {
+      sendJson(res, 400, { error: 'Malformed request URL' });
+      return;
+    }
+    const pathname = parsedUrl.pathname;
+    const method = (req.method || 'GET').toUpperCase();
 
     try {
       const owner = parsedUrl.searchParams.get('owner') || undefined;

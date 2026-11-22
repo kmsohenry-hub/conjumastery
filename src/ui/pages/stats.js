@@ -12,7 +12,8 @@ export function renderStats() {
   // Chart
   const chartEl = document.getElementById('statsChart');
   const stats = d.tenseStats;
-  const tenses = APP_DATA.tenses.filter((t) => stats[t.id] && stats[t.id].total > 0);
+  const allTopics = [...APP_DATA.tenses, ...Object.values(APP_DATA.specialTopicsById || {})];
+  const tenses = allTopics.filter((t) => stats[t.id] && stats[t.id].total > 0);
 
   if (tenses.length === 0) {
     chartEl.innerHTML =
@@ -29,7 +30,7 @@ export function renderStats() {
         return `<div class="bar-item">
         <div class="bar-value">${accuracy}%</div>
         <div class="bar" style="height:${height}%;background:${color}"></div>
-        <div class="bar-label">${escapeHtml(t.nameFR.split(' ')[0])}</div>
+        <div class="bar-label" title="${escapeHtml(t.nameFR)}">${escapeHtml(t.nameFR.split(' ')[0])}</div>
       </div>`;
       })
       .join('');
@@ -45,9 +46,13 @@ export function renderStats() {
     logEl.innerHTML = recent
       .map((a) => {
         const date = new Date(a.date);
+        const dateLabel = Number.isFinite(date.getTime())
+          ? `${date.toLocaleDateString('fr-FR')} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+          : '—';
+        const safeXp = escapeHtml(String(Math.max(0, Number(a.xp) || 0)));
         return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.8rem">
-        <span>${date.toLocaleDateString('fr-FR')} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-        <span style="color:var(--primary);font-weight:600">+${a.xp} XP</span>
+        <span>${escapeHtml(dateLabel)}</span>
+        <span style="color:var(--primary);font-weight:600">+${safeXp} XP</span>
       </div>`;
       })
       .join('');

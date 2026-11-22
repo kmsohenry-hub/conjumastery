@@ -21,6 +21,8 @@ function validateRepo(owner = DEFAULT_OWNER, repo = DEFAULT_REPO) {
   return { owner, repo };
 }
 
+const ALLOWED_BLOB_MODES = new Set(['100644', '100755', '120000']);
+
 function validateBranchName(branch) {
   if (
     typeof branch !== 'string' ||
@@ -28,6 +30,8 @@ function validateBranchName(branch) {
     branch.includes('..') ||
     branch.startsWith('/') ||
     branch.endsWith('/') ||
+    branch.startsWith('-') ||
+    branch.endsWith('.lock') ||
     !SAFE_BRANCH_RE.test(branch)
   ) {
     throw new Error('Invalid branch name');
@@ -40,7 +44,10 @@ function validateRepoPath(filePath) {
     typeof filePath !== 'string' ||
     !filePath ||
     filePath.startsWith('/') ||
+    filePath.endsWith('/') ||
     filePath.includes('..') ||
+    filePath.includes('\\') ||
+    filePath.includes('//') ||
     filePath.includes('\0')
   ) {
     throw new Error('Invalid repository file path');
@@ -305,10 +312,19 @@ export function createGitHubService({
         typeof file.path !== 'string' ||
         !file.path ||
         file.path.startsWith('/') ||
+        file.path.endsWith('/') ||
         file.path.includes('..') ||
+        file.path.includes('\\') ||
+        file.path.includes('//') ||
         file.path.includes('\0')
       ) {
         throw new Error(`Invalid file entry path: ${file?.path}`);
+      }
+      if (!file.delete && file.content !== null) {
+        const mode = file.mode || '100644';
+        if (!ALLOWED_BLOB_MODES.has(mode)) {
+          throw new Error(`Invalid git file mode: ${mode}`);
+        }
       }
     }
 
@@ -345,9 +361,10 @@ export function createGitHubService({
           encoding,
         },
       });
+      const mode = file.mode || '100644';
       treeEntries.push({
         path: file.path,
-        mode: file.mode || '100644',
+        mode,
         type: 'blob',
         sha: blobRes.data.sha,
       });
@@ -423,9 +440,13 @@ export function createGitHubService({
     repo = defaultRepo,
   }) {
     const target = validateRepo(owner, repo);
+    const cleanTitle = typeof title === 'string' ? title.trim() : '';
+    if (!cleanTitle) {
+      throw new Error('Pull request title is required');
+    }
     const res = await request('POST', `/repos/${target.owner}/${target.repo}/pulls`, {
       body: {
-        title: String(title || '').trim(),
+        title: cleanTitle,
         head: validateBranchName(head),
         base: validateBranchName(base),
         body: String(body || ''),
