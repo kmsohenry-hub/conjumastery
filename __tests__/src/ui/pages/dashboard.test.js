@@ -58,14 +58,16 @@ describe('dashboard page', () => {
     expect(document.getElementById('dashAccuracy').textContent).toBe('80%');
   });
 
-  it('renders next lesson element with accessible role and data-page', () => {
+  it('renders next lesson element with accessible role, data-page, data-module-index and valid CSS', () => {
     renderDashboardNextLesson(['l_present_simple']);
     const card = document.querySelector('#dashNextLesson .lesson-card');
     expect(card).toBeTruthy();
     expect(card.getAttribute('data-page')).toBe('lessons');
+    expect(card.getAttribute('data-module-index')).toBe('0');
     expect(card.getAttribute('role')).toBe('button');
     expect(card.getAttribute('tabindex')).toBe('0');
     expect(card.hasAttribute('onclick')).toBe(false);
+    expect(card.innerHTML).not.toContain(')20');
   });
 
   it('navigates to lessons when clicking the next lesson card (DOM event simulation)', () => {

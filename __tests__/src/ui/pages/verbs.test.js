@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 
 describe('verbs page DOM and event delegation (AUDIT-01, 02, 03, 04)', () => {
-  it('renders verbs without any inline handlers and with keyboard accessibility', () => {
+  it('renders verbs without inline handlers, without nested interactive elements, and with continuous auxiliaries', () => {
     renderVerbs();
     const container = document.getElementById('verbsList');
     expect(container.children.length).toBeGreaterThan(0);
@@ -35,10 +35,19 @@ describe('verbs page DOM and event delegation (AUDIT-01, 02, 03, 04)', () => {
     const cards = container.querySelectorAll('.verb-card');
     cards.forEach((c) => {
       expect(c.hasAttribute('onclick')).toBe(false);
-      expect(c.getAttribute('role')).toBe('button');
-      expect(c.getAttribute('tabindex')).toBe('0');
-      expect(c.getAttribute('data-action')).toBe('toggle-verb');
+      expect(c.hasAttribute('role')).toBe(false);
+      const toggleBtn = c.querySelector('button.verb-card-toggle');
+      const favBtn = c.querySelector('button.fav-btn');
+      expect(toggleBtn).toBeTruthy();
+      expect(favBtn).toBeTruthy();
+      expect(toggleBtn.getAttribute('data-action')).toBe('toggle-verb');
+      expect(toggleBtn.getAttribute('aria-expanded')).toBe('false');
+      expect(toggleBtn.contains(favBtn)).toBe(false);
     });
+
+    const firstTable = cards[0].querySelector('.verb-conjugation-table');
+    expect(firstTable.textContent).toContain('am/is/are arising');
+    expect(firstTable.textContent).toContain('was/were arising');
 
     const favBtns = container.querySelectorAll('.fav-btn');
     favBtns.forEach((b) => {
@@ -47,31 +56,28 @@ describe('verbs page DOM and event delegation (AUDIT-01, 02, 03, 04)', () => {
     });
   });
 
-  it('toggles verb card on DOM click and Enter keypress', () => {
+  it('toggles verb card on toggle button click and updates aria-expanded', () => {
     renderVerbs();
     const card = document.getElementById('verb-card-0');
+    const toggleBtn = card.querySelector('.verb-card-toggle');
     expect(card).toBeTruthy();
+    expect(toggleBtn).toBeTruthy();
     expect(card.classList.contains('expanded')).toBe(false);
 
-    // Wire local delegation simulation
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('[data-action="toggle-fav"]')) return;
-      toggleVerbCard(Number(card.dataset.index));
+    toggleBtn.addEventListener('click', () => {
+      toggleVerbCard(Number(toggleBtn.dataset.index));
     });
 
-    // 1. Mouse Click
-    card.click();
+    toggleBtn.click();
     expect(card.classList.contains('expanded')).toBe(true);
-    card.click();
-    expect(card.classList.contains('expanded')).toBe(false);
+    expect(toggleBtn.getAttribute('aria-expanded')).toBe('true');
 
-    // 2. Keyboard Enter
-    card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    card.click();
-    expect(card.classList.contains('expanded')).toBe(true);
+    toggleBtn.click();
+    expect(card.classList.contains('expanded')).toBe(false);
+    expect(toggleBtn.getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('clicking favorite button does NOT trigger card expansion (stopPropagation parity)', () => {
+  it('clicking favorite button does NOT trigger card expansion (sibling button separation)', () => {
     renderVerbs();
     const card = document.getElementById('verb-card-0');
     const favBtn = card.querySelector('[data-action="toggle-fav"]');
@@ -82,9 +88,11 @@ describe('verbs page DOM and event delegation (AUDIT-01, 02, 03, 04)', () => {
     card.addEventListener('click', (e) => {
       if (e.target.closest('[data-action="toggle-fav"]')) {
         toggleFavMock(favBtn.dataset.favId, favBtn);
-        return; // stop propagation
+        return;
       }
-      cardToggled = true;
+      if (e.target.closest('[data-action="toggle-verb"]')) {
+        cardToggled = true;
+      }
     });
 
     favBtn.click();

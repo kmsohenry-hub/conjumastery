@@ -117,8 +117,13 @@ test('filters irregular verbs, expands conjugations and persists favorites', asy
   await expect(cards.first()).toContainText('gone');
 
   await cards.first().locator('.verb-base').click();
-  await expect(cards.first()).toHaveAttribute('aria-expanded', 'true');
+  await expect(cards.first().locator('[data-action="toggle-verb"]')).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
   await expect(cards.first().locator('.verb-conjugation-table')).toBeVisible();
+  await expect(cards.first().locator('.verb-conjugation-table')).toContainText('am/is/are going');
+  await expect(cards.first().locator('.verb-conjugation-table')).toContainText('was/were going');
 
   const favBtn = cards.first().locator('[data-action="toggle-fav"]');
   await favBtn.click();
@@ -136,6 +141,9 @@ test('runs global search case-insensitively and switches comparison tabs', async
   await page.locator('#globalSearchInput').fill('GIVE UP');
   await expect(page.locator('#searchResults')).toContainText(/give up/i);
 
+  await page.locator('#globalSearchInput').fill('since');
+  await expect(page.locator('#searchResults')).toContainText('Present Perfect');
+
   await page.locator('#globalSearchInput').fill('PRESENT SIMPLE');
   const tenseItem = page.locator('.search-result-item[data-action="open-tense-modal"]').first();
   await expect(tenseItem).toBeVisible();
@@ -145,6 +153,13 @@ test('runs global search case-insensitively and switches comparison tabs', async
 
   await page.locator('.nav-item[data-page="comparison"]').click();
   await expect(page.locator('#page-comparison')).toBeVisible();
+  const futureTab = page.locator('#comparisonTabs .tab[data-comp-id="future"]');
+  await futureTab.click();
+  await expect(futureTab).toHaveClass(/active/);
+  await expect(page.locator('#comparisonContent .comparison-table')).toContainText(
+    'Futur simple (will)',
+  );
+
   const pastTab = page.locator('#comparisonTabs .tab[data-comp-id="past"]');
   await pastTab.click();
   await expect(pastTab).toHaveClass(/active/);

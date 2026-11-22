@@ -16,10 +16,10 @@ export function renderDashboardNextLesson(completedLessons) {
   const incompleteLessons = [];
   const completedSet = new Set(completedLessons);
 
-  APP_DATA.modules.forEach((mod) => {
+  APP_DATA.modules.forEach((mod, modIndex) => {
     mod.lessons.forEach((l) => {
       if (!completedSet.has(l.id)) {
-        incompleteLessons.push({ ...l, module: mod });
+        incompleteLessons.push({ ...l, module: mod, moduleIndex: modIndex });
       }
     });
   });
@@ -29,8 +29,8 @@ export function renderDashboardNextLesson(completedLessons) {
     const durationLabel =
       next.duration || `${Math.max(5, Math.round((next.exercises || 10) * 0.8))} min`;
     nextLessonEl.innerHTML = `
-      <div class="lesson-card" data-page="lessons" role="button" tabindex="0">
-        <div class="lesson-icon" style="background:${escapeHtml(next.module.color)}20;color:${escapeHtml(next.module.color)}">${escapeHtml(next.module.icon)}</div>
+      <div class="lesson-card" data-page="lessons" data-module-index="${next.moduleIndex}" role="button" tabindex="0">
+        <div class="lesson-icon" style="background:var(--primary-soft);color:${escapeHtml(next.module.color)}">${escapeHtml(next.module.icon)}</div>
         <div class="lesson-info">
           <div class="lesson-title">${escapeHtml(next.title)}</div>
           <div class="lesson-desc">${escapeHtml(next.desc)}</div>

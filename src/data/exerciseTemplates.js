@@ -587,7 +587,13 @@ export const exerciseTemplates = {
         fr: 'J’ai perdu mes clés, je ne peux pas entrer.',
         hint: 'I / lose / my keys',
         answer: 'I have lost my keys.',
-        acceptedAnswers: ["I've lost my keys.", 'I have lost my keys, I cannot get in.'],
+        acceptedAnswers: [
+          "I've lost my keys.",
+          'I have lost my keys, I cannot get in.',
+          "I have lost my keys, I can't get in.",
+          'I have lost my keys, I cannot enter.',
+          "I have lost my keys, I can't enter.",
+        ],
         explanation: "Conséquence présente au Present Perfect : 'I have (I've) lost my keys.'",
       },
       {
@@ -863,7 +869,7 @@ export const exerciseTemplates = {
       },
       {
         sentence: 'After the guests ___, we tidied the living room.',
-        options: ['had left', 'left', 'have left', 'were leaving'],
+        options: ['had left', 'leave', 'have left', 'were leaving'],
         correct: 0,
         explanation: "Action accomplie avant une autre action passée ('After...') → Past Perfect.",
       },
@@ -1096,7 +1102,14 @@ export const exerciseTemplates = {
         fr: 'Je t’aiderai avec tes bagages, promis.',
         hint: 'I / help / you / with your luggage',
         answer: 'I will help you with your luggage.',
-        acceptedAnswers: ["I'll help you with your luggage.", 'I will help you with your bags.'],
+        acceptedAnswers: [
+          "I'll help you with your luggage.",
+          'I will help you with your bags.',
+          'I will help you with your luggage, I promise.',
+          "I'll help you with your luggage, I promise.",
+          'I promise I will help you with your luggage.',
+          "I promise I'll help you with your luggage.",
+        ],
         explanation: "Promesse avec Future Simple (will) : 'I will help you with your luggage.'",
       },
       {
@@ -1216,8 +1229,7 @@ export const exerciseTemplates = {
         sentence: "Don't phone me at 8 PM tonight; I ___ dinner with clients.",
         options: ['will be having', 'will have', 'have', 'had'],
         correct: 0,
-        explanation:
-          'Action en déroulement à 20h demain/ce soir → Future Continuous (will be having).',
+        explanation: 'Action en déroulement à 20h ce soir → Future Continuous (will be having).',
       },
       {
         sentence: 'At 10 a.m. tomorrow, she ___ her driving test.',
@@ -1368,12 +1380,7 @@ export const exerciseTemplates = {
     qcm: [
       {
         sentence: 'By next June, I ___ at this company for ten years.',
-        options: [
-          'will have been working',
-          'will be working',
-          'have been working',
-          'will have worked',
-        ],
+        options: ['will have been working', 'will be working', 'have been working', 'worked'],
         correct: 0,
         explanation:
           "Repère futur ('By next June') + durée continue ('for ten years') → Future Perfect Continuous.",
@@ -1510,7 +1517,7 @@ export const exerciseTemplates = {
   conditional_1: {
     qcm: [
       {
-        sentence: 'If it ___ tomorrow, we will stay home.',
+        sentence: 'If it ___ tomorrow, we will stay at home.',
         options: ['rains', 'will rain', 'rained', 'would rain'],
         correct: 0,
         explanation:
@@ -1584,14 +1591,15 @@ export const exerciseTemplates = {
     translation: [
       {
         fr: 'S’il pleut demain, nous resterons à la maison.',
-        hint: 'If it / rain / tomorrow, we / stay / home',
-        answer: 'If it rains tomorrow, we will stay home.',
+        hint: 'If it / rain / tomorrow, we / stay / at home',
+        answer: 'If it rains tomorrow, we will stay at home.',
         acceptedAnswers: [
-          'If it rains tomorrow, we will stay at home.',
+          'If it rains tomorrow, we will stay home.',
+          'We will stay at home if it rains tomorrow.',
           'We will stay home if it rains tomorrow.',
         ],
         explanation:
-          "First Conditional : 'If it rains tomorrow, we will stay home.' (Present Simple après if !)",
+          "First Conditional : 'If it rains tomorrow, we will stay at home.' (Present Simple après if !)",
       },
     ],
   },

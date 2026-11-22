@@ -18,8 +18,8 @@
   </a>
   <img src="https://img.shields.io/badge/version-2.0.0-1d4ed8" alt="Version 2.0.0" />
   <img src="https://img.shields.io/badge/node-%3E%3D24%20%3C25-047857" alt="Node.js 24" />
-  <img src="https://img.shields.io/badge/vitest-46%20fichiers%20%7C%20760%20tests-0f766e" alt="Suite Vitest" />
-  <img src="https://img.shields.io/badge/playwright-23%20tests%20E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
+  <img src="https://img.shields.io/badge/vitest-47%20fichiers%20%7C%20782%20tests-0f766e" alt="Suite Vitest" />
+  <img src="https://img.shields.io/badge/playwright-25%20tests%20E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/licence-MIT-334155" alt="Licence MIT" />
   </a>
@@ -74,18 +74,18 @@
 
 ### Couverture grammaticale
 
-| Domaine                         | Volume vérifié            | Détails                                                                                                                 |
-| ------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **Temps & structures verbales** | **18 temps**              | Présent (2), Perfect (4), Passé (2), Futur (4), Conditionnels (4 : _0, 1st, 2nd, 3rd_), Voix passive, Discours indirect |
-| **Parcours séquentiel**         | **4 modules / 20 leçons** | _Les bases_ (5), _Intermédiaire_ (5), _Avancé_ (5), _Expert_ (5) — seuil de maîtrise à **75 %** (`UNLOCK_THRESHOLD`)    |
-| **Modèles d’exercices**         | **250 modèles**           | `qcm` (89), `fill` (86), `correction` (43), `translation` (32), complétés par un générateur dynamique                   |
-| **Dictionnaires de référence**  | **221 entrées**           | 143 verbes irréguliers, 11 modaux, 26 _phrasal verbs_, 41 verbes d’état (_stative verbs_)                               |
+| Domaine                         | Volume vérifié            | Détails                                                                                                                                                    |
+| ------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Temps & structures verbales** | **18 temps + 2 thèmes**   | Présent (2), Perfect (4), Passé (2), Futur (5), Conditionnels (5 : _0, 1st, 2nd, 3rd, Mixed_), plus 2 leçons transverses (Voix passive, Discours indirect) |
+| **Parcours séquentiel**         | **4 modules / 20 leçons** | _Les bases_ (5), _Intermédiaire_ (5), _Avancé_ (5), _Expert_ (5) — seuil de maîtrise à **75 %** (`UNLOCK_THRESHOLD`)                                       |
+| **Modèles d’exercices**         | **250 modèles**           | `qcm` (89), `fill` (86), `correction` (43), `translation` (32), complétés par un générateur dynamique                                                      |
+| **Dictionnaires de référence**  | **221 entrées**           | 143 verbes irréguliers, 11 modaux, 26 _phrasal verbs_, 41 verbes d’état (_stative verbs_)                                                                  |
 
 ### Cinq types d’exercices + évaluation
 
 - **QCM**, **phrases à compléter**, **transformations** (affirmatif ↔ négatif / interrogatif), **correction d’erreurs**, **traductions FR → EN** et **mode mixte**.
 - **Mode Test** : épreuve chronométrée de **20 questions** filtrables par temps et par niveau, avec bilan détaillé.
-- **Répétition espacée** (`src/core/state/store.js`) : file de révision adaptative dérivée de l’algorithme SM-2 (intervalle, facteur de facilité à partir de `2.5`, plancher à `1.3`, priorisation des erreurs récentes).
+- **Répétition espacée** (`src/core/state/store.js`) : file de révision adaptative dérivée de l’algorithme SM-2 (intervalle plafonné à 1 an, facteur de facilité borné entre `1.3` et `3.0` à partir de `2.5`, priorisation des erreurs récentes).
 
 ### Priorité à l’anglais britannique & validation tolérante
 
@@ -105,12 +105,14 @@ conjumastery/
 ├── index.html                  # Point d'entrée HTML, CSP stricte, conteneurs de vues
 ├── style.css                   # Système visuel "Oxford Studio" (clair / sombre / responsive)
 ├── app.js                      # Bootstrap, événements délégués, export global contrôlé
-├── sw.js                       # Service Worker PWA avec pré-cache généré au build
-├── manifest.webmanifest        # Métadonnées d'installation PWA
+├── sw.js                       # Service Worker PWA avec cache hashé et pré-cache généré au build
+├── public/
+│   ├── manifest.webmanifest    # Métadonnées d'installation PWA copiées à la racine de dist/
+│   └── icons/                  # Icônes PWA (192×192, 512×512)
 ├── server.js                   # Serveur HTTP de production (dist/ + middleware /api/github)
 ├── server/
-│   ├── githubMiddleware.js     # Routeur /api/github/* et restriction loopback en écriture
-│   └── githubService.js        # Client GitHub REST v3 (sans exposition de GITHUB_TOKEN)
+│   ├── githubMiddleware.js     # Routeur /api/github/* avec restriction loopback stricte
+│   └── githubService.js        # Client GitHub REST v3 (timeout 15 s, sans exposition de GITHUB_TOKEN)
 ├── scripts/
 │   └── performance-budget.mjs  # Contrôle automatisé des poids HTML / CSS / JS dans dist/
 ├── src/
@@ -126,7 +128,7 @@ conjumastery/
 │       ├── pages/              # Tableau de bord, leçons, exercices, test, temps, verbes, etc.
 │       ├── utils/              # Toasts, confettis, notifications navigateur
 │       └── navigation.js       # Routage interne, thème clair/sombre, modales, tiroir mobile
-├── __tests__/                  # 43 fichiers Vitest (unitaires, intégration, régression, sécurité)
+├── __tests__/                  # 47 fichiers Vitest (unitaires, intégration, régression, sécurité)
 └── e2e/                        # 3 specs Playwright (parcours app, accessibilité axe-core, responsive)
 ```
 
@@ -173,7 +175,7 @@ L’application est alors servie par Vite sur `http://localhost:3000`.
 | `npm test`              | Exécute la suite unitaire et d’intégration **Vitest**                             |
 | `npm run test:coverage` | Vérifie la couverture (`@vitest/coverage-v8`) avec seuils bloquants               |
 | `npm run test:e2e`      | Lance les tests **Playwright** (bureau, mobile et audit `axe-core`)               |
-| `npm run lint`          | Vérifie les règles **ESLint** sur tout le dépôt                                   |
+| `npm run lint`          | Vérifie les règles **ESLint** (`--max-warnings 0`) sur tout le dépôt              |
 | `npm run format:check`  | Vérifie le formatage **Prettier** (`.js`, `.css`, `.json`, `.md`)                 |
 | `npm run perf:budget`   | Contrôle les budgets de taille des fichiers générés dans `dist/`                  |
 
@@ -183,26 +185,26 @@ L’application est alors servie par Vite sur `http://localhost:3000`.
 
 Lorsque le serveur Vite (`npm run dev` / `npm run preview`) ou `server.js` est actif, `server/githubMiddleware.js` et `server/githubService.js` exposent une interface serveur vers `api.github.com` sous `/api/github/*` (statut, branches, contenu, commits atomiques via l’API Git Data, Pull Requests et suivi GitHub Actions).
 
-- **Configuration** : renseignez `GITHUB_TOKEN` dans les secrets d’environnement serveur (modèle fourni dans `.env.example`).
+- **Configuration** : renseignez `GITHUB_TOKEN` (et optionnellement `GITHUB_OWNER` / `GITHUB_REPO`) dans les variables d’environnement du serveur Node.
 - **Cloisonnement strict** : le jeton n’est lu que via `process.env.GITHUB_TOKEN` côté Node.js, filtré des messages d’erreur (`[REDACTED]`) et jamais transmis au frontend.
-- **Restriction en écriture** : toute requête non `GET` sur `/api/github/*` vérifie l’origine _loopback_ (`127.0.0.1` / `::1` sans en-tête `x-forwarded-for`).
+- **Restriction loopback complète** : toute requête (lecture ou écriture) sur `/api/github/*` vérifie l’origine _loopback_ (`127.0.0.1` / `::1` sans en-tête `x-forwarded-for`), et les appels sortants vers GitHub disposent d’un timeout de 15 s (HTTP `504` en cas d’expiration).
 
 ---
 
 ## Qualité, accessibilité & budgets de performance
 
-Le pipeline défini dans `.github/workflows/ci.yml` bloque toute fusion tant que les contrôles suivants ne sont pas verts :
+Le pipeline défini dans `.github/workflows/ci.yml` exécute les contrôles suivants :
 
 1. **Audit des dépendances** : `npm audit --audit-level=moderate` (complété par `.github/dependabot.yml` pour les mises à jour hebdomadaires groupées npm et GitHub Actions).
-2. **Qualité de code** : `npm run lint` (ESLint) + `npm run format:check` (Prettier).
-3. **Suite unitaire & intégration (46 fichiers, 760 tests)** : couverture minimale exigée dans `vite.config.js` :
+2. **Qualité de code** : `npm run lint` (`ESLint --max-warnings 0`) + `npm run format:check` (Prettier).
+3. **Suite unitaire & intégration (47 fichiers, 782 tests)** : couverture minimale exigée dans `vite.config.js` :
    - **Statements / Functions / Lines** : `≥ 95 %`
    - **Branches** : `≥ 90 %`
 4. **Budgets de production (`npm run perf:budget`)** :
    - `index.html` ≤ **35 KiB**
    - Feuille CSS minifiée ≤ **35 KiB**
    - Chaque bundle JavaScript (dont `curriculum-data`) ≤ **180 KiB**
-5. **Tests E2E & accessibilité (`e2e/*.spec.js`)** : 23 tests Playwright vérifiant les parcours critiques (exercices, mode test chronométré, recherche, sauvegarde/import, réinitialisation accessible), la non-régression responsive mobile/bureau sans débordement horizontal et la conformité WCAG 2.0 A / AA via `@axe-core/playwright` sur l’ensemble des 13 vues.
+5. **Tests E2E & accessibilité (`e2e/*.spec.js`)** : 25 tests Playwright vérifiant les parcours critiques (exercices, mode test chronométré, révision Voix Passive / Discours Indirect, recherche, sauvegarde/import, réinitialisation accessible), la non-régression responsive mobile/bureau sans débordement horizontal et l’absence de violation WCAG 2.0 A / AA **critical** ou **serious** via `@axe-core/playwright` sur l’ensemble des 13 vues, en mode sombre et avec modale active.
 
 ---
 
@@ -214,24 +216,25 @@ Le pipeline défini dans `.github/workflows/ci.yml` bloque toute fusion tant que
   ```text
   default-src 'self'; script-src 'self'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'
   ```
-- **Protection XSS & imports** : tout contenu dynamique inséré dans le DOM passe par `escapeHtml()`, les saisies sont nettoyées par `sanitizeInput()`, et les sauvegardes importées sont validées et migrées (`migrateState`) avant écriture dans le store.
+- **Protection XSS & imports** : tout contenu dynamique inséré dans le DOM passe par `escapeHtml()`, les saisies utilisateur sont rognées et bornées à 500 caractères par `sanitizeInput()`, et les sauvegardes importées sont validées, nettoyées et migrées (`migrateState` / `sanitizeState`) avant écriture dans le store.
 - **Stockage borné** : `errorLog` et `activityLog` sont plafonnés à **100 entrées** chacun (`MAX_ERROR_LOG_ENTRIES`, `MAX_ACTIVITY_LOG_ENTRIES`), et l’état se synchronise entre onglets via `mergeStates()`.
 
 ### Schéma `APP_DATA` (`src/data/index.js`)
 
 ```javascript
 {
-  tenses: [...],          // 18 temps (id, nameEN, nameFR, level, structure, timeline, examples...)
-  modules: [...],         // 4 modules ordonnés totalisant 20 leçons
-  exerciseTemplates: {},  // Dictionnaire indexé par tenseId -> { qcm, fill, correction, translation }
-  irregularVerbs: [...],  // 143 verbes (base, past, pp, meaning...)
-  modals: [...],          // 11 modaux et règles d'usage
-  phrasalVerbs: [...],    // 26 verbes à particule
-  stativeVerbs: [...],    // 41 verbes d'état
-  passiveInfo: {},        // Règles et tableaux de voix passive
-  reportedSpeech: {},     // Concordance des temps et marqueurs temporels
-  tensesById: {},         // Index O(1) par identifiant de temps
-  verbsByBase: {},        // Index O(1) par base verbale
+  tenses: [...],             // 18 temps (id, name, nameFR, level, structure, timeline, examples...)
+  modules: [...],            // 4 modules ordonnés totalisant 20 leçons
+  exerciseTemplates: {},     // Dictionnaire indexé par tenseId -> { qcm, fill, correction, translation }
+  irregularVerbs: [...],     // 143 verbes (base, past, pp, meaning...)
+  modals: [...],             // 11 modaux et règles d'usage
+  phrasalVerbs: [...],       // 26 verbes à particule
+  stativeVerbs: [...],       // 41 verbes d'état
+  passiveInfo: {},           // Règles et tableaux de voix passive
+  reportedSpeech: {},        // Concordance des temps et marqueurs temporels
+  tensesById: {},            // Index O(1) par identifiant de temps
+  specialTopicsById: {},     // Index O(1) pour passive_voice et reported_speech
+  verbsByBase: {},           // Index O(1) par base verbale
 }
 ```
 
@@ -252,7 +255,7 @@ Le pipeline défini dans `.github/workflows/ci.yml` bloque toute fusion tant que
   tenseStats: Object,          // { [tenseId]: { correct, total } }
   errorLog: Array,             // Max 100 entrées { tenseId, date }
   activityLog: Array,          // Max 100 entrées { date, xp }
-  favorites: Array,            // Bases verbales mises en favori
+  favorites: Array,            // IDs de temps (ex. 'present_simple') et verbes ('verb_<base>')
   spacedRepetition: Object,    // { [tenseId]: { interval, nextReview, ease, errors } }
   settings: { theme: 'light' | 'dark' },
 }

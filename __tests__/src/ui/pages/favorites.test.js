@@ -48,9 +48,14 @@ describe('favorites page DOM and event delegation (AUDIT-01, 02, 03, 04)', () =>
     const cards = container.querySelectorAll('.lesson-card');
     cards.forEach((c) => {
       expect(c.hasAttribute('onclick')).toBe(false);
-      expect(c.getAttribute('data-action')).toBe('open-tense-modal');
-      expect(c.getAttribute('role')).toBe('button');
-      expect(c.getAttribute('tabindex')).toBe('0');
+      expect(c.hasAttribute('role')).toBe(false);
+      const trigger = c.querySelector('.lesson-card-trigger');
+      const favBtn = c.querySelector('.fav-btn');
+      expect(trigger).toBeTruthy();
+      expect(trigger.getAttribute('data-action')).toBe('open-tense-modal');
+      expect(trigger.getAttribute('role')).toBe('button');
+      expect(trigger.getAttribute('tabindex')).toBe('0');
+      expect(trigger.contains(favBtn)).toBe(false);
     });
   });
 
@@ -69,17 +74,24 @@ describe('favorites page DOM and event delegation (AUDIT-01, 02, 03, 04)', () =>
     expect(btn.classList.contains('active')).toBe(true);
   });
 
-  it('opens tense modal when clicking a favorite tense card', () => {
+  it('opens tense modal when clicking a favorite tense card trigger and locks locked tenses', () => {
+    mockState.data.favorites = ['present_simple', 'past_perfect'];
     renderFavorites();
-    const card = document.querySelector('.lesson-card[data-tense-id="present_simple"]');
-    expect(card).toBeTruthy();
+    const trigger = document.querySelector('.lesson-card-trigger[data-tense-id="present_simple"]');
+    expect(trigger).toBeTruthy();
+    expect(trigger.hasAttribute('data-locked')).toBe(false);
 
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('[data-action="toggle-fav"]')) return;
-      openTenseModalMock(card.dataset.tenseId);
+    const lockedTrigger = document.querySelector(
+      '.lesson-card-trigger[data-tense-id="past_perfect"]',
+    );
+    expect(lockedTrigger).toBeTruthy();
+    expect(lockedTrigger.getAttribute('data-locked')).toBe('true');
+
+    trigger.addEventListener('click', () => {
+      openTenseModalMock(trigger.dataset.tenseId);
     });
 
-    card.click();
+    trigger.click();
     expect(openTenseModalMock).toHaveBeenCalledWith('present_simple');
   });
 

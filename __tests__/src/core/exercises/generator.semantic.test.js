@@ -72,10 +72,10 @@ describe('semantic generation invariants', () => {
   });
 
   test.each([
-    ['conditional_0', /If John ___, John ___\./i],
+    ['conditional_0', /If John ___, John goes\./i],
     ['conditional_1', /If John ___, John will go\./i],
     ['conditional_2', /If John ___, John would go\./i],
-    ['conditional_3', /If John had ___, John would have ___\./i],
+    ['conditional_3', /If John had ___, John would have gone\./i],
     ['mixed_conditional', /If John had ___, John would go\./i],
   ])('QCM fallback preserves the conditional skeleton: %s', (tenseId, pattern) => {
     vi.spyOn(Math, 'random').mockReturnValue(0.99);

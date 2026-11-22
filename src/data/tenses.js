@@ -373,7 +373,7 @@ export const tenses = [
       { en: 'They had been arguing for hours.', fr: 'Ils se disputaient depuis des heures.' },
       {
         en: 'How long had you been studying before the exam?',
-        fr: "Depuis combien de temps étudiez-vous avant l'examen ?",
+        fr: "Depuis combien de temps étudiiez-vous avant l'examen ?",
       },
     ],
     timeline: { type: 'arrow', start: 5, end: 35, label: 'Durée avant un point passé' },
@@ -679,8 +679,8 @@ export const tenses = [
     },
     commonErrors: [
       {
-        wrong: "If it will rain, I'll stay home.",
-        right: "If it rains, I'll stay home.",
+        wrong: "If it will rain, I'll stay at home.",
+        right: "If it rains, I'll stay at home.",
         note: "Jamais de 'will' après 'if'. Le Present Simple suffit dans la condition.",
       },
       {

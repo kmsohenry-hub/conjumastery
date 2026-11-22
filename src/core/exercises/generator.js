@@ -60,6 +60,7 @@ const GENERATOR_REGULAR_VERBS = [
 ];
 
 const GENERATOR_ALL_MODES = ['qcm', 'fill', 'transform', 'correction', 'translation'];
+const STATIVE_VERBS = new Set(APP_DATA.stativeVerbs || []);
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -157,7 +158,7 @@ export function generateReportedQuestion(indexHint) {
       type: 'transform',
       sentence: `Transformez au discours indirect :\n"${directClean}"${promptHint}`,
       answer: reportedClean,
-      acceptedAnswers: [reportedClean, item.reported].filter(Boolean),
+      acceptedAnswers: [reportedClean],
       tenseId: 'reported_speech',
       explanation: `Au discours indirect : "${reportedClean}" (${ruleSummary})`,
     };
@@ -248,6 +249,7 @@ function buildIncorrectSentenceForTense(tenseId, subj, verb, is3rdSing) {
   const present = getPresentSimpleForm(verb, is3rdSing, subj);
   const bePast = subj === 'I' || is3rdSing ? 'was' : 'were';
   const pastForm = verb === 'be' ? bePast : past;
+  const cond2Past = verb === 'be' ? 'were' : pastForm;
 
   let wrongPresent;
   if (verb === 'be') {
@@ -258,32 +260,38 @@ function buildIncorrectSentenceForTense(tenseId, subj, verb, is3rdSing) {
     wrongPresent = is3rdSing ? verb : getPresentSimpleForm(verb, true, subj);
   }
 
+  const wrongPastSimple = verb === pastForm ? getRegularPast(verb) : verb;
+  const wrongPastPerfectParticiple =
+    pastForm !== pp ? pastForm : verb !== pp ? verb : getIngForm(verb);
+  const wrongCond1If = pastForm !== present ? pastForm : `will ${verb}`;
+  const wrongCond2If = present !== cond2Past ? present : `would ${verb}`;
+
   const incorrect = {
     present_simple: `${subj} ${wrongPresent} every day.`,
     present_continuous: `${subj} ${present} right now.`,
     present_perfect: `${subj} ${pastForm} already.`,
     present_perfect_continuous: `${subj} has been ${verb} for two hours.`,
-    past_simple: `${subj} ${verb} yesterday.`,
+    past_simple: `${subj} ${wrongPastSimple} yesterday.`,
     past_continuous: `${subj} ${pastForm} when I arrived.`,
-    past_perfect: `${subj} had ${pastForm} before I arrived.`,
+    past_perfect: `${subj} had ${wrongPastPerfectParticiple} before I arrived.`,
     past_perfect_continuous: `${subj} had ${ing} for two hours before I arrived.`,
     future_will: `${subj} ${verb} tomorrow.`,
     future_going_to: `${subj} will going to ${verb} next week.`,
     future_continuous: `${subj} will ${ing} tomorrow evening.`,
     future_perfect: `${subj} will ${pp} by tomorrow.`,
     future_perfect_continuous: `${subj} will have ${ing} for two hours by then.`,
-    conditional_0: `If ${subj} ${verb}, ${subj} ${present}.`,
-    conditional_1: `If ${subj} ${pastForm}, ${subj} will ${verb}.`,
-    conditional_2: `If ${subj} ${present}, ${subj} would ${verb}.`,
+    conditional_0: `If ${subj} ${wrongPresent}, ${subj} ${present}.`,
+    conditional_1: `If ${subj} ${wrongCond1If}, ${subj} will ${verb}.`,
+    conditional_2: `If ${subj} ${wrongCond2If}, ${subj} would ${verb}.`,
     conditional_3: `If ${subj} ${pastForm}, ${subj} would have ${pp}.`,
     mixed_conditional: `If ${subj} ${present}, ${subj} would ${verb}.`,
   };
 
-  return incorrect[tenseId] === correct ? `${subj} ${verb} yesterday.` : incorrect[tenseId];
+  return incorrect[tenseId] === correct ? `${subj} ${ing} yesterday.` : incorrect[tenseId];
 }
 
 export function generateQCM(tense, subj, verb, is3rdSing, _difficulty, usedSentences = null) {
-  let fullSentence, correctAnswer;
+  let promptSentence, correctAnswer;
   let options;
 
   const correctForm = getConjugation(APP_DATA.verbsByBase, verb, tense.id, subj, is3rdSing);
@@ -313,71 +321,71 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty, usedSente
   // DYNAMIC GENERATION (Fallback)
   if (tense.id === 'conditional_0') {
     correctAnswer = getPresentSimpleForm(verb, is3rdSing, subj);
-    fullSentence = `If ${subj} ___, ${subj} ${correctAnswer}.`;
+    promptSentence = `If ${subj} ___, ${subj} ${correctAnswer}.`;
   } else if (tense.id === 'conditional_1') {
     correctAnswer = getPresentSimpleForm(verb, is3rdSing, subj);
-    fullSentence = `If ${subj} ___, ${subj} will ${verb}.`;
+    promptSentence = `If ${subj} ___, ${subj} will ${verb}.`;
   } else if (tense.id === 'conditional_2') {
     const { past: pastForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
     correctAnswer = verb === 'be' ? 'were' : pastForm;
-    fullSentence = `If ${subj} ___, ${subj} would ${verb}.`;
+    promptSentence = `If ${subj} ___, ${subj} would ${verb}.`;
   } else if (tense.id === 'conditional_3') {
     const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
     correctAnswer = ppForm;
-    fullSentence = `If ${subj} had ___, ${subj} would have ${ppForm}.`;
+    promptSentence = `If ${subj} had ___, ${subj} would have ${ppForm}.`;
   } else if (tense.id === 'mixed_conditional') {
     const { pp: ppForm } = getIrregularForms(APP_DATA.verbsByBase, verb);
     correctAnswer = ppForm;
-    fullSentence = `If ${subj} had ___, ${subj} would ${verb}.`;
+    promptSentence = `If ${subj} had ___, ${subj} would ${verb}.`;
   } else if (
     tense.id.includes('perfect') ||
     tense.id.includes('continuous') ||
     tense.id.includes('future')
   ) {
     if (tense.id === 'present_perfect') {
-      fullSentence = `${subj} ${aux} ${correctForm} recently.`;
+      promptSentence = `${subj} ___ recently.`;
       correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id === 'past_perfect') {
-      fullSentence = `${subj} ${aux} ${correctForm} before I arrived.`;
+      promptSentence = `${subj} ___ before I arrived.`;
       correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id === 'present_perfect_continuous') {
-      fullSentence = `${subj} ${aux} ${correctForm} for two hours.`;
+      promptSentence = `${subj} ___ for two hours.`;
       correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id === 'past_perfect_continuous') {
-      fullSentence = `${subj} ${aux} ${correctForm} before I arrived.`;
+      promptSentence = `${subj} ___ before I arrived.`;
       correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id === 'future_perfect') {
-      fullSentence = `${subj} ${aux} ${correctForm} by tomorrow.`;
+      promptSentence = `${subj} ___ by tomorrow.`;
       correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id === 'future_perfect_continuous') {
-      fullSentence = `${subj} ${aux} ${correctForm} for two hours by then.`;
+      promptSentence = `${subj} ___ for two hours by then.`;
       correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id === 'future_continuous') {
-      fullSentence = `${subj} ${aux} ${correctForm} tomorrow evening.`;
+      promptSentence = `${subj} ___ tomorrow evening.`;
       correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id === 'present_continuous') {
-      fullSentence = `${subj} ${aux} ${correctForm} right now.`;
+      promptSentence = `${subj} ___ right now.`;
       correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id === 'past_continuous') {
-      fullSentence = `${subj} ${aux} ${correctForm} when I arrived.`;
+      promptSentence = `${subj} ___ when I arrived.`;
       correctAnswer = `${aux} ${correctForm}`;
     } else if (tense.id === 'future_will') {
-      fullSentence = `${subj} will ${correctForm} tomorrow.`;
+      promptSentence = `${subj} ___ tomorrow.`;
       correctAnswer = `will ${correctForm}`;
     } else if (tense.id === 'future_going_to') {
       const goAux = subj === 'I' ? 'am' : is3rdSing ? 'is' : 'are';
-      fullSentence = `${subj} ${goAux} going to ${correctForm} next week.`;
+      promptSentence = `${subj} ___ next week.`;
       correctAnswer = `${goAux} going to ${correctForm}`;
     } else {
-      fullSentence = `${subj} ${correctForm} tomorrow.`;
+      promptSentence = `${subj} ___ tomorrow.`;
       correctAnswer = correctForm;
     }
   } else {
     if (tense.id === 'present_simple') {
-      fullSentence = `${subj} ${correctForm} every day.`;
+      promptSentence = `${subj} ___ every day.`;
       correctAnswer = correctForm;
     } else {
-      fullSentence = `${subj} ${correctForm} yesterday.`;
+      promptSentence = `${subj} ___ yesterday.`;
       correctAnswer = correctForm;
     }
   }
@@ -459,7 +467,7 @@ export function generateQCM(tense, subj, verb, is3rdSing, _difficulty, usedSente
 
   return {
     type: 'qcm',
-    sentence: fullSentence.replace(correctAnswer, '___'),
+    sentence: promptSentence,
     options: shuffled,
     correct: correctIndex,
     explanation: `La forme correcte est "${correctAnswer}". ${tense.nameFR} : ${tense.structure}`,
@@ -811,8 +819,12 @@ export function generateSingleQuestion(
   difficulty,
   usedSentences = null,
 ) {
+  const eligibleVerbs = tense?.id?.includes('continuous')
+    ? verbs.filter((v) => !STATIVE_VERBS.has(v))
+    : verbs;
+  const verbPool = eligibleVerbs.length > 0 ? eligibleVerbs : GENERATOR_REGULAR_VERBS;
   const subj = subjects[Math.floor(Math.random() * subjects.length)];
-  const verb = verbs[Math.floor(Math.random() * verbs.length)];
+  const verb = verbPool[Math.floor(Math.random() * verbPool.length)];
   const is3rdSing = !NON_3RD_SING_SUBJECTS.has(subj);
 
   switch (mode) {

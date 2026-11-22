@@ -68,10 +68,17 @@ describe('tenses page', () => {
     expect(document.querySelectorAll('#tenseContent .lesson-card')).toHaveLength(0);
   });
 
-  it('renders comparison tabs and delegated cards', () => {
+  it('renders comparison tabs (including Futurs) and delegated cards', () => {
     renderComparison();
     const tabs = [...document.querySelectorAll('#comparisonTabs .tab')];
-    expect(tabs).toHaveLength(4);
+    expect(tabs).toHaveLength(5);
+    expect(tabs.map((t) => t.dataset.compId)).toEqual([
+      'present',
+      'past',
+      'future',
+      'perfect',
+      'conditionals',
+    ]);
     expect(tabs[0].classList.contains('active')).toBe(true);
     for (const tab of tabs) {
       expect(tab.hasAttribute('onclick')).toBe(false);
@@ -83,10 +90,12 @@ describe('tenses page', () => {
   it('switches comparison category and renders the comparison table', () => {
     renderComparison();
     const tabs = document.querySelectorAll('#comparisonTabs .tab');
-    showComparison('past', tabs[1]);
+    showComparison('future', tabs[2]);
     expect(tabs[0].classList.contains('active')).toBe(false);
-    expect(tabs[1].classList.contains('active')).toBe(true);
-    expect(document.querySelector('.comparison-table')).not.toBeNull();
+    expect(tabs[2].classList.contains('active')).toBe(true);
+    expect(document.querySelector('.comparison-table').textContent).toContain(
+      'Futur simple (will)',
+    );
   });
 
   it('renders an empty comparison for an unknown category', () => {
@@ -126,7 +135,7 @@ describe('tenses page', () => {
     expect(tableHtml).not.toContain('undefined');
   });
 
-  it('displays unlocked accuracy badges, favorite state, and locked prerequisites accurately', async () => {
+  it('displays unlocked accuracy badges, favorite state, non-nested triggers, and locked prerequisites accurately', async () => {
     const { State } = await import('../../../../src/core/state/State.js');
     State.reset();
     State.data.tenseStats.present_simple = { correct: 9, total: 10 };
@@ -134,10 +143,20 @@ describe('tenses page', () => {
 
     showTenseCategory('present');
     const presentCards = [...document.querySelectorAll('#tenseContent .lesson-card')];
-    const presSimple = presentCards.find((c) => c.dataset.tenseId === 'present_simple');
-    const presCont = presentCards.find((c) => c.dataset.tenseId === 'present_continuous');
+    const presSimple = presentCards.find(
+      (c) => c.querySelector('.lesson-card-trigger')?.dataset.tenseId === 'present_simple',
+    );
+    const presCont = presentCards.find(
+      (c) => c.querySelector('.lesson-card-trigger')?.dataset.tenseId === 'present_continuous',
+    );
 
     expect(presSimple.classList.contains('locked')).toBe(false);
+    expect(presSimple.hasAttribute('role')).toBe(false);
+    expect(
+      presSimple
+        .querySelector('.lesson-card-trigger')
+        .contains(presSimple.querySelector('.fav-btn')),
+    ).toBe(false);
     expect(presSimple.textContent).toContain('✓ 90%');
     expect(presSimple.querySelector('.fav-btn').classList.contains('active')).toBe(true);
     expect(presSimple.querySelector('.fav-btn').textContent).toBe('★');
@@ -149,7 +168,14 @@ describe('tenses page', () => {
     showTenseCategory('past');
     const pastCards = [...document.querySelectorAll('#tenseContent .lesson-card')];
     expect(pastCards.every((c) => c.classList.contains('locked'))).toBe(true);
-    expect(pastCards[0].getAttribute('data-locked')).toBe('true');
+    expect(pastCards[0].querySelector('.lesson-card-trigger').getAttribute('data-locked')).toBe(
+      'true',
+    );
     expect(pastCards[0].textContent).toContain('75% requis');
+
+    // Comparison detail cards also enforce progressive lock gating
+    showComparison('past');
+    const compCards = [...document.querySelectorAll('#comparisonContent .card')];
+    expect(compCards.every((c) => c.getAttribute('data-locked') === 'true')).toBe(true);
   });
 });

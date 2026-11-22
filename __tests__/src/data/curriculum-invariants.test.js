@@ -7,6 +7,7 @@ import {
   generateCorrection,
   generateFill,
   generateQCM,
+  generateSingleQuestion,
   generateTransform,
   generateTranslation,
 } from '../../../src/core/exercises/generator.js';
@@ -153,15 +154,18 @@ describe('curriculum data & pedagogical invariants', () => {
     }
   });
 
-  test('dynamic generators satisfy structural invariants across all 18 tenses (no double-blank QCM bug)', () => {
+  test('dynamic generators satisfy structural invariants across all 18 tenses (strict single-blank QCM, no stative continuous, no identical correction)', () => {
     // Force fallback dynamic generation (>= 0.7) for every tense
     vi.spyOn(Math, 'random').mockReturnValue(0.85);
 
     const testCases = [
       ['I', 'be', false],
+      ['My parents', 'be', false],
       ['She', 'have', true],
       ['The teacher', 'teach', true],
       ['They', 'go', false],
+      ['They', 'put', false],
+      ['He', 'work', true],
     ];
 
     for (const tense of APP_DATA.tenses) {
@@ -170,9 +174,9 @@ describe('curriculum data & pedagogical invariants', () => {
         const blankCount = (qcm.sentence.match(/___/g) || []).length;
         expect(
           blankCount,
-          `Expected 1 or 2 blanks in dynamic QCM for ${tense.id} (${subj}/${verb}): "${qcm.sentence}"`,
-        ).toBeGreaterThanOrEqual(1);
-        expect(blankCount).toBeLessThanOrEqual(2);
+          `Expected exactly 1 blank in dynamic QCM for ${tense.id} (${subj}/${verb}): "${qcm.sentence}"`,
+        ).toBe(1);
+        expect(qcm.sentence).not.toContain('p___nts');
         expect(qcm.options).toHaveLength(4);
         expect(new Set(qcm.options).size).toBe(4);
         expect(qcm.correct).toBeGreaterThanOrEqual(0);
@@ -194,6 +198,14 @@ describe('curriculum data & pedagogical invariants', () => {
         const translation = generateTranslation(tense, subj, verb, is3rdSing);
         expect(answerMatches(translation.answer, translation.answer)).toBe(true);
       }
+    }
+
+    // Continuous tenses must exclude stative verbs when sampling dynamically
+    const continuousTenses = APP_DATA.tenses.filter((t) => t.id.includes('continuous'));
+    const stativeAndAction = ['know', 'believe', 'understand', 'be', 'work'];
+    for (const tense of continuousTenses) {
+      const q = generateSingleQuestion('fill', tense, ['She'], stativeAndAction, 'intermediate');
+      expect(q.sentence).toContain('(work)');
     }
   });
 

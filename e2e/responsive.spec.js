@@ -8,15 +8,18 @@ test('keeps the primary navigation usable on a mobile viewport', async ({ page }
   await expect(page.locator('.main-content')).toBeVisible();
   await expect(page.locator('#menuToggleBtn')).toBeVisible();
 
-  await page.locator('#menuToggleBtn').click();
-  await expect(page.locator('#sidebar')).toHaveClass(/open/);
+  const pagesToCheck = ['dashboard', 'lessons', 'exercises', 'verbs', 'comparison', 'settings'];
+  for (const targetPage of pagesToCheck) {
+    await page.locator('#menuToggleBtn').click();
+    await expect(page.locator('#sidebar')).toHaveClass(/open/);
 
-  await page.locator('[data-page="exercises"]').click();
-  await expect(page.locator('#page-exercises')).toBeVisible();
-  await expect(page.locator('[data-mode="qcm"]')).toBeVisible();
+    await page.locator(`.nav-item[data-page="${targetPage}"]`).click();
+    await expect(page.locator(`#page-${targetPage}`)).toBeVisible();
+    await expect(page.locator('#sidebar')).not.toHaveClass(/open/);
 
-  const horizontalOverflow = await page.evaluate(
-    () => document.documentElement.scrollWidth > window.innerWidth + 1,
-  );
-  expect(horizontalOverflow).toBe(false);
+    const horizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth + 1,
+    );
+    expect(horizontalOverflow, `Unexpected horizontal overflow on ${targetPage}`).toBe(false);
+  }
 });

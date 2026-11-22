@@ -38,23 +38,34 @@ import { APP_DATA } from '../data/index.js';
 import { showToast } from './utils/toast.js';
 import { getOrderedLessons, getPreviousLesson, UNLOCK_THRESHOLD } from '../core/progression.js';
 
-let _cachedPages = null;
-let _cachedNavItems = null;
 let _previousActiveElement = null;
+let _modalFocusTimer = null;
 
 function syncMainContentInertState() {
   const mainContent = document.querySelector('.main-content');
-  if (!mainContent) return;
-  const isSidebarOpen = document.getElementById('sidebar')?.classList?.contains('open') ?? false;
+  const sidebar = document.getElementById('sidebar');
+  const isSidebarOpen = sidebar?.classList?.contains('open') ?? false;
   const isModalOpen =
     document.getElementById('modalOverlay')?.classList?.contains('active') ?? false;
 
-  if (isSidebarOpen || isModalOpen) {
-    mainContent.setAttribute('inert', '');
-    mainContent.setAttribute('aria-hidden', 'true');
-  } else {
-    mainContent.removeAttribute('inert');
-    mainContent.removeAttribute('aria-hidden');
+  if (mainContent) {
+    if (isSidebarOpen || isModalOpen) {
+      mainContent.setAttribute('inert', '');
+      mainContent.setAttribute('aria-hidden', 'true');
+    } else {
+      mainContent.removeAttribute('inert');
+      mainContent.removeAttribute('aria-hidden');
+    }
+  }
+
+  if (sidebar) {
+    if (isModalOpen) {
+      sidebar.setAttribute('inert', '');
+      sidebar.setAttribute('aria-hidden', 'true');
+    } else {
+      sidebar.removeAttribute('inert');
+      sidebar.removeAttribute('aria-hidden');
+    }
   }
 }
 
@@ -76,6 +87,10 @@ export function setSidebarOpenState(isOpen) {
 }
 
 export function setModalOpenState(isOpen) {
+  if (!isOpen && _modalFocusTimer !== null) {
+    clearTimeout(_modalFocusTimer);
+    _modalFocusTimer = null;
+  }
   const overlay = document.getElementById('modalOverlay');
   const modalContent = document.getElementById('modalContent');
   if (overlay) {
@@ -111,18 +126,18 @@ export function resolvePageFromHash(hash) {
   return VALID_PAGES.has(raw) ? raw : 'dashboard';
 }
 
-export function navigateTo(page, { updateHash = true } = {}) {
+export function navigateTo(page, { updateHash = true, moduleIndex } = {}) {
   if (page !== 'test') {
     cancelTest();
   }
-  if (!_cachedPages) _cachedPages = document.querySelectorAll('.page');
-  if (!_cachedNavItems) _cachedNavItems = document.querySelectorAll('.nav-item');
+  const pages = document.querySelectorAll('.page');
+  const navItems = document.querySelectorAll('.nav-item');
 
-  _cachedPages.forEach((p) => p.classList.remove('active'));
+  pages.forEach((p) => p.classList.remove('active'));
   const pageEl = document.getElementById(`page-${page}`);
   if (pageEl) pageEl.classList.add('active');
 
-  _cachedNavItems.forEach((n) => {
+  navItems.forEach((n) => {
     if (n.dataset.page === page) {
       n.classList.add('active');
       n.setAttribute('aria-current', 'page');
@@ -157,7 +172,11 @@ export function navigateTo(page, { updateHash = true } = {}) {
       renderDashboard();
       break;
     case 'lessons':
-      renderLessons();
+      if (typeof moduleIndex === 'number' && Number.isInteger(moduleIndex)) {
+        renderLessons(moduleIndex);
+      } else {
+        renderLessons();
+      }
       break;
     case 'exercises':
       resetExerciseUI();
@@ -259,8 +278,14 @@ export function openModal() {
   _previousActiveElement = document.activeElement;
   const overlay = document.getElementById('modalOverlay');
   if (overlay) {
+    if (_modalFocusTimer !== null) {
+      clearTimeout(_modalFocusTimer);
+      _modalFocusTimer = null;
+    }
     setModalOpenState(true);
-    setTimeout(() => {
+    _modalFocusTimer = setTimeout(() => {
+      _modalFocusTimer = null;
+      if (!overlay.classList.contains('active')) return;
       const focusable = overlay.querySelector(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
       );
@@ -277,6 +302,10 @@ export function closeModal(event) {
 }
 
 export function closeModalDirect() {
+  if (_modalFocusTimer !== null) {
+    clearTimeout(_modalFocusTimer);
+    _modalFocusTimer = null;
+  }
   setModalOpenState(false);
   if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
     _previousActiveElement.focus();
@@ -291,7 +320,7 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (isModalActive) {
       closeModalDirect();
-    } else if (document.getElementById('sidebar')?.classList.contains('open')) {
+    } else if (document.getElementById('sidebar')?.classList?.contains('open')) {
       setSidebarOpenState(false);
     }
   } else if (e.key === 'Tab' && isModalActive) {
@@ -334,9 +363,7 @@ window.addEventListener('keydown', (e) => {
       (target.getAttribute('role') === 'button' ||
         target.classList.contains('nav-item') ||
         target.classList.contains('mode-card') ||
-        target.classList.contains('lesson-card') ||
-        target.classList.contains('verb-card') ||
-        target.classList.contains('search-result-item'))
+        target.classList.contains('lesson-card-trigger'))
     ) {
       if (
         target.tagName === 'BUTTON' ||
@@ -441,11 +468,13 @@ export function initEventDelegation() {
 
   // Keydown delegation for Enter on exercise and test inputs
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
       const target = e.target;
       if (target && target.id === 'exerciseInput') {
+        e.preventDefault();
         validateExercise();
       } else if (target && target.id === 'testInput') {
+        e.preventDefault();
         validateTestAnswer();
       }
     }
@@ -496,7 +525,13 @@ export function initEventDelegation() {
     ) {
       const page = navItem.dataset.page;
       if (page) {
-        navigateTo(page);
+        const rawModIdx = navItem.dataset.moduleIndex;
+        const parsedModIdx = rawModIdx !== undefined ? Number(rawModIdx) : undefined;
+        const navOpts =
+          typeof parsedModIdx === 'number' && Number.isInteger(parsedModIdx)
+            ? { moduleIndex: parsedModIdx }
+            : undefined;
+        navigateTo(page, navOpts);
         return;
       }
     }
@@ -699,6 +734,14 @@ export function initEventDelegation() {
   if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
     window.addEventListener('hashchange', () => {
       navigateTo(resolvePageFromHash(window.location?.hash), { updateHash: false });
+    });
+    window.addEventListener('resize', () => {
+      if (
+        window.innerWidth > 768 &&
+        document.getElementById('sidebar')?.classList?.contains('open')
+      ) {
+        setSidebarOpenState(false);
+      }
     });
   }
 }

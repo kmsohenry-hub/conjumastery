@@ -43,18 +43,20 @@ export function showTenseCategory(category, tabEl) {
         const stats = State?.data?.tenseStats?.[t.id];
         const acc = stats?.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
         return `
-      <div class="lesson-card ${!unlocked ? 'locked' : ''}" data-action="open-tense-modal" data-tense-id="${escapeHtml(t.id)}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''} role="button" tabindex="0">
-        <div class="lesson-icon" style="background:var(--primary-soft);color:var(--primary)">${!unlocked ? '🔒' : t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
-        <div class="lesson-info">
-          <div class="lesson-title">${escapeHtml(t.nameFR)}</div>
-          <div class="lesson-desc">${escapeHtml((t.explanation || '').substring(0, 120))}...</div>
-          <div class="lesson-meta">
-            <span class="tag tag-blue">${escapeHtml(t.name || '')}</span>
-            <span class="tag ${unlocked ? 'tag-green' : 'tag-locked'}">${unlocked ? (acc !== null ? `✓ ${acc}%` : '🔓 Débloqué') : `🔒 ${UNLOCK_THRESHOLD}% requis`}</span>
-            <span><code>${escapeHtml(t.structure)}</code></span>
+      <div class="lesson-card ${!unlocked ? 'locked' : ''}">
+        <div class="lesson-card-trigger" data-action="open-tense-modal" data-tense-id="${escapeHtml(t.id)}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''} role="button" tabindex="0">
+          <div class="lesson-icon" style="background:var(--primary-soft);color:var(--primary)">${!unlocked ? '🔒' : t.level === 'beginner' ? '🌱' : t.level === 'intermediate' ? '🌿' : '🌳'}</div>
+          <div class="lesson-info">
+            <div class="lesson-title">${escapeHtml(t.nameFR)}</div>
+            <div class="lesson-desc">${escapeHtml((t.explanation || '').substring(0, 120))}...</div>
+            <div class="lesson-meta">
+              <span class="tag tag-blue">${escapeHtml(t.name || '')}</span>
+              <span class="tag ${unlocked ? 'tag-green' : 'tag-locked'}">${unlocked ? (acc !== null ? `✓ ${acc}%` : '🔓 Débloqué') : `🔒 ${UNLOCK_THRESHOLD}% requis`}</span>
+              <span><code>${escapeHtml(t.structure)}</code></span>
+            </div>
           </div>
         </div>
-        <button class="fav-btn ${isFav ? 'active' : ''}" data-action="toggle-fav" data-fav-id="${escapeHtml(t.id)}" aria-label="Favori">${isFav ? '★' : '☆'}</button>
+        <button type="button" class="fav-btn ${isFav ? 'active' : ''}" data-action="toggle-fav" data-fav-id="${escapeHtml(t.id)}" aria-label="Favori">${isFav ? '★' : '☆'}</button>
       </div>`;
       })
       .join('')}
@@ -65,6 +67,7 @@ export function renderComparison() {
   const tabs = [
     { id: 'present', name: 'Présents' },
     { id: 'past', name: 'Passés' },
+    { id: 'future', name: 'Futurs' },
     { id: 'perfect', name: 'Parfaits' },
     { id: 'conditionals', name: 'Conditionnels' },
   ];
@@ -113,12 +116,13 @@ export function showComparison(category, tabEl) {
     </div>
     <h3 style="margin:24px 0 12px">🔍 Comparaison détaillée</h3>
     ${tenses
-      .map(
-        (t) => `
-      <div class="card" style="margin-bottom:12px;cursor:pointer" data-action="open-tense-modal" data-tense-id="${escapeHtml(t.id)}" role="button" tabindex="0">
-        <h4>${escapeHtml(t.nameFR)} vs autres</h4>
+      .map((t) => {
+        const unlocked = isTenseUnlocked(State?.data, t.id, APP_DATA.modules);
+        return `
+      <div class="card ${!unlocked ? 'locked' : ''}" style="margin-bottom:12px;cursor:${unlocked ? 'pointer' : 'not-allowed'}" data-action="open-tense-modal" data-tense-id="${escapeHtml(t.id)}" ${!unlocked ? 'data-locked="true" aria-disabled="true"' : ''} role="button" tabindex="0">
+        <h4>${!unlocked ? '🔒 ' : ''}${escapeHtml(t.nameFR)} vs autres</h4>
         <p style="font-size:0.9rem;color:var(--text-light);margin-top:8px">${escapeHtml(t.nuances || (t.explanation || '').substring(0, 200))}</p>
-      </div>`,
-      )
+      </div>`;
+      })
       .join('')}`;
 }

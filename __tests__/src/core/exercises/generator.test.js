@@ -120,7 +120,7 @@ describe('generator core distribution', () => {
         true,
         'intermediate',
       );
-      expect(cond0.sentence).toBe('If He ___, He ___.');
+      expect(cond0.sentence).toBe('If He ___, He works.');
 
       const cond3 = generateQCM(
         APP_DATA.tensesById.conditional_3,
@@ -129,9 +129,28 @@ describe('generator core distribution', () => {
         true,
         'intermediate',
       );
-      expect(cond3.sentence).toBe('If He had ___, He would have ___.');
+      expect(cond3.sentence).toBe('If He had ___, He would have worked.');
+
+      const myParentsBe = generateQCM(
+        APP_DATA.tensesById.present_simple,
+        'My parents',
+        'be',
+        false,
+        'intermediate',
+      );
+      expect(myParentsBe.sentence).toBe('My parents ___ every day.');
+      expect(myParentsBe.options[myParentsBe.correct]).toBe('are');
     } finally {
       Math.random.mockRestore();
+    }
+  });
+
+  test('generateReportedQuestion never accepts grammatical tense rule names as answers', () => {
+    const ruleCount = APP_DATA.reportedSpeech.rules.length;
+    for (let i = 0; i < ruleCount; i++) {
+      const q = generateReportedQuestion(i);
+      const ruleName = APP_DATA.reportedSpeech.rules[i].reported;
+      expect(q.acceptedAnswers).not.toContain(ruleName);
     }
   });
 
