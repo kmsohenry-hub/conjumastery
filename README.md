@@ -18,7 +18,7 @@
   </a>
   <img src="https://img.shields.io/badge/version-2.0.0-1d4ed8" alt="Version 2.0.0" />
   <img src="https://img.shields.io/badge/node-%3E%3D24%20%3C25-047857" alt="Node.js 24" />
-  <img src="https://img.shields.io/badge/vitest-47%20fichiers%20%7C%20794%20tests-0f766e" alt="Suite Vitest" />
+  <img src="https://img.shields.io/badge/vitest-47%20fichiers%20%7C%20796%20tests-0f766e" alt="Suite Vitest" />
   <img src="https://img.shields.io/badge/playwright-27%20tests%20E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/licence-MIT-334155" alt="Licence MIT" />
@@ -197,7 +197,7 @@ Le pipeline défini dans `.github/workflows/ci.yml` exécute les contrôles suiv
 
 1. **Audit des dépendances** : `npm audit --audit-level=moderate` (complété par `.github/dependabot.yml` pour les mises à jour hebdomadaires groupées npm et GitHub Actions).
 2. **Qualité de code** : `npm run lint` (`ESLint --max-warnings 0`) + `npm run format:check` (Prettier).
-3. **Suite unitaire & intégration (47 fichiers, 794 tests)** : couverture minimale exigée dans `vite.config.js` :
+3. **Suite unitaire & intégration (47 fichiers, 796 tests)** : couverture minimale exigée dans `vite.config.js` :
    - **Statements / Functions / Lines** : `≥ 95 %`
    - **Branches** : `≥ 90 %`
 4. **Budgets de production (`npm run perf:budget`)** :
