@@ -47,7 +47,11 @@ async function readJsonBody(req) {
 export function createGitHubMiddleware(service = createGitHubService()) {
   return async function githubApiMiddleware(req, res, next) {
     const rawUrl = req.url || '/';
-    if (!rawUrl.startsWith('/api/github')) {
+    const isGitHubRoute =
+      rawUrl === '/api/github' ||
+      rawUrl.startsWith('/api/github/') ||
+      rawUrl.startsWith('/api/github?');
+    if (!isGitHubRoute) {
       if (typeof next === 'function') {
         next();
       }
@@ -58,9 +62,9 @@ export function createGitHubMiddleware(service = createGitHubService()) {
     const pathname = parsedUrl.pathname;
     const method = (req.method || 'GET').toUpperCase();
 
-    if (method !== 'GET' && !isLoopbackRequest(req)) {
+    if (!isLoopbackRequest(req)) {
       sendJson(res, 403, {
-        error: 'GitHub write operations are restricted to local server access',
+        error: 'GitHub API access is restricted to local server access',
       });
       return;
     }

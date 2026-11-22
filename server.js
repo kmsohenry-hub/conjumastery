@@ -24,9 +24,29 @@ const MIME_TYPES = {
 
 const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
 };
+
+const STATIC_ASSET_EXTENSIONS = new Set([
+  '.js',
+  '.mjs',
+  '.css',
+  '.map',
+  '.json',
+  '.webmanifest',
+  '.png',
+  '.svg',
+  '.ico',
+  '.jpg',
+  '.jpeg',
+  '.webp',
+  '.woff',
+  '.woff2',
+  '.txt',
+  '.xml',
+]);
 
 function applyStaticHeaders(res, filePath, distRoot) {
   const mime = MIME_TYPES[extname(filePath)] || 'application/octet-stream';
@@ -56,7 +76,11 @@ export function createAppServer({ distDir = DIST_DIR, middleware = githubMiddlew
 
   return createServer(async (req, res) => {
     const reqUrl = req.url || '/';
-    if (reqUrl.startsWith('/api/github')) {
+    if (
+      reqUrl === '/api/github' ||
+      reqUrl.startsWith('/api/github/') ||
+      reqUrl.startsWith('/api/github?')
+    ) {
       await middleware(req, res);
       return;
     }
@@ -90,7 +114,8 @@ export function createAppServer({ distDir = DIST_DIR, middleware = githubMiddlew
 
     const relative = decodedPathname === '/' ? 'index.html' : decodedPathname.replace(/^\/+/, '');
     const resolved = resolve(normalizedDistDir, relative);
-    const targetPath = isWithinDirectory(resolved, normalizedDistDir) ? resolved : indexHtmlPath;
+    const inDist = isWithinDirectory(resolved, normalizedDistDir);
+    const targetPath = inDist ? resolved : indexHtmlPath;
 
     try {
       const info = await stat(targetPath);
@@ -103,6 +128,14 @@ export function createAppServer({ distDir = DIST_DIR, middleware = githubMiddlew
       applyStaticHeaders(res, filePath, normalizedDistDir);
       res.end(method === 'HEAD' ? undefined : content);
     } catch {
+      const requestedExt = extname(decodedPathname).toLowerCase();
+      const isTraversalProbe = reqUrl.includes('..') || /%2e%2e/i.test(reqUrl);
+      if (inDist && !isTraversalProbe && STATIC_ASSET_EXTENSIONS.has(requestedExt)) {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.end(method === 'HEAD' ? undefined : 'Not found');
+        return;
+      }
       try {
         const fallback = await readFile(indexHtmlPath);
         res.statusCode = 200;

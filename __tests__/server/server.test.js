@@ -70,6 +70,7 @@ describe('production HTTP server (server.js)', () => {
     expect(res.headers['content-type']).toBe('text/html; charset=utf-8');
     expect(res.headers['cache-control']).toBe('no-cache');
     expect(res.headers['x-content-type-options']).toBe('nosniff');
+    expect(res.headers['x-frame-options']).toBe('DENY');
     expect(res.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
     expect(res.headers['permissions-policy']).toContain('camera=()');
     expect(res.body).toContain('<title>SPA</title>');
@@ -126,7 +127,7 @@ describe('production HTTP server (server.js)', () => {
     expect(nullByte.status).toBe(400);
   });
 
-  test('serves nested directory index and falls back to SPA index on client routes', async () => {
+  test('serves nested directory index, falls back to SPA index on client routes, and returns 404 for missing static assets', async () => {
     const nested = await rawHttpRequest(port, '/nested');
     expect(nested.status).toBe(200);
     expect(nested.body).toContain('<h1>Nested</h1>');
@@ -134,6 +135,14 @@ describe('production HTTP server (server.js)', () => {
     const spaRoute = await rawHttpRequest(port, '/lessons/present-simple');
     expect(spaRoute.status).toBe(200);
     expect(spaRoute.body).toContain('<title>SPA</title>');
+
+    const missingAsset = await rawHttpRequest(port, '/assets/missing-chunk.js');
+    expect(missingAsset.status).toBe(404);
+    expect(missingAsset.headers['content-type']).toBe('text/plain; charset=utf-8');
+
+    const missingIconHead = await rawHttpRequest(port, '/icons/missing.png', { method: 'HEAD' });
+    expect(missingIconHead.status).toBe(404);
+    expect(missingIconHead.body).toBe('');
   });
 
   test('delegates /api/github requests to the GitHub middleware', async () => {
