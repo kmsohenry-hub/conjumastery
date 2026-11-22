@@ -46,14 +46,18 @@ function mockRes() {
 }
 
 describe('server githubMiddleware', () => {
-  test('passes through non-github requests', async () => {
+  test('passes through non-github requests including similar prefixes', async () => {
     const middleware = createGitHubMiddleware({});
-    const next = vi.fn();
-    await middleware(mockReq({ url: '/index.html' }), mockRes(), next);
-    expect(next).toHaveBeenCalledOnce();
+    const next1 = vi.fn();
+    await middleware(mockReq({ url: '/index.html' }), mockRes(), next1);
+    expect(next1).toHaveBeenCalledOnce();
+
+    const next2 = vi.fn();
+    await middleware(mockReq({ url: '/api/github-other' }), mockRes(), next2);
+    expect(next2).toHaveBeenCalledOnce();
   });
 
-  test('blocks non-loopback or forwarded write requests with 403', async () => {
+  test('blocks non-loopback or forwarded read and write requests with 403', async () => {
     const middleware = createGitHubMiddleware({});
     const res1 = mockRes();
     await middleware(
@@ -72,6 +76,24 @@ describe('server githubMiddleware', () => {
       res2,
     );
     expect(res2.statusCode).toBe(403);
+
+    const res3 = mockRes();
+    await middleware(
+      mockReq({ method: 'GET', url: '/api/github/status', remoteAddress: '203.0.113.5' }),
+      res3,
+    );
+    expect(res3.statusCode).toBe(403);
+
+    const res4 = mockRes();
+    await middleware(
+      mockReq({
+        method: 'GET',
+        url: '/api/github/contents?owner=private&repo=secret&path=README.md',
+        headers: { 'x-forwarded-for': '203.0.113.5' },
+      }),
+      res4,
+    );
+    expect(res4.statusCode).toBe(403);
   });
 
   test('routes status, branches, contents, commits, pulls, merge, and actions cleanly', async () => {

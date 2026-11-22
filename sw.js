@@ -1,5 +1,5 @@
 /* global self, caches */
-const CACHE_NAME = 'conjumaster-v2.0.0';
+const CACHE_NAME = /* __CACHE_NAME__ */ 'conjumaster-v2.0.0';
 const CACHE_PREFIX = 'conjumaster-';
 const APP_SHELL = /* __PRECACHE_MANIFEST__ */ [];
 
@@ -40,12 +40,14 @@ self.addEventListener('fetch', (event) => {
 
   const requestURL = new URL(event.request.url);
   if (requestURL.origin !== self.location.origin) return;
+  if (requestURL.pathname.startsWith('/api/')) return;
 
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          if (response && response.status === 200) {
+          const cacheControl = response?.headers?.get?.('cache-control') || '';
+          if (response && response.status === 200 && !/no-store/i.test(cacheControl)) {
             const copy = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
           }
@@ -60,10 +62,12 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
+          const cacheControl = networkResponse?.headers?.get?.('cache-control') || '';
           if (
             networkResponse &&
             networkResponse.status === 200 &&
-            networkResponse.type === 'basic'
+            networkResponse.type === 'basic' &&
+            !/no-store/i.test(cacheControl)
           ) {
             const copy = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));

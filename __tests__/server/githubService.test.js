@@ -408,4 +408,22 @@ describe('server githubService', () => {
     await service.listActionRuns({ perPage: 999 });
     expect(fetchMock.mock.calls[12][0]).toContain('per_page=50');
   });
+
+  test('passes an AbortSignal timeout to fetch and maps timeout errors to HTTP 504', async () => {
+    const timeoutErr = Object.assign(new Error('The operation timed out'), {
+      name: 'TimeoutError',
+    });
+    const fetchMock = vi.fn().mockRejectedValueOnce(timeoutErr);
+    const service = createGitHubService({
+      getToken: () => 'tok',
+      fetchImpl: fetchMock,
+      timeoutMs: 250,
+    });
+
+    await expect(service.listBranches()).rejects.toMatchObject({
+      message: 'GitHub API request timed out',
+      status: 504,
+    });
+    expect(fetchMock.mock.calls[0][1].signal).toBeDefined();
+  });
 });

@@ -67,3 +67,69 @@ describe('service worker update lifecycle', () => {
     expect(self.skipWaiting).toHaveBeenCalledOnce();
   });
 });
+
+describe('service worker fetch isolation', () => {
+  it('never intercepts same-origin /api/ requests', () => {
+    const { listeners } = loadServiceWorker({ cacheKeys: [] });
+    const respondWith = vi.fn();
+
+    listeners.fetch({
+      request: {
+        method: 'GET',
+        url: 'https://example.test/api/github/status',
+        mode: 'cors',
+      },
+      respondWith,
+    });
+
+    expect(respondWith).not.toHaveBeenCalled();
+  });
+
+  it('does not cache responses with Cache-Control: no-store', async () => {
+    const put = vi.fn().mockResolvedValue(undefined);
+    const { listeners, caches } = loadServiceWorker({ cacheKeys: [] });
+    caches.match.mockResolvedValue(undefined);
+    caches.open.mockResolvedValue({ put });
+
+    const noStoreResponse = {
+      status: 200,
+      type: 'basic',
+      headers: { get: (h) => (h.toLowerCase() === 'cache-control' ? 'no-store' : null) },
+      clone: vi.fn(),
+    };
+    const fetchMock = vi.fn().mockResolvedValue(noStoreResponse);
+
+    // Reload SW with mocked fetch in sandbox context
+    const source = readFileSync(resolve(process.cwd(), 'sw.js'), 'utf8').replace(
+      '/* __PRECACHE_MANIFEST__ */ []',
+      '[]',
+    );
+    const fetchListeners = {};
+    const selfObj = {
+      addEventListener: vi.fn((event, handler) => {
+        fetchListeners[event] = handler;
+      }),
+      skipWaiting: vi.fn(),
+      clients: { claim: vi.fn() },
+      location: { origin: 'https://example.test' },
+    };
+    vm.runInNewContext(source, { self: selfObj, caches, URL, fetch: fetchMock });
+
+    let responsePromise;
+    fetchListeners.fetch({
+      request: {
+        method: 'GET',
+        url: 'https://example.test/data.json',
+        mode: 'cors',
+      },
+      respondWith: (p) => {
+        responsePromise = p;
+      },
+    });
+
+    const result = await responsePromise;
+    expect(result).toBe(noStoreResponse);
+    expect(put).not.toHaveBeenCalled();
+    expect(listeners.fetch).toBeTypeOf('function');
+  });
+});

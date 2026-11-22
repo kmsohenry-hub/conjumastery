@@ -1,4 +1,4 @@
-/* global process, Buffer */
+/* global process, Buffer, AbortSignal */
 
 const GITHUB_API_BASE = 'https://api.github.com';
 const DEFAULT_OWNER = 'kmsohenry-hub';
@@ -56,6 +56,7 @@ export function createGitHubService({
   fetchImpl = fetch,
   owner: defaultOwner = DEFAULT_OWNER,
   repo: defaultRepo = DEFAULT_REPO,
+  timeoutMs = 15_000,
 } = {}) {
   function readToken() {
     const raw = getToken();
@@ -78,6 +79,9 @@ export function createGitHubService({
       'X-GitHub-Api-Version': '2022-11-28',
     };
     const init = { method, headers };
+    if (timeoutMs > 0 && typeof AbortSignal?.timeout === 'function') {
+      init.signal = AbortSignal.timeout(timeoutMs);
+    }
     if (body !== undefined) {
       headers['Content-Type'] = 'application/json';
       init.body = JSON.stringify(body);
@@ -87,8 +91,13 @@ export function createGitHubService({
     try {
       response = await fetchImpl(url, init);
     } catch (networkErr) {
-      const err = new Error(`GitHub network error: ${sanitizeText(networkErr?.message, token)}`);
-      err.status = 502;
+      const isTimeout = networkErr?.name === 'TimeoutError' || networkErr?.name === 'AbortError';
+      const err = new Error(
+        isTimeout
+          ? 'GitHub API request timed out'
+          : `GitHub network error: ${sanitizeText(networkErr?.message, token)}`,
+      );
+      err.status = isTimeout ? 504 : 502;
       throw err;
     }
 

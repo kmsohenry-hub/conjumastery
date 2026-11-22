@@ -2,19 +2,20 @@
 
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const DIST = new URL('../dist/', import.meta.url);
+const DIST_DIR = fileURLToPath(new URL('../dist/', import.meta.url));
 const BUDGETS = {
   html: 35 * 1024,
   css: 35 * 1024,
   js: 180 * 1024,
 };
 
-const files = await readdir(DIST.pathname, { recursive: true });
+const files = await readdir(DIST_DIR, { recursive: true });
 const assets = [];
 
 for (const relative of files) {
-  const path = join(DIST.pathname, relative);
+  const path = join(DIST_DIR, relative);
   const info = await stat(path);
   if (!info.isFile()) continue;
 
