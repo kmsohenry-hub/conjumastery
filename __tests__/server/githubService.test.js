@@ -326,7 +326,20 @@ describe('server githubService', () => {
 
     await expect(service.createBranch({ branch: '/leading' })).rejects.toThrow('Invalid branch');
     await expect(service.createBranch({ branch: 'trailing/' })).rejects.toThrow('Invalid branch');
+    await expect(service.createBranch({ branch: '-dash-branch' })).rejects.toThrow(
+      'Invalid branch',
+    );
+    await expect(service.createBranch({ branch: 'feat.lock' })).rejects.toThrow('Invalid branch');
     await expect(service.getContent({ path: '/abs/path' })).rejects.toThrow(
+      'Invalid repository file path',
+    );
+    await expect(service.getContent({ path: 'dir/' })).rejects.toThrow(
+      'Invalid repository file path',
+    );
+    await expect(service.getContent({ path: 'a\\b' })).rejects.toThrow(
+      'Invalid repository file path',
+    );
+    await expect(service.getContent({ path: 'a//b' })).rejects.toThrow(
       'Invalid repository file path',
     );
     await expect(service.getContent({ path: 'a\0b' })).rejects.toThrow(
@@ -352,6 +365,17 @@ describe('server githubService', () => {
         files: [{ path: '../escape.js', content: 'x' }],
       }),
     ).rejects.toThrow('Invalid file entry path');
+    await expect(
+      service.createCommit({
+        branch: 'main',
+        message: 'm',
+        baseSha: 'abc',
+        files: [{ path: 'src/a.js', content: 'x', mode: '999999' }],
+      }),
+    ).rejects.toThrow('Invalid git file mode');
+    await expect(
+      service.createPullRequest({ title: '   ', head: 'fix/x', base: 'main' }),
+    ).rejects.toThrow('Pull request title is required');
     await expect(service.updatePullRequest({ pullNumber: 0 })).rejects.toThrow(
       'Invalid pull request number',
     );

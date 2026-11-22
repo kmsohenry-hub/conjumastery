@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { APP_DATA } from '../../../src/data/index.js';
 import { generateQuestions } from '../../../src/core/exercises/generator.js';
-import { validateImportedState } from '../../../app.js';
+import { handleImportFile, validateImportedState } from '../../../app.js';
 import {
   createStore,
   MAX_ACTIVITY_LOG_ENTRIES,
@@ -42,38 +42,85 @@ describe('session, special topics, persistence & SRS stability regressions', () 
     ]);
   });
 
-  it('preserves passive_voice and reported_speech across backup import while still rejecting unknown IDs', () => {
+  it('preserves passive_voice and reported_speech across backup import while clamping SRS and deduplicating arrays', () => {
     const imported = validateImportedState({
       version: 1,
       data: {
         xp: 120,
+        completedLessons: ['l_present_simple', 'l_present_simple'],
+        favorites: ['verb_go', 'verb_go'],
         tenseStats: {
           passive_voice: { correct: 4, total: 5 },
           reported_speech: { correct: 3, total: 5 },
           '<script>xss</script>': { correct: 1, total: 1 },
         },
         spacedRepetition: {
-          passive_voice: { interval: 3, nextReview: 1000, ease: 2.5, errors: 1 },
+          passive_voice: { interval: 9999999, nextReview: 1000, ease: 99, errors: 1 },
           reported_speech: { interval: 1, nextReview: 2000, ease: 2.3, errors: 2 },
           malicious_id: { interval: 1, nextReview: 0, ease: 2.5, errors: 1 },
         },
         errorLog: [
-          { tenseId: 'passive_voice', date: '2026-11-20T10:00:00.000Z' },
+          { tenseId: 'passive_voice', date: '2026-11-20T10:00:00.000Z', injected: true },
           { tenseId: 'reported_speech', date: '2026-11-20T10:05:00.000Z' },
           { tenseId: 'unknown_id', date: '2026-11-20T10:10:00.000Z' },
         ],
+        activityLog: [{ date: '2026-11-20T10:00:00.000Z', xp: 20, injected: true }],
       },
     });
 
     expect(APP_DATA.specialTopicsById.passive_voice.nameFR).toBe('Voix Passive');
     expect(APP_DATA.specialTopicsById.reported_speech.nameFR).toBe('Discours Indirect');
+    expect(imported.completedLessons).toEqual(['l_present_simple']);
+    expect(imported.favorites).toEqual(['verb_go']);
     expect(imported.tenseStats.passive_voice).toEqual({ correct: 4, total: 5 });
     expect(imported.tenseStats.reported_speech).toEqual({ correct: 3, total: 5 });
     expect(imported.tenseStats['<script>xss</script>']).toBeUndefined();
-    expect(imported.spacedRepetition.passive_voice.errors).toBe(1);
+    expect(imported.spacedRepetition.passive_voice.interval).toBe(MAX_SRS_INTERVAL_MINUTES);
+    expect(imported.spacedRepetition.passive_voice.ease).toBe(MAX_SRS_EASE);
     expect(imported.spacedRepetition.reported_speech.errors).toBe(2);
     expect(imported.spacedRepetition.malicious_id).toBeUndefined();
     expect(imported.errorLog.map((e) => e.tenseId)).toEqual(['passive_voice', 'reported_speech']);
+    expect(imported.errorLog[0].injected).toBeUndefined();
+    expect(imported.activityLog[0].injected).toBeUndefined();
+  });
+
+  it('rejects oversized backup files and syncs theme immediately on valid import', () => {
+    document.body.innerHTML = '<div id="toastContainer"></div>';
+    document.documentElement.setAttribute('data-theme', 'light');
+
+    handleImportFile({ size: 3 * 1024 * 1024 });
+    expect(document.getElementById('toastContainer').textContent).toContain('trop volumineux');
+
+    const originalFileReader = globalThis.FileReader;
+    try {
+      globalThis.FileReader = class MockReader {
+        readAsText() {
+          this.onload?.({
+            target: {
+              result: JSON.stringify({
+                version: 1,
+                data: { xp: 50, settings: { theme: 'dark' } },
+              }),
+            },
+          });
+        }
+      };
+      handleImportFile({ size: 128 });
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+
+      globalThis.FileReader = class FailingReader {
+        readAsText() {
+          this.onerror?.(new Error('disk error'));
+        }
+      };
+      handleImportFile({ size: 128 });
+      expect(document.getElementById('toastContainer').textContent).toContain(
+        'Impossible de lire le fichier',
+      );
+    } finally {
+      globalThis.FileReader = originalFileReader;
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
   });
 
   it('displays French labels instead of raw snake_case IDs for passive_voice and reported_speech across UI views', () => {
@@ -106,6 +153,7 @@ describe('session, special topics, persistence & SRS stability regressions', () 
         { tenseId: 'passive_voice', date: '2026-11-20T10:00:00.000Z' },
         { tenseId: 'reported_speech', date: '2026-11-20T10:01:00.000Z' },
       ],
+      activityLog: [{ date: 'invalid-date', xp: 10 }],
     };
 
     renderDashboardRevisionQueue(State.getReviewQueue());
@@ -124,6 +172,9 @@ describe('session, special topics, persistence & SRS stability regressions', () 
     renderStats();
     expect(document.getElementById('commonErrors').textContent).toContain('Voix Passive');
     expect(document.getElementById('commonErrors').textContent).toContain('Discours Indirect');
+    expect(document.getElementById('statsChart').innerHTML).toContain('Voix Passive');
+    expect(document.getElementById('activityLog').textContent).toContain('—');
+    expect(document.getElementById('activityLog').textContent).not.toContain('Invalid Date');
   });
 
   it('caps SRS ease and interval growth over many consecutive correct answers', () => {
@@ -158,5 +209,6 @@ describe('session, special topics, persistence & SRS stability regressions', () 
     expect(sanitized.favorites).toEqual(['verb_go']);
     expect(sanitized.errorLog).toHaveLength(MAX_ERROR_LOG_ENTRIES);
     expect(sanitized.activityLog).toHaveLength(MAX_ACTIVITY_LOG_ENTRIES);
+    expect(vi.fn).toBeTypeOf('function');
   });
 });

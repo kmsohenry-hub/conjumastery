@@ -8,6 +8,8 @@ import {
   defaultState,
   MAX_ACTIVITY_LOG_ENTRIES,
   MAX_ERROR_LOG_ENTRIES,
+  MAX_SRS_EASE,
+  MAX_SRS_INTERVAL_MINUTES,
 } from '../state/store.js';
 
 export const STORAGE_VERSION = 1;
@@ -63,6 +65,37 @@ function sanitizePlainObject(defaultVal, candidateVal) {
   return clean;
 }
 
+function sanitizeTenseStatsMap(rawMap) {
+  const clean = {};
+  for (const [k, v] of Object.entries(rawMap)) {
+    if (FORBIDDEN_KEYS.has(k) || !v || typeof v !== 'object' || Array.isArray(v)) continue;
+    const correct = Math.max(0, Math.floor(Number(v.correct) || 0));
+    const total = Math.max(correct, Math.floor(Number(v.total) || 0));
+    clean[k] = { correct, total };
+  }
+  return clean;
+}
+
+function sanitizeSpacedRepetitionMap(rawMap) {
+  const clean = {};
+  for (const [k, v] of Object.entries(rawMap)) {
+    if (FORBIDDEN_KEYS.has(k) || !v || typeof v !== 'object' || Array.isArray(v)) continue;
+    const rawInterval = Number(v.interval);
+    const interval = Number.isFinite(rawInterval)
+      ? Math.min(MAX_SRS_INTERVAL_MINUTES, Math.max(1, Math.round(rawInterval)))
+      : 1;
+    const rawEase = Number(v.ease);
+    const ease = Number.isFinite(rawEase)
+      ? Number(Math.min(MAX_SRS_EASE, Math.max(1.3, rawEase)).toFixed(2))
+      : 2.5;
+    const rawNextReview = Number(v.nextReview);
+    const nextReview = Number.isFinite(rawNextReview) && rawNextReview >= 0 ? rawNextReview : 0;
+    const errors = Math.max(0, Math.floor(Number(v.errors) || 0));
+    clean[k] = { interval, nextReview, ease, errors };
+  }
+  return clean;
+}
+
 export function sanitizeState(candidate) {
   const base = cloneState(defaultState);
   if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
@@ -99,10 +132,21 @@ export function sanitizeState(candidate) {
     Number(sanitized.totalExercises) || 0,
     sanitized.correctAnswers + sanitized.incorrectAnswers,
   );
-  sanitized.completedLessons = sanitized.completedLessons.filter(
-    (item) => typeof item === 'string',
+  if (
+    sanitized.lastActiveDate !== null &&
+    (typeof sanitized.lastActiveDate !== 'string' ||
+      !Number.isFinite(Date.parse(sanitized.lastActiveDate)))
+  ) {
+    sanitized.lastActiveDate = null;
+  }
+  sanitized.completedLessons = Array.from(
+    new Set(sanitized.completedLessons.filter((item) => typeof item === 'string')),
   );
-  sanitized.favorites = sanitized.favorites.filter((item) => typeof item === 'string');
+  sanitized.favorites = Array.from(
+    new Set(sanitized.favorites.filter((item) => typeof item === 'string')),
+  );
+  sanitized.tenseStats = sanitizeTenseStatsMap(sanitized.tenseStats);
+  sanitized.spacedRepetition = sanitizeSpacedRepetitionMap(sanitized.spacedRepetition);
   sanitized.errorLog = sanitized.errorLog
     .filter(
       (entry) =>
@@ -111,6 +155,10 @@ export function sanitizeState(candidate) {
         !Array.isArray(entry) &&
         typeof entry.tenseId === 'string',
     )
+    .map((entry) => ({
+      tenseId: entry.tenseId,
+      date: typeof entry.date === 'string' ? entry.date : new Date().toISOString(),
+    }))
     .slice(-MAX_ERROR_LOG_ENTRIES);
   sanitized.activityLog = sanitized.activityLog
     .filter(
@@ -120,6 +168,10 @@ export function sanitizeState(candidate) {
         !Array.isArray(entry) &&
         Number.isFinite(Number(entry.xp)),
     )
+    .map((entry) => ({
+      date: typeof entry.date === 'string' ? entry.date : new Date().toISOString(),
+      xp: Math.max(0, Number(entry.xp)),
+    }))
     .slice(-MAX_ACTIVITY_LOG_ENTRIES);
   sanitized.settings.theme = sanitized.settings.theme === 'dark' ? 'dark' : 'light';
 

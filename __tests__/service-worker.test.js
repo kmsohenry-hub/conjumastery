@@ -132,4 +132,95 @@ describe('service worker fetch isolation', () => {
     expect(put).not.toHaveBeenCalled();
     expect(listeners.fetch).toBeTypeOf('function');
   });
+
+  it('returns a 503 offline Response on uncached network failure and tolerates cache.put quota errors', async () => {
+    const source = readFileSync(resolve(process.cwd(), 'sw.js'), 'utf8').replace(
+      '/* __PRECACHE_MANIFEST__ */ []',
+      '[]',
+    );
+
+    const quotaPut = vi.fn().mockRejectedValue(new Error('QuotaExceededError'));
+    const caches = {
+      keys: vi.fn().mockResolvedValue([]),
+      delete: vi.fn().mockResolvedValue(true),
+      open: vi.fn().mockResolvedValue({ put: quotaPut }),
+      match: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const okResponse = {
+      status: 200,
+      type: 'basic',
+      headers: { get: () => null },
+      clone: vi.fn().mockReturnValue({ cloned: true }),
+    };
+
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('offline asset'))
+      .mockRejectedValueOnce(new Error('offline nav'))
+      .mockResolvedValueOnce(okResponse);
+
+    const listeners = {};
+    const selfObj = {
+      addEventListener: vi.fn((event, handler) => {
+        listeners[event] = handler;
+      }),
+      skipWaiting: vi.fn(),
+      clients: { claim: vi.fn() },
+      location: { origin: 'https://example.test' },
+    };
+
+    class FakeResponse {
+      constructor(body, init) {
+        this.body = body;
+        this.status = init.status;
+        this.statusText = init.statusText;
+      }
+    }
+
+    vm.runInNewContext(source, {
+      self: selfObj,
+      caches,
+      URL,
+      fetch: fetchMock,
+      Response: FakeResponse,
+    });
+
+    // 1. Offline uncached asset fetch returns 503 Response instead of undefined
+    let offlineAssetPromise;
+    listeners.fetch({
+      request: { method: 'GET', url: 'https://example.test/missing.js', mode: 'cors' },
+      respondWith: (p) => {
+        offlineAssetPromise = p;
+      },
+    });
+    const offlineAssetRes = await offlineAssetPromise;
+    expect(offlineAssetRes.status).toBe(503);
+
+    // 2. Offline uncached navigate fetch returns 503 Response instead of undefined
+    let offlineNavPromise;
+    listeners.fetch({
+      request: { method: 'GET', url: 'https://example.test/', mode: 'navigate' },
+      respondWith: (p) => {
+        offlineNavPromise = p;
+      },
+    });
+    const offlineNavRes = await offlineNavPromise;
+    expect(offlineNavRes.status).toBe(503);
+
+    // 3. Background cache.put rejection (quota full) does not break the returned network response
+    let quotaPromise;
+    listeners.fetch({
+      request: { method: 'GET', url: 'https://example.test/app.js', mode: 'cors' },
+      respondWith: (p) => {
+        quotaPromise = p;
+      },
+    });
+    const networkRes = await quotaPromise;
+    expect(networkRes).toBe(okResponse);
+    // Allow microtasks for background cache.put().catch() to settle without unhandled rejection
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(quotaPut).toHaveBeenCalledOnce();
+  });
 });

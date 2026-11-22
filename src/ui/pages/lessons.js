@@ -152,7 +152,7 @@ function renderTenseModal(tense, lessonId) {
         <div class="modal-title" id="modalTitle">${escapeHtml(tense.nameEN || tense.name || '')}</div>
         <div style="color:var(--text-light);font-size:0.9rem">${escapeHtml(tense.nameFR || '')}${levelLabel ? ` • ${escapeHtml(levelLabel)}` : ''}</div>
       </div>
-      <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
+      <button type="button" class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
     
     <div class="explain-block">
@@ -198,9 +198,9 @@ function renderTenseModal(tense, lessonId) {
     }
 
     <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-      ${lessonId ? `<button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${escapeHtml(lessonId)}">🎯 Commencer la leçon</button>` : ''}
-      <button class="btn ${lessonId ? 'btn-outline' : 'btn-primary'}" data-action="start-tense" data-tense-id="${escapeHtml(tense.id)}">🎮 Entraînement libre</button>
-      <button class="btn btn-outline" data-page="comparison">📊 Voir le comparatif</button>
+      ${lessonId ? `<button type="button" class="btn btn-primary" data-action="start-lesson" data-lesson-id="${escapeHtml(lessonId)}">🎯 Commencer la leçon</button>` : ''}
+      <button type="button" class="btn ${lessonId ? 'btn-outline' : 'btn-primary'}" data-action="start-tense" data-tense-id="${escapeHtml(tense.id)}">🎮 Entraînement libre</button>
+      <button type="button" class="btn btn-outline" data-page="comparison">📊 Voir le comparatif</button>
     </div>`;
 
   openModal();
@@ -213,7 +213,7 @@ export function openPassiveModal(lessonId = 'l_passive') {
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Voix Passive</div>
-      <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
+      <button type="button" class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
@@ -234,7 +234,7 @@ export function openPassiveModal(lessonId = 'l_passive') {
       <h4>💡 Nuances</h4>
       <p>${escapeHtml(info.nuances)}</p>
     </div>
-    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${escapeHtml(lessonId)}">🎯 Commencer la leçon</button></div>`;
+    <div style="margin-top:20px"><button type="button" class="btn btn-primary" data-action="start-lesson" data-lesson-id="${escapeHtml(lessonId)}">🎯 Commencer la leçon</button></div>`;
   openModal();
 }
 
@@ -245,7 +245,7 @@ export function openReportedModal(lessonId = 'l_reported') {
   modal.innerHTML = `
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Discours Indirect (Reported Speech)</div>
-      <button class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
+      <button type="button" class="modal-close" data-action="close-modal" aria-label="Fermer">✕</button>
     </div>
     <div class="explain-block">
       <h4>📝 Explication</h4>
@@ -265,7 +265,7 @@ export function openReportedModal(lessonId = 'l_reported') {
         ${info.timeChanges.map((t) => `<tr><td>${escapeHtml(t.direct)}</td><td><strong>${escapeHtml(t.reported)}</strong></td></tr>`).join('')}
       </table>
     </div>
-    <div style="margin-top:20px"><button class="btn btn-primary" data-action="start-lesson" data-lesson-id="${escapeHtml(lessonId)}">🎯 Commencer la leçon</button></div>`;
+    <div style="margin-top:20px"><button type="button" class="btn btn-primary" data-action="start-lesson" data-lesson-id="${escapeHtml(lessonId)}">🎯 Commencer la leçon</button></div>`;
   openModal();
 }
 

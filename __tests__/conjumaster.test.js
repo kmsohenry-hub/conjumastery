@@ -904,6 +904,7 @@ describe('app UI and data management', () => {
     expect(State.data.xp).toBe(150);
     expect(State.data.level).toBe(2);
     expect(State.data.settings.theme).toBe('dark');
+    expect(document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'dark');
     expect(State.save).toHaveBeenCalledTimes(1);
 
     State.save = originalSave;
@@ -913,9 +914,9 @@ describe('app UI and data management', () => {
     global.document.getElementById = originalGetElementById;
   });
 
-  test('importData shows an error toast for invalid JSON', () => {
+  test('importData shows an error toast for invalid JSON, oversized files, and reader errors', () => {
     const input = { type: '', accept: '', onchange: null, click: vi.fn() };
-    const reader = { onload: null, readAsText: vi.fn() };
+    const reader = { onload: null, onerror: null, readAsText: vi.fn() };
     const toastContainer = { appendChild: vi.fn() };
     const originalCreateElement = global.document.createElement;
     const originalGetElementById = global.document.getElementById;
@@ -936,13 +937,29 @@ describe('app UI and data management', () => {
 
     appWindow.importData();
     input.click.mockImplementationOnce(() => {
-      input.onchange({ target: { files: [{ name: 'broken.json' }] } });
+      input.onchange({ target: { files: [{ name: 'huge.json', size: 3 * 1024 * 1024 }] } });
+    });
+    input.click();
+    expect(reader.readAsText).not.toHaveBeenCalled();
+    expect(toastContainer.appendChild).toHaveBeenCalledTimes(1);
+    expect(toastContainer.appendChild.mock.calls[0][0].textContent).toBe(
+      '❌ Fichier trop volumineux (max 2 Mo)',
+    );
+
+    input.click.mockImplementationOnce(() => {
+      input.onchange({ target: { files: [{ name: 'broken.json', size: 128 }] } });
     });
     input.click();
     reader.onload({ target: { result: '{invalid json' } });
 
-    expect(toastContainer.appendChild).toHaveBeenCalledTimes(1);
-    expect(toastContainer.appendChild.mock.calls[0][0].textContent).toBe('❌ Fichier invalide');
+    expect(toastContainer.appendChild).toHaveBeenCalledTimes(2);
+    expect(toastContainer.appendChild.mock.calls[1][0].textContent).toBe('❌ Fichier invalide');
+
+    reader.onerror();
+    expect(toastContainer.appendChild).toHaveBeenCalledTimes(3);
+    expect(toastContainer.appendChild.mock.calls[2][0].textContent).toBe(
+      '❌ Impossible de lire le fichier',
+    );
 
     global.FileReader = originalFileReader;
     global.document.createElement = originalCreateElement;

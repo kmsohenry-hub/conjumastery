@@ -64,7 +64,7 @@ describe('production HTTP server (server.js)', () => {
     await rm(rootDir, { recursive: true, force: true });
   });
 
-  test('serves index.html with security headers and no-cache policy', async () => {
+  test('serves index.html with security headers, CSP, and no-cache policy', async () => {
     const res = await rawHttpRequest(port, '/');
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toBe('text/html; charset=utf-8');
@@ -73,7 +73,15 @@ describe('production HTTP server (server.js)', () => {
     expect(res.headers['x-frame-options']).toBe('DENY');
     expect(res.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
     expect(res.headers['permissions-policy']).toContain('camera=()');
+    expect(res.headers['content-security-policy']).toContain("frame-ancestors 'none'");
+    expect(res.headers['content-security-policy']).toContain("script-src 'self'");
     expect(res.body).toContain('<title>SPA</title>');
+  });
+
+  test('configures bounded HTTP server timeouts to guard against slowloris hangs', () => {
+    expect(server.requestTimeout).toBe(30_000);
+    expect(server.headersTimeout).toBe(15_000);
+    expect(server.keepAliveTimeout).toBe(5_000);
   });
 
   test('applies immutable caching to hashed assets and no-cache to service worker', async () => {
@@ -96,7 +104,7 @@ describe('production HTTP server (server.js)', () => {
     expect(unknownMime.headers['content-type']).toBe('application/octet-stream');
   });
 
-  test('supports HEAD with empty body and rejects non-GET/HEAD with 405', async () => {
+  test('supports HEAD with empty body and rejects non-GET/HEAD with 405 and security headers', async () => {
     const head = await rawHttpRequest(port, '/assets/main-abc123.js', { method: 'HEAD' });
     expect(head.status).toBe(200);
     expect(head.headers['content-type']).toBe('application/javascript; charset=utf-8');
@@ -105,6 +113,8 @@ describe('production HTTP server (server.js)', () => {
     const post = await rawHttpRequest(port, '/', { method: 'POST' });
     expect(post.status).toBe(405);
     expect(post.headers.allow).toBe('GET, HEAD');
+    expect(post.headers['x-content-type-options']).toBe('nosniff');
+    expect(post.headers['x-frame-options']).toBe('DENY');
   });
 
   test('blocks sibling-directory path traversal and encoded traversal attacks', async () => {
@@ -119,12 +129,15 @@ describe('production HTTP server (server.js)', () => {
     expect(encodedTraversal.body).toContain('<title>SPA</title>');
   });
 
-  test('rejects malformed percent-encoding and null bytes with 400 Bad Request', async () => {
+  test('rejects malformed percent-encoding and null bytes with 400 Bad Request and security headers', async () => {
     const malformed = await rawHttpRequest(port, '/%E0%A4%A');
     expect(malformed.status).toBe(400);
+    expect(malformed.headers['x-content-type-options']).toBe('nosniff');
+    expect(malformed.headers['x-frame-options']).toBe('DENY');
 
     const nullByte = await rawHttpRequest(port, '/index.html%00.js');
     expect(nullByte.status).toBe(400);
+    expect(nullByte.headers['x-content-type-options']).toBe('nosniff');
   });
 
   test('serves nested directory index, falls back to SPA index on client routes, and returns 404 for missing static assets', async () => {
@@ -139,6 +152,8 @@ describe('production HTTP server (server.js)', () => {
     const missingAsset = await rawHttpRequest(port, '/assets/missing-chunk.js');
     expect(missingAsset.status).toBe(404);
     expect(missingAsset.headers['content-type']).toBe('text/plain; charset=utf-8');
+    expect(missingAsset.headers['x-content-type-options']).toBe('nosniff');
+    expect(missingAsset.headers['x-frame-options']).toBe('DENY');
 
     const missingIconHead = await rawHttpRequest(port, '/icons/missing.png', { method: 'HEAD' });
     expect(missingIconHead.status).toBe(404);
@@ -150,6 +165,28 @@ describe('production HTTP server (server.js)', () => {
     expect(apiRes.status).toBe(200);
     expect(JSON.parse(apiRes.body)).toEqual({ delegated: true });
     expect(middlewareSpy).toHaveBeenCalledOnce();
+  });
+
+  test('returns a safe 500 with security headers if an async middleware throws unexpectedly', async () => {
+    const crashingServer = createAppServer({
+      distDir,
+      middleware: async () => {
+        throw new Error('unexpected internal crash');
+      },
+    });
+    await new Promise((resolve) => crashingServer.listen(0, '127.0.0.1', resolve));
+    const crashPort = crashingServer.address().port;
+
+    try {
+      const res = await rawHttpRequest(crashPort, '/api/github/status');
+      expect(res.status).toBe(500);
+      expect(res.body).toBe('Internal Server Error');
+      expect(res.body).not.toContain('unexpected internal crash');
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
+      expect(res.headers['x-frame-options']).toBe('DENY');
+    } finally {
+      await new Promise((resolve) => crashingServer.close(resolve));
+    }
   });
 
   test('returns 404 when dist directory lacks index.html', async () => {

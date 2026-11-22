@@ -78,8 +78,19 @@ const UNAMBIGUOUS_CONTRACTIONS = [
   [/\b(you|we|they)'re\b/g, '$1 are'],
   [/\b(i|you|we|they)'ve\b/g, '$1 have'],
   [/\b(i|you|he|she|it|we|they|that|there)'ll\b/g, '$1 will'],
+  [/\b(would|could|should|might|must)'ve\b/g, '$1 have'],
+  [/\b(i|you|he|she|it|we|they)'d've\b/g, '$1 would have'],
   [/\blet's\b/g, 'let us'],
 ];
+
+const UNAMBIGUOUS_S_SUBJECTS = /\b(he|she|it|that|there|here|what|who|where|when|how|why)'s\b/;
+
+const GENERAL_S_CONTRACTION_PATTERN = new RegExp(
+  "\\b([a-z]+)'s(?=\\s+(?:" +
+    '[a-z]+(?:ing|ed|en)\\b|' +
+    '(?:been|got|gone|done|made|had|said|told|sold|held|built|sent|spent|lent|bent|meant|learnt|burnt|dealt|felt|kept|left|lost|met|paid|put|read|run|sat|set|shut|slept|stood|struck|stuck|sung|sunk|swum|taught|thought|caught|bought|brought|fought|sought|found|bound|wound|heard|hurt|cut|hit|let|cost|quit|split|spread|won|begun|drunk|rung|shrunk|sprung|stunk|come|become|overcome|fed|fled|led|bred|bled|sped|wed|dug|hung|clung|flung|slung|spun|stung|strung|swung|wrung|lit|shone|shot|spat|understood|withstood|laid)\\b|' +
+    '(?:not|never|always|already|just|still|ever|almost|nearly|really|very|so|too|quite|a|an|the|in|on|at|here|there|up|out|over|back|away|home|ready|late|early|fine|good|great|happy|angry|tired|busy|sick|ill|cold|hot|warm|true|false|wrong|right|sure|dead|open|going|about|able)\\b))',
+);
 
 const COMPILED_SPELLING_RULES = SPELLING_EQUIVALENTS.map(([pattern, replacement]) => ({
   source: pattern.source,
@@ -158,8 +169,8 @@ function expandAmbiguousContractions(str) {
     results.add(canonicalizeGrammar(`${commaMatch[2]} if ${commaMatch[1]}`));
   }
 
-  const sSinglePattern = /\b([a-z]+)'s\b/;
-  expandSingleContractionPattern(results, sSinglePattern, ['is', 'has']);
+  expandSingleContractionPattern(results, UNAMBIGUOUS_S_SUBJECTS, ['is', 'has']);
+  expandSingleContractionPattern(results, GENERAL_S_CONTRACTION_PATTERN, ['is', 'has']);
 
   const dSinglePattern = /\b(i|you|he|she|it|we|they)'d\b/;
   expandSingleContractionPattern(results, dSinglePattern, ['would', 'had']);

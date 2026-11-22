@@ -54,6 +54,12 @@ describe('validation.js — smart grammatical equivalence', () => {
     ["He's sleeping right now.", 'He is sleeping right now.'],
     ["Be quiet! The baby's sleeping.", 'Be quiet! The baby is sleeping.'],
     ["Someone's broken the kitchen window!", 'Someone has broken the kitchen window!'],
+    ["My friend's bought a new flat.", 'My friend has bought a new flat.'],
+    ["John's a doctor.", 'John is a doctor.'],
+    ["If I'd known, I would've helped.", 'If I had known, I would have helped.'],
+    ["If I'd known, I'd've helped.", 'If I had known, I would have helped.'],
+    ["She could've won the match.", 'She could have won the match.'],
+    ["You should've called earlier.", 'You should have called earlier.'],
     ["If I'd known, I'd have helped.", 'If I had known, I would have helped.'],
     ["You'd better leave now.", 'You had better leave now.'],
   ])('matches contracted and expanded forms bidirectionally: %s <-> %s', (formA, formB) => {
@@ -107,6 +113,8 @@ describe('validation.js — smart grammatical equivalence', () => {
     expect(answerMatches('She don’t go.', "She doesn't go.")).toBe(false);
     expect(answerMatches('I have went.', 'I have gone.')).toBe(false);
     expect(answerMatches('He is work.', 'He is working.')).toBe(false);
+    expect(answerMatches("John's car", 'John is car')).toBe(false);
+    expect(answerMatches("my brother's house", 'my brother has house')).toBe(false);
     expect(answerMatches('   ', 'works')).toBe(false);
   });
 

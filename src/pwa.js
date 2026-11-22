@@ -16,7 +16,7 @@ export function announceUpdate(registration, { reload }) {
     const waitingWorker = registration.waiting;
     if (!waitingWorker) return;
 
-    navigator.serviceWorker.addEventListener('controllerchange', () => reload(), { once: true });
+    navigator.serviceWorker?.addEventListener('controllerchange', () => reload(), { once: true });
     waitingWorker.postMessage({ type: 'SKIP_WAITING' });
   };
 

@@ -18,8 +18,8 @@
   </a>
   <img src="https://img.shields.io/badge/version-2.0.0-1d4ed8" alt="Version 2.0.0" />
   <img src="https://img.shields.io/badge/node-%3E%3D24%20%3C25-047857" alt="Node.js 24" />
-  <img src="https://img.shields.io/badge/vitest-47%20fichiers%20%7C%20782%20tests-0f766e" alt="Suite Vitest" />
-  <img src="https://img.shields.io/badge/playwright-25%20tests%20E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
+  <img src="https://img.shields.io/badge/vitest-47%20fichiers%20%7C%20794%20tests-0f766e" alt="Suite Vitest" />
+  <img src="https://img.shields.io/badge/playwright-27%20tests%20E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/licence-MIT-334155" alt="Licence MIT" />
   </a>
@@ -197,14 +197,14 @@ Le pipeline défini dans `.github/workflows/ci.yml` exécute les contrôles suiv
 
 1. **Audit des dépendances** : `npm audit --audit-level=moderate` (complété par `.github/dependabot.yml` pour les mises à jour hebdomadaires groupées npm et GitHub Actions).
 2. **Qualité de code** : `npm run lint` (`ESLint --max-warnings 0`) + `npm run format:check` (Prettier).
-3. **Suite unitaire & intégration (47 fichiers, 782 tests)** : couverture minimale exigée dans `vite.config.js` :
+3. **Suite unitaire & intégration (47 fichiers, 794 tests)** : couverture minimale exigée dans `vite.config.js` :
    - **Statements / Functions / Lines** : `≥ 95 %`
    - **Branches** : `≥ 90 %`
 4. **Budgets de production (`npm run perf:budget`)** :
    - `index.html` ≤ **35 KiB**
    - Feuille CSS minifiée ≤ **35 KiB**
    - Chaque bundle JavaScript (dont `curriculum-data`) ≤ **180 KiB**
-5. **Tests E2E & accessibilité (`e2e/*.spec.js`)** : 25 tests Playwright vérifiant les parcours critiques (exercices, mode test chronométré, révision Voix Passive / Discours Indirect, recherche, sauvegarde/import, réinitialisation accessible), la non-régression responsive mobile/bureau sans débordement horizontal et l’absence de violation WCAG 2.0 A / AA **critical** ou **serious** via `@axe-core/playwright` sur l’ensemble des 13 vues, en mode sombre et avec modale active.
+5. **Tests E2E & accessibilité (`e2e/*.spec.js`)** : 27 tests Playwright vérifiant les parcours critiques (exercices, mode test chronométré, révision Voix Passive / Discours Indirect, recherche, sauvegarde/import, réinitialisation accessible), la non-régression responsive mobile/bureau sans débordement horizontal et l’absence de violation WCAG 2.0 A / AA **critical** ou **serious** via `@axe-core/playwright` sur l’ensemble des 13 vues, en mode sombre, avec modale active, en cours d’exercice / de test et sur les vues peuplées.
 
 ---
 
@@ -212,11 +212,12 @@ Le pipeline défini dans `.github/workflows/ci.yml` exécute les contrôles suiv
 
 ### Mesures appliquées
 
-- **Content Security Policy (`index.html`)** :
+- **Content Security Policy (`index.html` & `server.js`)** :
   ```text
   default-src 'self'; script-src 'self'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'
   ```
-- **Protection XSS & imports** : tout contenu dynamique inséré dans le DOM passe par `escapeHtml()`, les saisies utilisateur sont rognées et bornées à 500 caractères par `sanitizeInput()`, et les sauvegardes importées sont validées, nettoyées et migrées (`migrateState` / `sanitizeState`) avant écriture dans le store.
+  En production (`server.js`), la réponse HTML renforce en outre l’en-tête HTTP `Content-Security-Policy` avec `frame-ancestors 'none'` en complément de `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` et de délais HTTP bornés (`requestTimeout`, `headersTimeout`, `keepAliveTimeout`).
+- **Protection XSS & imports** : tout contenu dynamique inséré dans le DOM passe par `escapeHtml()`, les saisies utilisateur sont rognées et bornées à 500 caractères par `sanitizeInput()`, et les sauvegardes importées (plafonnées à 2 Mo) sont validées, nettoyées, dédupliquées et migrées (`migrateState` / `sanitizeState`) avant écriture dans le store.
 - **Stockage borné** : `errorLog` et `activityLog` sont plafonnés à **100 entrées** chacun (`MAX_ERROR_LOG_ENTRIES`, `MAX_ACTIVITY_LOG_ENTRIES`), et l’état se synchronise entre onglets via `mergeStates()`.
 
 ### Schéma `APP_DATA` (`src/data/index.js`)

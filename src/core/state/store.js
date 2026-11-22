@@ -8,6 +8,8 @@ export const MAX_ACTIVITY_LOG_ENTRIES = 100;
 export const MAX_SRS_EASE = 3.0;
 export const MAX_SRS_INTERVAL_MINUTES = 365 * 24 * 60;
 
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 function toArray(val) {
   return Array.isArray(val) ? val : [];
 }
@@ -115,8 +117,9 @@ export function mergeStates(local, remote) {
   let sumTenseCorrect = 0;
   let sumTenseTotal = 0;
   for (const tid of allTenseIds) {
-    const l = localTenses[tid] || { correct: 0, total: 0 };
-    const r = remoteTenses[tid] || { correct: 0, total: 0 };
+    if (FORBIDDEN_KEYS.has(tid)) continue;
+    const l = isPlainObject(localTenses[tid]) ? localTenses[tid] : { correct: 0, total: 0 };
+    const r = isPlainObject(remoteTenses[tid]) ? remoteTenses[tid] : { correct: 0, total: 0 };
     const c = Math.max(Number(l.correct) || 0, Number(r.correct) || 0);
     const t = Math.max(Number(l.total) || 0, Number(r.total) || 0, c);
     tenseStats[tid] = { correct: c, total: t };
@@ -132,12 +135,12 @@ export function mergeStates(local, remote) {
   const remoteSR = isPlainObject(remote.spacedRepetition) ? remote.spacedRepetition : {};
   const spacedRepetition = {};
   for (const [tid, lData] of Object.entries(localSR)) {
-    if (isPlainObject(lData)) {
+    if (!FORBIDDEN_KEYS.has(tid) && isPlainObject(lData)) {
       spacedRepetition[tid] = { ...lData };
     }
   }
   for (const [tid, rData] of Object.entries(remoteSR)) {
-    if (isPlainObject(rData)) {
+    if (!FORBIDDEN_KEYS.has(tid) && isPlainObject(rData)) {
       const lData = spacedRepetition[tid];
       const rReview = Number(rData.nextReview) || 0;
       const lReview = lData ? Number(lData.nextReview) || 0 : -1;
@@ -240,6 +243,9 @@ function createStore(initial = {}) {
   }
 
   function recordAnswer(tenseId, correct) {
+    if (typeof tenseId !== 'string' || !tenseId || FORBIDDEN_KEYS.has(tenseId)) {
+      return;
+    }
     const tenseStats = { ...state.tenseStats };
     if (!tenseStats[tenseId]) {
       tenseStats[tenseId] = { correct: 0, total: 0 };
@@ -251,11 +257,13 @@ function createStore(initial = {}) {
 
     const spacedRepetition = { ...state.spacedRepetition };
     if (!correct) {
+      const prevEase = Number(spacedRepetition[tenseId]?.ease);
+      const safePrevEase = Number.isFinite(prevEase) ? prevEase : 2.5;
       spacedRepetition[tenseId] = {
         interval: 1,
         nextReview: Date.now(),
-        ease: Math.max(1.3, (spacedRepetition[tenseId]?.ease ?? 2.5) - 0.2),
-        errors: (spacedRepetition[tenseId]?.errors ?? 0) + 1,
+        ease: Number(Math.min(MAX_SRS_EASE, Math.max(1.3, safePrevEase - 0.2)).toFixed(2)),
+        errors: (Number(spacedRepetition[tenseId]?.errors) || 0) + 1,
       };
     } else {
       const current = spacedRepetition[tenseId] ?? {

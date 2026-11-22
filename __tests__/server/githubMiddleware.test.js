@@ -176,10 +176,12 @@ describe('server githubMiddleware', () => {
       expect(res.statusCode).toBe(expectedStatus);
       expect(res.json).toEqual(expectedJson);
       expect(res.headers['cache-control']).toBe('no-store');
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
+      expect(res.headers['x-frame-options']).toBe('DENY');
     }
   });
 
-  test('returns 400 on invalid JSON payload and propagates service error status', async () => {
+  test('returns 400 on invalid or non-object JSON payloads and propagates service error status', async () => {
     const middleware = createGitHubMiddleware({
       createBranch: vi.fn().mockRejectedValue(Object.assign(new Error('nope'), { status: 422 })),
     });
@@ -190,6 +192,16 @@ describe('server githubMiddleware', () => {
       badJsonRes,
     );
     expect(badJsonRes.statusCode).toBe(400);
+
+    for (const nonObjectBody of ['[]', 'null', '"hello"', '42']) {
+      const res = mockRes();
+      await middleware(
+        mockReq({ method: 'POST', url: '/api/github/branches', body: nonObjectBody }),
+        res,
+      );
+      expect(res.statusCode).toBe(400);
+      expect(res.json.error).toBe('Request body must be a JSON object');
+    }
 
     const errRes = mockRes();
     await middleware(
