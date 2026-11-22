@@ -288,4 +288,72 @@ test('runs Test Mode validation guard, timed question flow, and cancels timer on
   await page.locator('.nav-item[data-page="dashboard"]').click();
   await expect(page.locator('#page-dashboard')).toBeVisible();
   await expect(page.locator('#testTimer')).toHaveText('00:00');
+
+  // Returning to Test Mode restores setup instead of stranding the user on #testArea
+  await page.locator('.nav-item[data-page="test"]').click();
+  await expect(page.locator('#testSetup')).toBeVisible();
+  await expect(page.locator('#testArea')).toBeHidden();
+
+  // Clicking Mode mixte after a Test session starts a fresh 10-question free session
+  await page.locator('.nav-item[data-page="exercises"]').click();
+  await page.locator('[data-mode="mixed"]').click();
+  await expect(page.locator('#exerciseArea')).toBeVisible();
+  await expect(page.locator('#exTotal')).toHaveText('10');
+});
+
+test('revises passive_voice and reported_speech from Revision queue with readable labels and no crash', async ({
+  page,
+}) => {
+  const pageErrors = [];
+  page.on('pageerror', (err) => pageErrors.push(err.message));
+
+  await page.evaluate(() => {
+    localStorage.setItem(
+      'conjumaster_data',
+      JSON.stringify({
+        version: 1,
+        data: {
+          xp: 40,
+          level: 1,
+          totalExercises: 4,
+          correctAnswers: 1,
+          incorrectAnswers: 3,
+          bestStreak: 1,
+          currentStreak: 0,
+          daysStreak: 1,
+          lastActiveDate: new Date().toDateString(),
+          completedLessons: [],
+          tenseStats: {
+            passive_voice: { correct: 1, total: 4 },
+          },
+          errorLog: [{ tenseId: 'passive_voice', date: new Date().toISOString() }],
+          activityLog: [],
+          favorites: [],
+          spacedRepetition: {
+            passive_voice: { interval: 1, nextReview: 0, ease: 2.3, errors: 2 },
+            reported_speech: { interval: 1, nextReview: 0, ease: 2.3, errors: 1 },
+          },
+          settings: { theme: 'light' },
+        },
+      }),
+    );
+  });
+
+  await page.reload();
+  await page.locator('.nav-item[data-page="revision"]').click();
+  await expect(page.locator('#revisionContent')).toContainText('Voix Passive');
+  await expect(page.locator('#revisionContent')).toContainText('Discours Indirect');
+  await expect(page.locator('#revisionContent')).not.toContainText('passive_voice');
+
+  await page.locator('[data-action="start-revision"]').click();
+  await expect(page.locator('#exerciseArea')).toBeVisible();
+  await expect(page.locator('#exTotal')).toHaveText('2');
+  await expect(page.locator('#exerciseQuestionContainer .exercise-card')).toBeVisible();
+  await expect(page.locator('#exerciseQuestionContainer')).toContainText(
+    /Voix Passive|Discours Indirect/,
+  );
+
+  await page.locator('#exSkipBtn').click();
+  await expect(page.locator('#exerciseFeedback')).toBeVisible();
+  expect(pageErrors).toEqual([]);
 });

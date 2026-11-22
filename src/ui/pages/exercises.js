@@ -9,6 +9,14 @@ import { UNLOCK_THRESHOLD } from '../../core/progression.js';
 
 let selectedOptionIndex = -1;
 let currentOptionButtons = [];
+let pendingExerciseTimer = null;
+
+function clearPendingExerciseTimer() {
+  if (pendingExerciseTimer) {
+    clearTimeout(pendingExerciseTimer);
+    pendingExerciseTimer = null;
+  }
+}
 
 const DIFFICULTY_LABELS = {
   beginner: 'Débutant',
@@ -17,6 +25,7 @@ const DIFFICULTY_LABELS = {
 };
 
 export function resetExerciseUI() {
+  clearPendingExerciseTimer();
   selectedOptionIndex = -1;
   currentOptionButtons = [];
   document.getElementById('exerciseModeSelector').style.display = 'block';
@@ -54,21 +63,19 @@ export function startExercise(
   lessonId = null,
   isRevision = false,
 ) {
+  clearPendingExerciseTimer();
   const cfg = ExerciseEngine.sessionConfig;
+  const inheritPreviousConfig = mode === undefined;
   const resolvedMode = mode ?? cfg?.mode ?? ExerciseEngine.currentMode ?? 'mixed';
-  const resolvedLessonId =
-    lessonId ?? (mode === undefined || mode === cfg?.mode ? cfg?.lessonId : null);
+  const resolvedLessonId = lessonId ?? (inheritPreviousConfig ? cfg?.lessonId : null);
   const resolvedIsRevision =
-    isRevision ?? (mode === undefined || mode === cfg?.mode ? cfg?.isRevision : false);
+    isRevision || (inheritPreviousConfig ? Boolean(cfg?.isRevision) : false);
 
   let resolvedTenseFilter = tenseFilter;
   if (resolvedTenseFilter === undefined || resolvedTenseFilter === null) {
-    if (cfg && (mode === undefined || mode === cfg.mode) && cfg.tenseFilter !== undefined) {
+    if (inheritPreviousConfig && cfg && cfg.tenseFilter !== undefined) {
       resolvedTenseFilter = cfg.tenseFilter;
-    } else if (
-      ExerciseEngine.currentTenseFilter !== undefined &&
-      (mode === undefined || mode === ExerciseEngine.currentMode)
-    ) {
+    } else if (inheritPreviousConfig && ExerciseEngine.currentTenseFilter !== undefined) {
       resolvedTenseFilter = ExerciseEngine.currentTenseFilter;
     } else {
       resolvedTenseFilter = resolvedMode === 'mixed' ? [] : null;
@@ -76,11 +83,9 @@ export function startExercise(
   }
 
   const resolvedDifficulty =
-    difficulty ||
-    (cfg && (mode === undefined || mode === cfg.mode) ? cfg.difficulty : 'intermediate');
+    difficulty || (inheritPreviousConfig && cfg ? cfg.difficulty : 'intermediate');
 
-  const resolvedCount =
-    count || (cfg && (mode === undefined || mode === cfg.mode) ? cfg.count : 10);
+  const resolvedCount = count || (inheritPreviousConfig && cfg ? cfg.count : 10);
 
   selectedOptionIndex = -1;
   ExerciseEngine.currentTenseFilter = resolvedTenseFilter;
@@ -131,16 +136,25 @@ export function startExerciseForLesson(lessonId) {
   const tenseFilter = targetLesson.tenseId ? [targetLesson.tenseId] : [];
   const count = targetLesson.exercises || 10;
 
+  clearPendingExerciseTimer();
   navigateTo('exercises');
-  setTimeout(
-    () => startExercise('mixed', tenseFilter, 'intermediate', count, lessonId, false),
-    100,
-  );
+  pendingExerciseTimer = setTimeout(() => {
+    pendingExerciseTimer = null;
+    const exercisesPage = document.getElementById('page-exercises');
+    if (exercisesPage && !exercisesPage.classList.contains('active')) return;
+    startExercise('mixed', tenseFilter, 'intermediate', count, lessonId, false);
+  }, 100);
 }
 
 export function startExerciseForTense(tenseId) {
+  clearPendingExerciseTimer();
   navigateTo('exercises');
-  setTimeout(() => startExercise('mixed', [tenseId], 'intermediate', 10, null, false), 100);
+  pendingExerciseTimer = setTimeout(() => {
+    pendingExerciseTimer = null;
+    const exercisesPage = document.getElementById('page-exercises');
+    if (exercisesPage && !exercisesPage.classList.contains('active')) return;
+    startExercise('mixed', [tenseId], 'intermediate', 10, null, false);
+  }, 100);
 }
 
 export function renderExerciseQuestion(q) {
@@ -161,9 +175,14 @@ export function renderExerciseQuestion(q) {
             ? 'Corriger'
             : 'Traduire';
 
+  const topicLabel =
+    APP_DATA.tensesById?.[q.tenseId]?.nameFR ||
+    APP_DATA.specialTopicsById?.[q.tenseId]?.nameFR ||
+    q.tenseId;
+
   let html = `<div class="exercise-card">`;
   html += `<div class="exercise-card-header">
-    <span class="tag tag-blue">${escapeHtml(APP_DATA.tensesById[q.tenseId]?.nameFR || q.tenseId)}</span>
+    <span class="tag tag-blue">${escapeHtml(topicLabel)}</span>
     <span class="exercise-type-pill">Type : ${escapeHtml(typeLabel)}</span>
   </div>`;
 
@@ -220,6 +239,7 @@ export function validateExercise() {
   if (ExerciseEngine.answered) return;
 
   const q = ExerciseEngine.getCurrent();
+  if (!q) return;
   let correct = false;
   let userAnswer;
 
@@ -285,8 +305,9 @@ export function validateExercise() {
 
 export function skipExercise() {
   if (ExerciseEngine.answered) return;
-  ExerciseEngine.answered = true;
   const q = ExerciseEngine.getCurrent();
+  if (!q) return;
+  ExerciseEngine.answered = true;
   State.recordAnswer(q.tenseId, false);
 
   const feedbackEl = document.getElementById('exerciseFeedback');
@@ -323,12 +344,13 @@ export function nextExercise() {
 
 export function updateExerciseProgress() {
   const p = ExerciseEngine.getProgress();
-  document.getElementById('exProgressBar').style.width = `${(p.current / p.total) * 100}%`;
+  const pct = p.total > 0 ? Math.min(100, (p.current / p.total) * 100) : 0;
+  document.getElementById('exProgressBar').style.width = `${pct}%`;
 }
 
 export function finishExercise() {
   const p = ExerciseEngine.getProgress();
-  const pct = Math.round((p.score / p.total) * 100);
+  const pct = p.total > 0 ? Math.round((p.score / p.total) * 100) : 0;
   const passed = pct >= UNLOCK_THRESHOLD;
 
   const container = document.getElementById('exerciseQuestionContainer');

@@ -221,6 +221,32 @@ describe('NotificationManager.sendNotification', () => {
       expect.objectContaining({ body: 'Corps', icon: expect.stringContaining('🇬🇧') }),
     );
   });
+
+  it('catches Illegal constructor errors thrown on mobile PWA environments', () => {
+    const ThrowingNotification = vi.fn(function () {
+      throw new TypeError("Failed to construct 'Notification': Illegal constructor");
+    });
+    ThrowingNotification.permission = 'granted';
+    Object.defineProperty(window, 'Notification', {
+      configurable: true,
+      value: ThrowingNotification,
+    });
+    global.Notification = ThrowingNotification;
+
+    expect(() => NotificationManager.sendNotification('Titre', 'Corps')).not.toThrow();
+  });
+
+  it('replaces existing interval when init() is called multiple times', () => {
+    setNotificationApi('default');
+    const checkSpy = vi.spyOn(NotificationManager, 'checkAndNotify');
+
+    NotificationManager.init();
+    NotificationManager.init();
+    vi.advanceTimersByTime(60 * 1000);
+
+    expect(checkSpy).toHaveBeenCalledTimes(1);
+    checkSpy.mockRestore();
+  });
 });
 
 it('covers the empty review queue with no last active date', () => {

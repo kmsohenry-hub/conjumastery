@@ -21,7 +21,7 @@ export function renderWeakpoints() {
     <div class="grid" style="gap:12px">
       ${weak
         .map((w) => {
-          const tense = APP_DATA.tensesById[w.tenseId];
+          const topic = APP_DATA.tensesById?.[w.tenseId] || APP_DATA.specialTopicsById?.[w.tenseId];
           const accuracy = Math.round(w.accuracy * 100);
           return `
         <div class="card" style="display:flex;align-items:center;gap:20px;padding:16px 20px">
@@ -30,7 +30,7 @@ export function renderWeakpoints() {
             <div style="font-size:0.7rem;color:var(--text-light)">précision</div>
           </div>
           <div style="flex:1">
-            <div style="font-weight:700">${escapeHtml(tense ? tense.nameFR : w.tenseId)}</div>
+            <div style="font-weight:700">${escapeHtml(topic ? topic.nameFR : w.tenseId)}</div>
             <div style="font-size:0.8rem;color:var(--text-light)">${w.total} exercices • ${w.errors} erreurs</div>
             <div class="progress-bar" style="height:6px;margin-top:6px">
               <div class="progress-fill ${accuracy < 50 ? 'warning' : 'success'}" style="width:${accuracy}%"></div>

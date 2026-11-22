@@ -4,6 +4,8 @@ import { escapeHtml } from '../../core/security.js';
 import { State } from '../../core/state/State.js';
 import { APP_DATA } from '../../data/index.js';
 
+let pendingRevisionTimer = null;
+
 export function renderRevision() {
   const queue = State.getReviewQueue();
   const container = document.getElementById('revisionContent');
@@ -26,11 +28,11 @@ export function renderRevision() {
     </div>
     ${queue
       .map((q) => {
-        const tense = APP_DATA.tensesById[q.tenseId];
+        const topic = APP_DATA.tensesById?.[q.tenseId] || APP_DATA.specialTopicsById?.[q.tenseId];
         return `<div class="revision-item">
         <span class="ri-icon">📖</span>
         <div class="ri-info">
-          <div class="ri-title">${escapeHtml(tense ? tense.nameFR : q.tenseId)}</div>
+          <div class="ri-title">${escapeHtml(topic ? topic.nameFR : q.tenseId)}</div>
           <div class="ri-meta">Prochaine révision : maintenant • Intervalle : ${escapeHtml(String(q.interval))}min • Erreurs : ${escapeHtml(String(q.errors))}</div>
         </div>
         <span class="ri-priority ${q.errors > 3 ? 'priority-high' : q.errors > 1 ? 'priority-medium' : 'priority-low'}">
@@ -45,6 +47,15 @@ export function startRevisionSession() {
   const queue = State.getReviewQueue();
   if (queue.length === 0) return;
   const tenses = queue.map((q) => q.tenseId);
+  if (pendingRevisionTimer) {
+    clearTimeout(pendingRevisionTimer);
+    pendingRevisionTimer = null;
+  }
   navigateTo('exercises');
-  setTimeout(() => startExercise('mixed', tenses, 'intermediate', tenses.length, null, true), 100);
+  pendingRevisionTimer = setTimeout(() => {
+    pendingRevisionTimer = null;
+    const exercisesPage = document.getElementById('page-exercises');
+    if (exercisesPage && !exercisesPage.classList.contains('active')) return;
+    startExercise('mixed', tenses, 'intermediate', tenses.length, null, true);
+  }, 100);
 }

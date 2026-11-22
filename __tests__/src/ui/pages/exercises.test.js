@@ -453,4 +453,82 @@ describe('exercises page', () => {
     expect(document.getElementById('exerciseModeSelector').style.display).toBe('block');
     expect(document.getElementById('exerciseArea').style.display).toBe('none');
   });
+
+  it('does not leak prior lesson or test config when explicitly starting Mode mixte', () => {
+    engine.sessionConfig = {
+      mode: 'mixed',
+      tenseFilter: ['past_simple'],
+      difficulty: 'advanced',
+      count: 20,
+      lessonId: 'l_passive',
+      isRevision: true,
+    };
+    engine.currentMode = 'mixed';
+    engine.currentTenseFilter = ['past_simple'];
+    engine.getCurrent.mockReturnValue({
+      type: 'qcm',
+      tenseId: 'present_simple',
+      sentence: 'She ___.',
+      options: ['works', 'work'],
+      correct: 0,
+    });
+
+    startExercise('mixed');
+
+    expect(engine.start).toHaveBeenCalledWith('mixed', [], 'intermediate', 10, null, false);
+    expect(engine.currentLessonId).toBeNull();
+    expect(engine.isRevision).toBe(false);
+  });
+
+  it('handles empty question sets safely without throwing or producing Infinity% / NaN%', () => {
+    engine.questions = [];
+    engine.getCurrent.mockReturnValue(null);
+    engine.getProgress.mockReturnValue({ current: 1, total: 0, score: 0 });
+
+    expect(() => validateExercise()).not.toThrow();
+    expect(() => skipExercise()).not.toThrow();
+    expect(() => updateExerciseProgress()).not.toThrow();
+    expect(document.getElementById('exProgressBar').style.width).toBe('0%');
+    expect(() => finishExercise()).not.toThrow();
+    expect(document.getElementById('exerciseQuestionContainer').textContent).toContain(
+      '0 / 0 bonnes réponses (0%)',
+    );
+    expect(state.recordAnswer).not.toHaveBeenCalled();
+  });
+
+  it('renders readable French labels for passive_voice and reported_speech questions', () => {
+    renderExerciseQuestion({
+      type: 'transform',
+      tenseId: 'passive_voice',
+      sentence: 'Transformez à la voix passive',
+      answer: 'The meal was prepared.',
+    });
+    expect(document.getElementById('exerciseQuestionContainer').textContent).toContain(
+      'Voix Passive',
+    );
+    expect(document.getElementById('exerciseQuestionContainer').textContent).not.toContain(
+      'passive_voice',
+    );
+
+    renderExerciseQuestion({
+      type: 'transform',
+      tenseId: 'reported_speech',
+      sentence: 'Transformez au discours indirect',
+      answer: 'She said she liked tea.',
+    });
+    expect(document.getElementById('exerciseQuestionContainer').textContent).toContain(
+      'Discours Indirect',
+    );
+  });
+
+  it('aborts async lesson/tense launch if the user navigated away from exercises', () => {
+    document.body.innerHTML += '<div id="page-exercises" class="page"></div>';
+    startExerciseForLesson('l_past_simple');
+    vi.advanceTimersByTime(100);
+    expect(engine.start).not.toHaveBeenCalled();
+
+    startExerciseForTense('present_simple');
+    vi.advanceTimersByTime(100);
+    expect(engine.start).not.toHaveBeenCalled();
+  });
 });

@@ -68,9 +68,9 @@ export function renderStats() {
       .slice(0, 8);
     errorsEl.innerHTML = sorted
       .map(([tenseId, count]) => {
-        const tense = APP_DATA.tensesById[tenseId];
+        const topic = APP_DATA.tensesById?.[tenseId] || APP_DATA.specialTopicsById?.[tenseId];
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-        <span style="font-size:0.9rem">${escapeHtml(tense ? tense.nameFR : tenseId)}</span>
+        <span style="font-size:0.9rem">${escapeHtml(topic ? topic.nameFR : tenseId)}</span>
         <span style="background:rgba(225,112,85,0.1);color:var(--danger);padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:700">${count} erreur${count > 1 ? 's' : ''}</span>
       </div>`;
       })

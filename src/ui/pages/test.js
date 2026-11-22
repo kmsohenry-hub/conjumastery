@@ -30,6 +30,16 @@ export function selectOption(btn, index) {
 }
 
 export function renderTestSetup() {
+  cancelTest();
+  selectedOptionIndex = -1;
+  currentOptionButtons = [];
+  const setupEl = document.getElementById('testSetup');
+  const areaEl = document.getElementById('testArea');
+  const resultsEl = document.getElementById('testResults');
+  if (setupEl) setupEl.style.display = 'block';
+  if (areaEl) areaEl.style.display = 'none';
+  if (resultsEl) resultsEl.style.display = 'none';
+
   const container = document.getElementById('testTenseCheckboxes');
   container.innerHTML = APP_DATA.tenses
     .map(
@@ -77,16 +87,23 @@ export function renderTestQuestion() {
   const q = ExerciseEngine.getCurrent();
   if (!q) return;
 
+  const total = Math.max(ExerciseEngine.questions.length, 1);
   document.getElementById('testCurrent').textContent = ExerciseEngine.currentIndex + 1;
   document.getElementById('testTotal').textContent = ExerciseEngine.questions.length;
   document.getElementById('testScore').textContent = ExerciseEngine.score;
   document.getElementById('testProgressBar').style.width =
-    `${((ExerciseEngine.currentIndex + 1) / ExerciseEngine.questions.length) * 100}%`;
+    `${((ExerciseEngine.currentIndex + 1) / total) * 100}%`;
+
+  const topicLabel =
+    APP_DATA.tensesById?.[q.tenseId]?.nameFR ||
+    APP_DATA.specialTopicsById?.[q.tenseId]?.nameFR ||
+    q.tenseId ||
+    '';
 
   const container = document.getElementById('testQuestionContainer');
   let html = `<div class="exercise-card">`;
   html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-    <span class="tag tag-blue">${escapeHtml(APP_DATA.tensesById[q.tenseId]?.nameFR || q.tenseId || '')}</span>
+    <span class="tag tag-blue">${escapeHtml(topicLabel)}</span>
     <span style="font-size:0.8rem;color:var(--text-light)">Question ${ExerciseEngine.currentIndex + 1} / ${ExerciseEngine.questions.length}</span>
   </div>`;
   html += `<div class="exercise-question">${escapeHtml(q.sentence || '').replace(/\n/g, '<br>')}</div>`;
@@ -125,6 +142,7 @@ export function validateTestAnswer() {
   if (ExerciseEngine.answered) return;
 
   const q = ExerciseEngine.getCurrent();
+  if (!q) return;
   let correct = false;
   let userAnswer;
 
@@ -208,7 +226,7 @@ export function finishTest() {
 
   const total = ExerciseEngine.questions.length;
   const score = ExerciseEngine.score;
-  const pct = Math.round((score / total) * 100);
+  const pct = total > 0 ? Math.round((score / total) * 100) : 0;
   const mins = Math.floor(elapsedSeconds / 60);
   const secs = elapsedSeconds % 60;
 
@@ -229,9 +247,13 @@ export function finishTest() {
       <div style="text-align:left;max-height:300px;overflow-y:auto;margin-bottom:24px">
         ${ExerciseEngine.questions
           .map((q, _i) => {
+            const detailLabel =
+              APP_DATA.tensesById?.[q.tenseId]?.nameFR ||
+              APP_DATA.specialTopicsById?.[q.tenseId]?.nameFR ||
+              '';
             return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:0.85rem">
           <span style="color:${q.answeredCorrectly ? 'var(--success)' : 'var(--danger)'}">${q.answeredCorrectly ? '✅' : '❌'}</span>
-          <strong>${escapeHtml(APP_DATA.tensesById[q.tenseId]?.nameFR || '')}</strong>
+          <strong>${escapeHtml(detailLabel)}</strong>
           <span style="color:var(--text-light);margin-left:8px">${escapeHtml((q.sentence || '').substring(0, 60))}...</span>
         </div>`;
           })

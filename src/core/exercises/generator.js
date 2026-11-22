@@ -862,10 +862,42 @@ export function generateQuestions(
   const tenses =
     tenseFilter && tenseFilter.length > 0 ? tenseFilter : APP_DATA.tenses.map((t) => t.id);
 
+  let passiveOrder = null;
+  let passiveCursor = 0;
+  let reportedOrder = null;
+  let reportedCursor = 0;
+
   for (let i = 0; i < count; i++) {
     const tenseId = isRevision
       ? tenses[i % tenses.length]
       : tenses[Math.floor(Math.random() * tenses.length)];
+
+    if (tenseId === 'passive_voice') {
+      if (!passiveOrder) {
+        const examples = APP_DATA.passiveInfo?.examples || [];
+        passiveOrder = shuffle(
+          Array.from({ length: Math.max(examples.length, 1) }, (_, idx) => idx),
+        );
+      }
+      const q = generatePassiveQuestion(passiveOrder[passiveCursor % passiveOrder.length]);
+      passiveCursor++;
+      usedSentences.add(q.sentence);
+      questions.push(q);
+      continue;
+    }
+
+    if (tenseId === 'reported_speech') {
+      if (!reportedOrder) {
+        const rules = APP_DATA.reportedSpeech?.rules || [];
+        reportedOrder = shuffle(Array.from({ length: Math.max(rules.length, 1) }, (_, idx) => idx));
+      }
+      const q = generateReportedQuestion(reportedOrder[reportedCursor % reportedOrder.length]);
+      reportedCursor++;
+      usedSentences.add(q.sentence);
+      questions.push(q);
+      continue;
+    }
+
     const tense = APP_DATA.tensesById[tenseId];
     if (!tense) continue;
 

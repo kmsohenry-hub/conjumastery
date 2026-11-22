@@ -3,7 +3,12 @@
  * @description Gestion de la persistance locale avec support de format versionné (migrations) et assainissement défensif.
  */
 
-import { cloneState, defaultState } from '../state/store.js';
+import {
+  cloneState,
+  defaultState,
+  MAX_ACTIVITY_LOG_ENTRIES,
+  MAX_ERROR_LOG_ENTRIES,
+} from '../state/store.js';
 
 export const STORAGE_VERSION = 1;
 
@@ -94,6 +99,28 @@ export function sanitizeState(candidate) {
     Number(sanitized.totalExercises) || 0,
     sanitized.correctAnswers + sanitized.incorrectAnswers,
   );
+  sanitized.completedLessons = sanitized.completedLessons.filter(
+    (item) => typeof item === 'string',
+  );
+  sanitized.favorites = sanitized.favorites.filter((item) => typeof item === 'string');
+  sanitized.errorLog = sanitized.errorLog
+    .filter(
+      (entry) =>
+        Boolean(entry) &&
+        typeof entry === 'object' &&
+        !Array.isArray(entry) &&
+        typeof entry.tenseId === 'string',
+    )
+    .slice(-MAX_ERROR_LOG_ENTRIES);
+  sanitized.activityLog = sanitized.activityLog
+    .filter(
+      (entry) =>
+        Boolean(entry) &&
+        typeof entry === 'object' &&
+        !Array.isArray(entry) &&
+        Number.isFinite(Number(entry.xp)),
+    )
+    .slice(-MAX_ACTIVITY_LOG_ENTRIES);
   sanitized.settings.theme = sanitized.settings.theme === 'dark' ? 'dark' : 'light';
 
   return sanitized;

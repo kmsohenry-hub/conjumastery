@@ -52,11 +52,11 @@ export function renderDashboardRevisionQueue(queue) {
     queueEl.innerHTML = queue
       .slice(0, 3)
       .map((q) => {
-        const tense = APP_DATA.tensesById[q.tenseId];
+        const topic = APP_DATA.tensesById?.[q.tenseId] || APP_DATA.specialTopicsById?.[q.tenseId];
         return `<div class="revision-item">
         <span class="ri-icon">📖</span>
         <div class="ri-info">
-          <div class="ri-title">${escapeHtml(tense ? tense.nameFR : q.tenseId)}</div>
+          <div class="ri-title">${escapeHtml(topic ? topic.nameFR : q.tenseId)}</div>
           <div class="ri-meta">Prochaine révision : maintenant • ${escapeHtml(String(q.interval))}min d'intervalle</div>
         </div>
         <span class="ri-priority ${q.errors > 3 ? 'priority-high' : q.errors > 1 ? 'priority-medium' : 'priority-low'}">
