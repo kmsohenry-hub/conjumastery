@@ -5,6 +5,8 @@
 
 export const MAX_ERROR_LOG_ENTRIES = 100;
 export const MAX_ACTIVITY_LOG_ENTRIES = 100;
+export const MAX_SRS_EASE = 3.0;
+export const MAX_SRS_INTERVAL_MINUTES = 365 * 24 * 60;
 
 function toArray(val) {
   return Array.isArray(val) ? val : [];
@@ -262,11 +264,14 @@ function createStore(initial = {}) {
         ease: 2.5,
         errors: 0,
       };
+      const baseInterval = Math.max(1, Number(current.interval) || 1);
+      const baseEase = Math.min(MAX_SRS_EASE, Math.max(1.3, Number(current.ease) || 2.5));
+      const nextInterval = Math.min(MAX_SRS_INTERVAL_MINUTES, Math.round(baseInterval * baseEase));
       spacedRepetition[tenseId] = {
-        interval: Math.round(current.interval * current.ease),
-        ease: current.ease + 0.1,
-        errors: Math.max(0, current.errors - 1),
-        nextReview: Date.now() + Math.round(current.interval * current.ease) * 60 * 1000,
+        interval: nextInterval,
+        ease: Math.min(MAX_SRS_EASE, Number((baseEase + 0.1).toFixed(2))),
+        errors: Math.max(0, (Number(current.errors) || 0) - 1),
+        nextReview: Date.now() + nextInterval * 60 * 1000,
       };
     }
 

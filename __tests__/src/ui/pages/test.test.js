@@ -355,4 +355,39 @@ describe('test mode', () => {
     expect(results).toContain(level);
     expect(results).toContain(`${engine.score} / 10 (${pct}%)`);
   });
+
+  it('restores testSetup and hides testArea/testResults when returning to Test Mode after navigation', () => {
+    renderTestSetup();
+    engine.getCurrent.mockReturnValue({
+      type: 'qcm',
+      tenseId: 'present_simple',
+      options: ['a'],
+      correct: 0,
+      sentence: 'She ___.',
+    });
+    startTest();
+    vi.advanceTimersByTime(5_000);
+    expect(document.getElementById('testSetup').style.display).toBe('none');
+    expect(document.getElementById('testArea').style.display).toBe('block');
+    expect(document.getElementById('testTimer').textContent).toBe('00:05');
+
+    // Simulate navigating away and coming back to #page-test
+    cancelTest();
+    renderTestSetup();
+
+    expect(document.getElementById('testSetup').style.display).toBe('block');
+    expect(document.getElementById('testArea').style.display).toBe('none');
+    expect(document.getElementById('testResults').style.display).toBe('none');
+    expect(document.getElementById('testTimer').textContent).toBe('00:00');
+  });
+
+  it('guards validateTestAnswer and finishTest against empty question sets', () => {
+    engine.questions = [];
+    engine.score = 0;
+    engine.getCurrent.mockReturnValue(null);
+
+    expect(() => validateTestAnswer()).not.toThrow();
+    expect(() => finishTest()).not.toThrow();
+    expect(document.getElementById('testResults').textContent).toContain('0 / 0 (0%)');
+  });
 });

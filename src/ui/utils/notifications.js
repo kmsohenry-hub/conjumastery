@@ -5,11 +5,15 @@ import { showToast } from './toast.js';
 export const NotificationManager = {
   lastNotificationTime: 0,
   minInterval: 60 * 60 * 1000, // 1 hour between notifications to avoid spam
+  intervalId: null,
 
   init() {
     this.updateUI();
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
     // Check every minute
-    setInterval(() => this.checkAndNotify(), 60 * 1000);
+    this.intervalId = setInterval(() => this.checkAndNotify(), 60 * 1000);
   },
 
   updateUI() {
@@ -80,9 +84,13 @@ export const NotificationManager = {
   },
 
   sendNotification(title, body) {
-    new Notification(title, {
-      body: body,
-      icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇬🇧</text></svg>',
-    });
+    try {
+      new Notification(title, {
+        body: body,
+        icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇬🇧</text></svg>',
+      });
+    } catch {
+      // Some mobile PWA environments disallow direct `new Notification()` construction.
+    }
   },
 };

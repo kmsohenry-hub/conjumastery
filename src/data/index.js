@@ -23,5 +23,19 @@ const APP_DATA = {
 // O(1) indexes are part of the data-layer contract.
 APP_DATA.tensesById = Object.fromEntries(tenses.map((tense) => [tense.id, tense]));
 APP_DATA.verbsByBase = Object.fromEntries(irregularVerbs.map((verb) => [verb.base, verb]));
+APP_DATA.specialTopicsById = Object.freeze({
+  passive_voice: Object.freeze({
+    id: 'passive_voice',
+    name: 'Passive Voice',
+    nameFR: 'Voix Passive',
+    lessonId: 'l_passive',
+  }),
+  reported_speech: Object.freeze({
+    id: 'reported_speech',
+    name: 'Reported Speech',
+    nameFR: 'Discours Indirect',
+    lessonId: 'l_reported',
+  }),
+});
 
 export { APP_DATA };

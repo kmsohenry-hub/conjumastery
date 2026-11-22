@@ -97,12 +97,16 @@ function cleanLastActiveDate(value) {
   return new Date(value).toDateString();
 }
 
+function isRecognizedTopicId(topicId) {
+  return Boolean(APP_DATA.tensesById[topicId] || APP_DATA.specialTopicsById?.[topicId]);
+}
+
 function cleanTenseStats(value) {
   if (!isPlainObject(value)) return {};
   return Object.fromEntries(
     Object.entries(value)
       // Imported backups are untrusted; only data IDs that the UI recognizes may be rendered.
-      .filter(([tenseId, stats]) => APP_DATA.tensesById[tenseId] && isPlainObject(stats))
+      .filter(([tenseId, stats]) => isRecognizedTopicId(tenseId) && isPlainObject(stats))
       .map(([tenseId, stats]) => [
         tenseId,
         {
@@ -118,7 +122,7 @@ function cleanSpacedRepetition(value) {
   if (!isPlainObject(value)) return {};
   return Object.fromEntries(
     Object.entries(value)
-      .filter(([tenseId, data]) => APP_DATA.tensesById[tenseId] && isPlainObject(data))
+      .filter(([tenseId, data]) => isRecognizedTopicId(tenseId) && isPlainObject(data))
       .map(([tenseId, data]) => [
         tenseId,
         {
@@ -134,7 +138,7 @@ function cleanSpacedRepetition(value) {
 function cleanErrorLog(value) {
   return Array.isArray(value)
     ? value
-        .filter((entry) => isPlainObject(entry) && APP_DATA.tensesById[entry.tenseId])
+        .filter((entry) => isPlainObject(entry) && isRecognizedTopicId(entry.tenseId))
         .slice(-100)
     : [];
 }
@@ -324,6 +328,8 @@ function updateUI() {
 // 4. INITIALIZATION
 // ============================================================
 
+let saveErrorListenerBound = false;
+
 export function init() {
   State.init();
   const irregularVerbCount = document.getElementById('irregularVerbCount');
@@ -339,9 +345,12 @@ export function init() {
     });
   }
   NotificationManager.init();
-  window.addEventListener('conjumaster:save-error', () => {
-    showToast('⚠️ Espace de stockage saturé : échec de sauvegarde locale', 'warning');
-  });
+  if (!saveErrorListenerBound) {
+    saveErrorListenerBound = true;
+    window.addEventListener('conjumaster:save-error', () => {
+      showToast('⚠️ Espace de stockage saturé : échec de sauvegarde locale', 'warning');
+    });
+  }
   updateUI();
   const initialPage = resolvePageFromHash(window.location?.hash);
   navigateTo(initialPage, { updateHash: false });
