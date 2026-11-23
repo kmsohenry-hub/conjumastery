@@ -275,8 +275,8 @@ export function finishTest() {
       </div>
 
       <div style="display:flex;gap:12px;justify-content:center">
-        <button class="btn btn-primary" data-action="new-test">🔄 Nouveau test</button>
-        <button class="btn btn-outline" data-page="dashboard">🏠 Tableau de bord</button>
+        <button type="button" class="btn btn-primary" data-action="new-test">🔄 Nouveau test</button>
+        <button type="button" class="btn btn-outline" data-page="dashboard">🏠 Tableau de bord</button>
       </div>
     </div>`;
 }

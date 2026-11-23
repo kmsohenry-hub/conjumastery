@@ -20,7 +20,7 @@ export function renderLessons(initialModuleIndex = 0) {
   tabs.innerHTML = APP_DATA.modules
     .map(
       (m, i) => `
-    <button class="tab ${i === safeIndex ? 'active' : ''}" data-action="show-module" data-index="${i}">
+    <button type="button" class="tab ${i === safeIndex ? 'active' : ''}" data-action="show-module" data-index="${i}">
       ${escapeHtml(m.name)}
     </button>`,
     )

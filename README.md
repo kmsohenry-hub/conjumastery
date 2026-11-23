@@ -17,9 +17,9 @@
     <img src="https://github.com/kmsohenry-hub/conjumastery/actions/workflows/ci.yml/badge.svg" alt="Statut CI" />
   </a>
   <img src="https://img.shields.io/badge/version-2.0.0-1d4ed8" alt="Version 2.0.0" />
-  <img src="https://img.shields.io/badge/node-%3E%3D24%20%3C25-047857" alt="Node.js 24" />
-  <img src="https://img.shields.io/badge/vitest-47%20fichiers%20%7C%20796%20tests-0f766e" alt="Suite Vitest" />
-  <img src="https://img.shields.io/badge/playwright-27%20tests%20E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
+  <img src="https://img.shields.io/badge/node-24.x-047857" alt="Node.js 24" />
+  <img src="https://img.shields.io/badge/vitest-47%20fichiers%20%7C%20806%20tests-0f766e" alt="Suite Vitest" />
+  <img src="https://img.shields.io/badge/playwright-29%20tests%20E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/licence-MIT-334155" alt="Licence MIT" />
   </a>
@@ -108,7 +108,12 @@ conjumastery/
 ├── sw.js                       # Service Worker PWA avec cache hashé et pré-cache généré au build
 ├── public/
 │   ├── manifest.webmanifest    # Métadonnées d'installation PWA copiées à la racine de dist/
+│   ├── robots.txt              # Directives d'indexation copiées à la racine de dist/
+│   ├── sitemap.xml             # Sitemap canonique Vercel copié à la racine de dist/
+│   ├── sitemap-netlify.xml     # Sitemap miroir Netlify copié à la racine de dist/
 │   └── icons/                  # Icônes PWA (192×192, 512×512)
+├── vercel.json                 # Build Vite → dist/ et en-têtes sécurité/cache Vercel
+├── netlify.toml                # Build Vite (Node 24) → dist/ et en-têtes sécurité/cache Netlify
 ├── server.js                   # Serveur HTTP de production (dist/ + middleware /api/github)
 ├── server/
 │   ├── githubMiddleware.js     # Routeur /api/github/* avec restriction loopback stricte
@@ -150,7 +155,7 @@ flowchart LR
 
 ### Prérequis
 
-- **Node.js `>= 24 < 25`** (voir `.nvmrc` et `package.json`)
+- **Node.js `24.x`** (voir `.nvmrc` et `package.json`)
 - **npm** (`npm ci` recommandé pour respecter `package-lock.json`)
 
 ### Installation locale
@@ -197,14 +202,14 @@ Le pipeline défini dans `.github/workflows/ci.yml` exécute les contrôles suiv
 
 1. **Audit des dépendances** : `npm audit --audit-level=moderate` (complété par `.github/dependabot.yml` pour les mises à jour hebdomadaires groupées npm et GitHub Actions).
 2. **Qualité de code** : `npm run lint` (`ESLint --max-warnings 0`) + `npm run format:check` (Prettier).
-3. **Suite unitaire & intégration (47 fichiers, 796 tests)** : couverture minimale exigée dans `vite.config.js` :
+3. **Suite unitaire & intégration (47 fichiers, 806 tests)** : couverture minimale exigée dans `vite.config.js` :
    - **Statements / Functions / Lines** : `≥ 95 %`
    - **Branches** : `≥ 90 %`
 4. **Budgets de production (`npm run perf:budget`)** :
    - `index.html` ≤ **35 KiB**
    - Feuille CSS minifiée ≤ **35 KiB**
    - Chaque bundle JavaScript (dont `curriculum-data`) ≤ **180 KiB**
-5. **Tests E2E & accessibilité (`e2e/*.spec.js`)** : 27 tests Playwright vérifiant les parcours critiques (exercices, mode test chronométré, révision Voix Passive / Discours Indirect, recherche, sauvegarde/import, réinitialisation accessible), la non-régression responsive mobile/bureau sans débordement horizontal et l’absence de violation WCAG 2.0 A / AA **critical** ou **serious** via `@axe-core/playwright` sur l’ensemble des 13 vues, en mode sombre, avec modale active, en cours d’exercice / de test et sur les vues peuplées.
+5. **Tests E2E & accessibilité (`e2e/*.spec.js`)** : 29 tests Playwright vérifiant les parcours critiques (exercices, mode test chronométré, révision Voix Passive / Discours Indirect, recherche, sauvegarde/import, réinitialisation accessible, disponibilité HTTP 200 des assets SEO/PWA), la non-régression responsive mobile/bureau sans débordement horizontal et l’absence de violation WCAG 2.0 A / AA **critical** ou **serious** via `@axe-core/playwright` sur l’ensemble des 13 vues, en mode sombre (dont exercice actif), avec modale active, en cours d’exercice / de test et sur les vues peuplées.
 
 ---
 

@@ -168,14 +168,46 @@ test('has no critical or serious accessibility violations on populated views (st
     await expectNoBlockingA11yViolations(page, `populated ${pageName}`);
   }
 
-  // Expanded irregular verb card
-  await page.locator('.nav-item[data-page="verbs"]').click();
-  await page.locator('#verbsList .verb-card .verb-base').first().click();
-  await expectNoBlockingA11yViolations(page, 'expanded verb card');
-
   // Populated search results
   await page.locator('.nav-item[data-page="search"]').click();
   await page.locator('#globalSearchInput').fill('present');
   await expect(page.locator('#searchResults')).not.toBeEmpty();
   await expectNoBlockingA11yViolations(page, 'populated search results');
+});
+
+test('has no critical or serious accessibility violations on expanded verb card and dark-mode active exercise', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+
+  // Expanded irregular verb card
+  await page.locator('.nav-item[data-page="verbs"]').click();
+  await page.locator('#verbsList .verb-card .verb-base').first().click();
+  await expectNoBlockingA11yViolations(page, 'expanded verb card');
+
+  // Dark mode on active exercise feedback
+  await page.locator('#themeBtn').click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.locator('.nav-item[data-page="exercises"]').click();
+  await page.locator('[data-mode="fill"]').click();
+  await expect(page.locator('#exerciseInput')).toBeVisible();
+  await page.locator('#exerciseInput').fill('wrong answer');
+  await page.locator('#exValidateBtn').click();
+  await expect(page.locator('#exerciseFeedback')).toBeVisible();
+  await expectNoBlockingA11yViolations(page, 'dark mode active fill feedback');
+});
+
+test('serves SEO and PWA static assets from root with HTTP 200', async ({ request }) => {
+  for (const [assetPath, snippet] of [
+    ['/robots.txt', 'Allow: /'],
+    ['/sitemap.xml', 'https://conjumastery.vercel.app/'],
+    ['/sitemap-netlify.xml', 'https://conjumastery.netlify.app/'],
+    ['/manifest.webmanifest', '"short_name": "ConjuMaster"'],
+  ]) {
+    const res = await request.get(assetPath);
+    expect(res.status(), `${assetPath} should return 200`).toBe(200);
+    expect(await res.text()).toContain(snippet);
+  }
 });

@@ -16,7 +16,7 @@ export function renderRevision() {
         <div class="empty-icon">✅</div>
         <h3>Aucune révision en attente</h3>
         <p>Votre programme de répétition espacée est à jour. Continuez à apprendre de nouvelles leçons !</p>
-        <button class="btn btn-primary" style="margin-top:16px" data-page="lessons">📚 Voir les leçons</button>
+        <button type="button" class="btn btn-primary" style="margin-top:16px" data-page="lessons">📚 Voir les leçons</button>
       </div>`;
     return;
   }
@@ -24,7 +24,7 @@ export function renderRevision() {
   container.innerHTML = `
     <div style="margin-bottom:20px">
       <p style="color:var(--text-light)">${queue.length} point${queue.length > 1 ? 's' : ''} à réviser</p>
-      <button class="btn btn-primary" style="margin-top:12px" data-action="start-revision">🚀 Démarrer la session de révision</button>
+      <button type="button" class="btn btn-primary" style="margin-top:12px" data-action="start-revision">🚀 Démarrer la session de révision</button>
     </div>
     ${queue
       .map((q) => {

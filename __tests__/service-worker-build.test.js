@@ -105,6 +105,23 @@ describe('production service worker & PWA build integrity', () => {
       expect(servedSw.headers['cache-control']).toBe('no-cache');
       expect(servedSw.body.toString('utf8')).toMatch(/conjumaster-v2\.0\.0-[0-9a-f]{8}/);
 
+      const servedRobots = await httpGet(port, '/robots.txt');
+      expect(servedRobots.status).toBe(200);
+      expect(servedRobots.headers['content-type']).toBe('text/plain; charset=utf-8');
+      expect(servedRobots.body.toString('utf8')).toContain('Allow: /');
+
+      const servedSitemap = await httpGet(port, '/sitemap.xml');
+      expect(servedSitemap.status).toBe(200);
+      expect(servedSitemap.headers['content-type']).toBe('application/xml; charset=utf-8');
+      expect(servedSitemap.body.toString('utf8')).toContain('https://conjumastery.vercel.app/');
+
+      const servedNetlifySitemap = await httpGet(port, '/sitemap-netlify.xml');
+      expect(servedNetlifySitemap.status).toBe(200);
+      expect(servedNetlifySitemap.headers['content-type']).toBe('application/xml; charset=utf-8');
+      expect(servedNetlifySitemap.body.toString('utf8')).toContain(
+        'https://conjumastery.netlify.app/',
+      );
+
       const missingAsset = await httpGet(port, '/assets/does-not-exist.js');
       expect(missingAsset.status).toBe(404);
 

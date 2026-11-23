@@ -381,8 +381,8 @@ export function finishExercise() {
         }
       </p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px">
-        <button class="btn btn-primary" data-action="reset-exercise-ui">🏠 Retour</button>
-        <button class="btn btn-secondary" data-action="restart-exercise">🔄 Recommencer</button>
+        <button type="button" class="btn btn-primary" data-action="reset-exercise-ui">🏠 Retour</button>
+        <button type="button" class="btn btn-secondary" data-action="restart-exercise">🔄 Recommencer</button>
       </div>
     </div>`;
 

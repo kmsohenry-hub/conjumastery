@@ -86,10 +86,11 @@ const UNAMBIGUOUS_CONTRACTIONS = [
 const UNAMBIGUOUS_S_SUBJECTS = /\b(he|she|it|that|there|here|what|who|where|when|how|why)'s\b/;
 
 const GENERAL_S_CONTRACTION_PATTERN = new RegExp(
-  "\\b([a-z]*[a-rtuvwy])(?<!ch)(?<!sh)'s(?=\\s+(?:" +
+  "\\b([a-z]+)'s(?=\\s+(?:" +
     '[a-z]+(?:ing|ed|en)\\b|' +
     '(?:been|got|gone|done|made|had|said|told|sold|held|built|sent|spent|lent|bent|meant|learnt|burnt|dealt|felt|kept|left|lost|met|paid|put|read|run|sat|set|shut|slept|stood|struck|stuck|sung|sunk|swum|taught|thought|caught|bought|brought|fought|sought|found|bound|wound|heard|hurt|cut|hit|let|cost|quit|split|spread|won|begun|drunk|rung|shrunk|sprung|stunk|come|become|overcome|fed|fled|led|bred|bled|sped|wed|dug|hung|clung|flung|slung|spun|stung|strung|swung|wrung|lit|shone|shot|spat|understood|withstood|laid)\\b|' +
-    '(?:not|never|always|already|just|still|ever|almost|nearly|really|very|so|too|quite|a|an|the|in|on|at|from|to|for|with|by|of|under|near|into|off|through|across|around|before|after|since|until|here|there|up|out|over|back|away|home|ready|late|early|fine|good|great|happy|angry|tired|busy|sick|ill|cold|hot|warm|true|false|wrong|right|sure|dead|open|going|about|able)\\b))',
+    '(?:not|never|always|already|just|still|ever|almost|nearly|really|very|so|too|quite|rather|pretty|fairly|a|an|the|no|all|both|only|also|even|more|most|less|such|much|many|enough|my|your|his|her|its|our|their|this|that|these|those|some|any|every|each|in|on|at|from|to|for|with|without|by|of|under|near|beside|behind|between|into|onto|off|through|across|around|before|after|since|until|against|during|here|there|up|out|over|back|away|home|ready|late|early|fine|good|great|happy|sad|angry|tired|busy|sick|ill|cold|hot|warm|true|false|wrong|right|sure|dead|alive|open|closed|full|empty|tall|short|big|small|old|new|young|fast|slow|rich|poor|free|safe|clean|dirty|hard|easy|heavy|light|dark|loud|quiet|nice|kind|smart|clever|brave|shy|calm|proud|sorry|afraid|scared|hungry|thirsty|sleepy|bored|british|french|english|american|going|about|able|likely|unlikely|possible|impossible|important|necessary|different|similar|available|better|worse|best|worst|bigger|smaller|older|younger|taller|shorter|faster|slower|easier|harder|cheaper|higher|lower|closer|further|farther|longer|stronger|weaker|richer|poorer|happier|busier|earlier|later|hotter|colder|warmer|nicer|safer)\\b))',
+  'g',
 );
 
 const NON_CONTRACTIBLE_BEFORE_IS_HAS = new Set([
@@ -105,25 +106,39 @@ const NON_CONTRACTIBLE_BEFORE_IS_HAS = new Set([
   'with',
   'from',
   'by',
+  'as',
   'and',
   'or',
   'but',
   'if',
   'not',
   'no',
+  'yes',
+  'this',
+  'these',
+  'those',
+  'us',
   'my',
   'your',
+  'his',
   'her',
+  'hers',
   'our',
+  'ours',
+  'yours',
   'their',
+  'theirs',
   'all',
   'some',
   'any',
   'be',
   'am',
+  'is',
   'are',
+  'was',
   'were',
   'do',
+  'does',
   'did',
   'can',
   'could',
@@ -135,10 +150,9 @@ const NON_CONTRACTIBLE_BEFORE_IS_HAS = new Set([
   'might',
   'must',
   'have',
+  'has',
   'had',
 ]);
-
-const EXPECTED_IS_HAS_PATTERN = /\b([a-z]+)\s+(?:is|has)(?=\s+\S)/g;
 
 const COMPILED_SPELLING_RULES = SPELLING_EQUIVALENTS.map(([pattern, replacement]) => ({
   source: pattern.source,
@@ -204,6 +218,38 @@ function expandSingleContractionPattern(set, singleRegex, replacements) {
   }
 }
 
+function canContractBeforeIsHas(word) {
+  return Boolean(word) && !NON_CONTRACTIBLE_BEFORE_IS_HAS.has(word);
+}
+
+function expandGeneralSContractions(set) {
+  let changed = true;
+  while (changed && set.size < MAX_SLASH_VARIANTS) {
+    changed = false;
+    for (const current of Array.from(set)) {
+      if (set.size >= MAX_SLASH_VARIANTS) break;
+      GENERAL_S_CONTRACTION_PATTERN.lastIndex = 0;
+      let match;
+      while ((match = GENERAL_S_CONTRACTION_PATTERN.exec(current)) !== null) {
+        const subject = match[1];
+        if (!canContractBeforeIsHas(subject)) continue;
+        for (const rep of ['is', 'has']) {
+          const next =
+            current.slice(0, match.index) +
+            `${subject} ${rep}` +
+            current.slice(match.index + match[0].length);
+          if (!set.has(next)) {
+            set.add(next);
+            changed = true;
+            if (set.size >= MAX_SLASH_VARIANTS) break;
+          }
+        }
+        if (set.size >= MAX_SLASH_VARIANTS) break;
+      }
+    }
+  }
+}
+
 function expandAmbiguousContractions(str) {
   const base = canonicalizeGrammar(str);
   const results = new Set([base]);
@@ -218,7 +264,7 @@ function expandAmbiguousContractions(str) {
   }
 
   expandSingleContractionPattern(results, UNAMBIGUOUS_S_SUBJECTS, ['is', 'has']);
-  expandSingleContractionPattern(results, GENERAL_S_CONTRACTION_PATTERN, ['is', 'has']);
+  expandGeneralSContractions(results);
 
   const dSinglePattern = /\b(i|you|he|she|it|we|they)'d\b/;
   expandSingleContractionPattern(results, dSinglePattern, ['would', 'had']);
@@ -264,37 +310,6 @@ function expandSlashVariants(expectedAnswer) {
   return Array.from(new Set([spaceJoined, ...exactVariants, ...combinatorial]));
 }
 
-function canContractBeforeIsHas(word) {
-  if (!word || NON_CONTRACTIBLE_BEFORE_IS_HAS.has(word)) return false;
-  if (/(?:s|x|z|ch|sh)$/.test(word)) return false;
-  return true;
-}
-
-function addExpectedIsHasContractions(expectedForms) {
-  let changed = true;
-  while (changed && expectedForms.size < MAX_SLASH_VARIANTS) {
-    changed = false;
-    for (const current of Array.from(expectedForms)) {
-      if (expectedForms.size >= MAX_SLASH_VARIANTS) break;
-      EXPECTED_IS_HAS_PATTERN.lastIndex = 0;
-      let match;
-      while ((match = EXPECTED_IS_HAS_PATTERN.exec(current)) !== null) {
-        const subject = match[1];
-        if (!canContractBeforeIsHas(subject)) continue;
-        const contracted =
-          current.slice(0, match.index) +
-          `${subject}'s` +
-          current.slice(match.index + match[0].length);
-        if (!expectedForms.has(contracted)) {
-          expectedForms.add(contracted);
-          changed = true;
-          if (expectedForms.size >= MAX_SLASH_VARIANTS) break;
-        }
-      }
-    }
-  }
-}
-
 export function answerMatches(userAnswer, expectedAnswer) {
   if (typeof expectedAnswer !== 'string') return false;
   if (typeof userAnswer !== 'string' || !userAnswer.trim()) return false;
@@ -306,7 +321,6 @@ export function answerMatches(userAnswer, expectedAnswer) {
 
   for (const candidate of candidates) {
     const expectedForms = expandAmbiguousContractions(candidate);
-    addExpectedIsHasContractions(expectedForms);
     for (const uForm of userForms) {
       if (!uForm) continue;
       if (expectedForms.has(uForm)) return true;

@@ -12,7 +12,25 @@
     />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://conjumastery.vercel.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="ConjuMaster UK" />
+    <meta property="og:title" content="ConjuMaster UK — Maîtrisez la conjugaison anglaise" />
+    <meta
+      property="og:description"
+      content="Application web interactive pour apprendre et réviser la conjugaison de l'anglais britannique : leçons structurées, exercices ciblés, tests et répétition espacée."
+    />
+    <meta property="og:url" content="https://conjumastery.vercel.app/" />
+    <meta property="og:image" content="https://conjumastery.vercel.app/icons/icon-512.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="ConjuMaster UK — Maîtrisez la conjugaison anglaise" />
+    <meta
+      name="twitter:description"
+      content="Application web interactive pour apprendre et réviser la conjugaison de l'anglais britannique."
+    />
+    <meta name="twitter:image" content="https://conjumastery.vercel.app/icons/icon-512.png" />
     <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
@@ -41,7 +59,7 @@
           ConjuMaster <span style="font-weight: 400; font-size: 0.8rem; opacity: 0.7">UK</span>
         </div>
       </div>
-      <nav class="sidebar-nav">
+      <nav class="sidebar-nav" aria-label="Navigation principale">
         <div class="nav-section-title">Principal</div>
         <a class="nav-item active" data-page="dashboard" role="button" tabindex="0">
           <span class="nav-icon">🏠</span> Tableau de bord
@@ -110,6 +128,7 @@
       <header class="app-header">
         <div class="header-left">
           <button
+            type="button"
             class="menu-toggle"
             id="menuToggleBtn"
             data-action="toggle-sidebar"
@@ -130,6 +149,7 @@
           </div>
           <div class="header-stat">🏆 <span id="headerLevel">1</span></div>
           <button
+            type="button"
             class="theme-toggle"
             id="themeBtn"
             data-action="toggle-theme"
@@ -251,7 +271,12 @@
                 >Question <span id="exCurrent">1</span> / <span id="exTotal">10</span></span
               >
             </div>
-            <button class="btn btn-outline btn-sm" id="exExitBtn" data-action="exit-exercise">
+            <button
+              type="button"
+              class="btn btn-outline btn-sm"
+              id="exExitBtn"
+              data-action="exit-exercise"
+            >
               ✕ Quitter
             </button>
           </div>
@@ -261,13 +286,24 @@
           <div id="exerciseQuestionContainer"></div>
           <div id="exerciseFeedback" style="display: none" role="status" aria-live="polite"></div>
           <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end">
-            <button class="btn btn-outline" id="exSkipBtn" data-action="skip-exercise">
+            <button
+              type="button"
+              class="btn btn-outline"
+              id="exSkipBtn"
+              data-action="skip-exercise"
+            >
               Passer ⏭️
             </button>
-            <button class="btn btn-primary" id="exValidateBtn" data-action="validate-exercise">
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="exValidateBtn"
+              data-action="validate-exercise"
+            >
               Valider ✓
             </button>
             <button
+              type="button"
               class="btn btn-primary"
               id="exNextBtn"
               data-action="next-exercise"
@@ -305,6 +341,7 @@
               </select>
             </div>
             <button
+              type="button"
               class="btn btn-primary btn-lg btn-block"
               id="startTestBtn"
               data-action="start-test"
@@ -340,10 +377,16 @@
           <div id="testQuestionContainer"></div>
           <div id="testFeedback" style="display: none" role="status" aria-live="polite"></div>
           <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end">
-            <button class="btn btn-primary" id="testValidateBtn" data-action="validate-test">
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="testValidateBtn"
+              data-action="validate-test"
+            >
               Valider ✓
             </button>
             <button
+              type="button"
               class="btn btn-primary"
               id="testNextBtn"
               data-action="next-test"
@@ -490,6 +533,7 @@
             </div>
             <div class="settings-actions">
               <button
+                type="button"
                 class="btn btn-outline"
                 id="lightModeBtn"
                 data-action="set-theme"
@@ -498,6 +542,7 @@
                 Clair
               </button>
               <button
+                type="button"
                 class="btn btn-outline"
                 id="darkModeBtn"
                 data-action="set-theme"
@@ -513,6 +558,7 @@
               <div class="settings-desc">Recevoir une notification pour maintenir votre série</div>
             </div>
             <button
+              type="button"
               class="btn btn-outline btn-sm"
               id="notificationToggleBtn"
               data-action="toggle-notifications"
@@ -526,10 +572,16 @@
               <div class="settings-desc">Exporter ou importer votre progression</div>
             </div>
             <div class="settings-actions">
-              <button class="btn btn-outline btn-sm" id="exportDataBtn" data-action="export-data">
+              <button
+                type="button"
+                class="btn btn-outline btn-sm"
+                id="exportDataBtn"
+                data-action="export-data"
+              >
                 Exporter
               </button>
               <button
+                type="button"
                 class="btn btn-outline btn-sm"
                 id="importDataBtn"
                 data-action="import-data-click"
@@ -551,6 +603,7 @@
               <div class="settings-desc">Effacer toutes les données et recommencer à zéro</div>
             </div>
             <button
+              type="button"
               class="btn btn-outline btn-sm btn-danger-outline"
               id="resetProgressBtn"
               data-action="reset-progress"

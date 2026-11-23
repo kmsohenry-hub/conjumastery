@@ -33,13 +33,41 @@ describe('SEO crawlability and indexing assets', () => {
     expect(netlifySitemap).toContain('<loc>https://conjumastery.netlify.app/</loc>');
   });
 
-  test('index.html exposes SEO metadata, canonical link, and verification tags', () => {
+  test('index.html exposes SEO metadata, Open Graph, Twitter Card, apple-touch-icon, canonical link, and verification tags', () => {
     const html = fs.readFileSync(path.join(ROOT_DIR, 'index.html'), 'utf8');
     expect(html).toContain('<meta name="robots" content="index, follow" />');
     expect(html).toContain('<link rel="canonical" href="https://conjumastery.vercel.app/" />');
+    expect(html).toContain('<meta property="og:title"');
+    expect(html).toContain('<meta property="og:url" content="https://conjumastery.vercel.app/" />');
+    expect(html).toContain('<meta name="twitter:card" content="summary" />');
+    expect(html).toContain('<link rel="apple-touch-icon" href="icons/icon-192.png" />');
     expect(html).toContain('name="description"');
     expect(html).toContain('content="Ao0PW3Z1nU193rP3f1bMfoqTUAtOh81CKwCtv2AyCq4"');
     expect(html).toContain('content="a96gsFhr3t7HvbMZRkuJnywY8k_6W0ygjASKOQOMn6I"');
+  });
+
+  test('vercel.json and netlify.toml build dist/ with security headers and without altering routing', () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'package.json'), 'utf8'));
+    expect(pkg.engines?.node).toBe('24.x');
+
+    const vercel = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'vercel.json'), 'utf8'));
+    expect(vercel.buildCommand).toBe('npm run build');
+    expect(vercel.outputDirectory).toBe('dist');
+    expect(vercel.rewrites).toBeUndefined();
+    expect(vercel.redirects).toBeUndefined();
+    const vercelHeaderKeys = vercel.headers.flatMap((rule) => rule.headers.map((h) => h.key));
+    expect(vercelHeaderKeys).toContain('X-Frame-Options');
+    expect(vercelHeaderKeys).toContain('X-Content-Type-Options');
+    expect(vercelHeaderKeys).toContain('Content-Security-Policy');
+
+    const netlify = fs.readFileSync(path.join(ROOT_DIR, 'netlify.toml'), 'utf8');
+    expect(netlify).toContain('command = "npm run build"');
+    expect(netlify).toContain('publish = "dist"');
+    expect(netlify).toContain('NODE_VERSION = "24"');
+    expect(netlify).toContain('X-Frame-Options = "DENY"');
+    expect(netlify).toContain('X-Content-Type-Options = "nosniff"');
+    expect(netlify).toContain("frame-ancestors 'none'");
+    expect(netlify).not.toContain('[[redirects]]');
   });
 
   test('createAppServer serves robots.txt and sitemap.xml with accurate MIME types', async () => {

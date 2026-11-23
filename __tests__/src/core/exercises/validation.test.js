@@ -57,6 +57,15 @@ describe('validation.js — smart grammatical equivalence', () => {
     ["My friend's bought a new flat.", 'My friend has bought a new flat.'],
     ["John's a doctor.", 'John is a doctor.'],
     ["John's from France.", 'John is from France.'],
+    ["He's from France.", 'He is from France.'],
+    ["It's raining.", 'It is raining.'],
+    ["James's been waiting.", 'James has been waiting.'],
+    ["James's from France.", 'James is from France.'],
+    ["Chris's finished.", 'Chris has finished.'],
+    ["Alex's arriving soon.", 'Alex is arriving soon.'],
+    ["The watch's broken.", 'The watch has broken.'],
+    ["The bus's late.", 'The bus is late.'],
+    ["James's friend's arriving.", "James's friend is arriving."],
     ["If I'd known, I would've helped.", 'If I had known, I would have helped.'],
     ["If I'd known, I'd've helped.", 'If I had known, I would have helped.'],
     ["She could've won the match.", 'She could have won the match.'],
@@ -70,6 +79,7 @@ describe('validation.js — smart grammatical equivalence', () => {
 
   test('accepts valid learner contractions with unlisted adjectives/nouns when expected has explicit is/has', () => {
     expect(answerMatches("John's tall.", 'John is tall.')).toBe(true);
+    expect(answerMatches("James's tall.", 'James is tall.')).toBe(true);
     expect(answerMatches("Tom's British.", 'Tom is British.')).toBe(true);
     expect(answerMatches("The train's delayed.", 'The train is delayed.')).toBe(true);
   });
@@ -121,8 +131,12 @@ describe('validation.js — smart grammatical equivalence', () => {
     expect(answerMatches('I have went.', 'I have gone.')).toBe(false);
     expect(answerMatches('He is work.', 'He is working.')).toBe(false);
     expect(answerMatches('John is car', "John's car")).toBe(false);
+    expect(answerMatches("John's car", 'John is car')).toBe(false);
+    expect(answerMatches('James is car', "James's car")).toBe(false);
+    expect(answerMatches("James's car", 'James is car')).toBe(false);
     expect(answerMatches('John is car is red.', "John's car is red.")).toBe(false);
     expect(answerMatches('my brother has house', "my brother's house")).toBe(false);
+    expect(answerMatches("my brother's house", 'my brother has house')).toBe(false);
     expect(answerMatches("This's a pen.", 'This is a pen.')).toBe(false);
     expect(answerMatches("Yes, Tom's.", 'Yes, Tom is.')).toBe(false);
     expect(answerMatches('   ', 'works')).toBe(false);
