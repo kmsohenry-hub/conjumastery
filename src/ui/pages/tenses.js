@@ -19,7 +19,7 @@ export function renderTenses() {
   tabsEl.innerHTML = categories
     .map(
       (cat, i) =>
-        `<button class="tab ${i === 0 ? 'active' : ''}" data-action="show-tense-category" data-cat-id="${cat.id}">${cat.name}</button>`,
+        `<button type="button" class="tab ${i === 0 ? 'active' : ''}" data-action="show-tense-category" data-cat-id="${cat.id}">${cat.name}</button>`,
     )
     .join('');
 
@@ -75,7 +75,7 @@ export function renderComparison() {
   document.getElementById('comparisonTabs').innerHTML = tabs
     .map(
       (t, i) =>
-        `<button class="tab ${i === 0 ? 'active' : ''}" data-action="show-comparison" data-comp-id="${t.id}">${t.name}</button>`,
+        `<button type="button" class="tab ${i === 0 ? 'active' : ''}" data-action="show-comparison" data-comp-id="${t.id}">${t.name}</button>`,
     )
     .join('');
 
