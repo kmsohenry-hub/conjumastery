@@ -131,9 +131,12 @@ describe('validation.js — smart grammatical equivalence', () => {
     expect(answerMatches('I have went.', 'I have gone.')).toBe(false);
     expect(answerMatches('He is work.', 'He is working.')).toBe(false);
     expect(answerMatches('John is car', "John's car")).toBe(false);
+    expect(answerMatches("John's car", 'John is car')).toBe(false);
     expect(answerMatches('James is car', "James's car")).toBe(false);
+    expect(answerMatches("James's car", 'James is car')).toBe(false);
     expect(answerMatches('John is car is red.', "John's car is red.")).toBe(false);
     expect(answerMatches('my brother has house', "my brother's house")).toBe(false);
+    expect(answerMatches("my brother's house", 'my brother has house')).toBe(false);
     expect(answerMatches("This's a pen.", 'This is a pen.')).toBe(false);
     expect(answerMatches("Yes, Tom's.", 'Yes, Tom is.')).toBe(false);
     expect(answerMatches('   ', 'works')).toBe(false);
