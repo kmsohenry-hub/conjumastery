@@ -47,6 +47,9 @@ describe('SEO crawlability and indexing assets', () => {
   });
 
   test('vercel.json and netlify.toml build dist/ with security headers and without altering routing', () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'package.json'), 'utf8'));
+    expect(pkg.engines?.node).toBe('24.x');
+
     const vercel = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'vercel.json'), 'utf8'));
     expect(vercel.buildCommand).toBe('npm run build');
     expect(vercel.outputDirectory).toBe('dist');

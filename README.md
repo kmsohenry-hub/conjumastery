@@ -17,7 +17,7 @@
     <img src="https://github.com/kmsohenry-hub/conjumastery/actions/workflows/ci.yml/badge.svg" alt="Statut CI" />
   </a>
   <img src="https://img.shields.io/badge/version-2.0.0-1d4ed8" alt="Version 2.0.0" />
-  <img src="https://img.shields.io/badge/node-%3E%3D24%20%3C25-047857" alt="Node.js 24" />
+  <img src="https://img.shields.io/badge/node-24.x-047857" alt="Node.js 24" />
   <img src="https://img.shields.io/badge/vitest-47%20fichiers%20%7C%20806%20tests-0f766e" alt="Suite Vitest" />
   <img src="https://img.shields.io/badge/playwright-29%20tests%20E2E%20%2B%20axe--core-be123c" alt="Playwright E2E" />
   <a href="LICENSE">
@@ -155,7 +155,7 @@ flowchart LR
 
 ### Prérequis
 
-- **Node.js `>= 24 < 25`** (voir `.nvmrc` et `package.json`)
+- **Node.js `24.x`** (voir `.nvmrc` et `package.json`)
 - **npm** (`npm ci` recommandé pour respecter `package-lock.json`)
 
 ### Installation locale
